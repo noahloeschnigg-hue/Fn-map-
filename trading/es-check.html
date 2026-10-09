@@ -114,16 +114,24 @@ input[type=number],input[type=text],select{background:var(--bg);border:1px solid
 
         <div style="margin-top:12px"><label class="f"><span>Vortag Value Area (ES, nur reguläre Sitzung)</span></label></div>
         <div class="row" style="margin-top:6px">
-          <label class="f"><span>VAH</span><input type="number" step="0.25" id="vah" value="7731.50"></label>
-          <label class="f"><span>POC</span><input type="number" step="0.25" id="poc" value="7718.00"></label>
-          <label class="f"><span>VAL</span><input type="number" step="0.25" id="val" value="7703.25"></label>
+          <label class="f"><span>VAH</span><input type="number" step="0.25" id="vah" value="7858.50"></label>
+          <label class="f"><span>POC</span><input type="number" step="0.25" id="poc" value="7846.00"></label>
+          <label class="f"><span>VAL</span><input type="number" step="0.25" id="val" value="7826.25"></label>
         </div>
 
-        <div style="margin-top:14px"><label class="f"><span>SPX → ES umrechnen (Gamma-Strikes)</span></label></div>
-        <div class="row" style="margin-top:6px">
-          <label class="f"><span>ES jetzt</span><input type="number" step="0.25" id="esNow" value="7724.50"></label>
-          <label class="f"><span>SPX jetzt</span><input type="number" step="0.01" id="spxNow" value="7705.36"></label>
-          <label class="f"><span>SPX-Strikes</span><input type="text" id="strikes" value="7650, 7700, 7750" inputmode="decimal"></label>
+        <div style="margin-top:14px"><label class="f"><span>Abstand ES zu SPX (zur selben Uhrzeit ablesen)</span></label></div>
+        <div class="row2" style="margin-top:6px">
+          <label class="f"><span>SPX (Gexmetrix „Spot Price“)</span><input type="number" step="0.01" id="spxNow" value="7811.54"></label>
+          <label class="f"><span>ES zur selben Zeit (NinjaTrader)</span><input type="number" step="0.25" id="esNow" value="7851.75"></label>
+        </div>
+        <p class="hint">Gexmetrix zeigt die Uhrzeit bei „Data Timestamp“ in New Yorker Zeit. Such im 1-Minuten-Chart von NinjaTrader die ES-Kerze zur selben Uhrzeit (deutsche Zeit = New York + 6 Stunden, vom 26. bis 30. Oktober nur + 5).</p>
+
+        <div style="margin-top:14px"><label class="f"><span>Gamma-Level aus Gexmetrix (SPX)</span></label></div>
+        <div class="row2" style="margin-top:6px">
+          <label class="f"><span>Zero Gamma</span><input type="number" step="0.5" id="gZero" value="7676.5"></label>
+          <label class="f"><span>Magnet (größter blauer Balken)</span><input type="number" step="5" id="gMag" value="7820"></label>
+          <label class="f"><span>Kante blau / rot</span><input type="number" step="5" id="gEdge" value="7800"></label>
+          <label class="f"><span>Größter roter Balken</span><input type="number" step="5" id="gRed" value="7750"></label>
         </div>
         <div class="conv" id="conv"></div>
       </section>
@@ -145,10 +153,10 @@ input[type=number],input[type=text],select{background:var(--bg);border:1px solid
         </div>
         <div style="margin-top:10px"><label class="f"><span>Kontrakt</span></label><div class="seg" id="ctr"><button type="button" data-v="ES" aria-pressed="false">ES · 50 $/Punkt</button><button type="button" data-v="MES" aria-pressed="true">MES · 5 $/Punkt</button></div></div>
         <div class="row2" style="margin-top:10px">
-          <label class="f"><span>Einstieg</span><input type="number" step="0.25" id="entry" value="7712.25"></label>
-          <label class="f"><span>Stop</span><input type="number" step="0.25" id="stop" value="7706.75"></label>
-          <label class="f"><span>Ziel 1 (z. B. POC)</span><input type="number" step="0.25" id="t1" value="7726.50"></label>
-          <label class="f"><span>Ziel 2 (z. B. Hoch)</span><input type="number" step="0.25" id="t2" value="7738.00"></label>
+          <label class="f"><span>Einstieg</span><input type="number" step="0.25" id="entry" value="7845.00"></label>
+          <label class="f"><span>Stop</span><input type="number" step="0.25" id="stop" value="7838.75"></label>
+          <label class="f"><span>Ziel 1 (z. B. Magnet)</span><input type="number" step="0.25" id="t1" value="7860.25"></label>
+          <label class="f"><span>Ziel 2 (z. B. Hoch)</span><input type="number" step="0.25" id="t2" value="7875.00"></label>
         </div>
         <div class="res" id="res"></div>
         <p class="err" id="err" hidden></p>
@@ -158,7 +166,7 @@ input[type=number],input[type=text],select{background:var(--bg);border:1px solid
     </aside>
   </div>
 
-  <p class="foot">ES-Tick = 0,25 Punkte = 12,50 $ (MES: 1,25 $). Die reguläre US-Sitzung läuft 15:30 bis 22:00 Uhr deutscher Zeit; wenn die Zeitumstellung in den USA und Europa nicht in derselben Woche ist, verschiebt sich das für ein bis zwei Wochen um eine Stunde. GEX-Strikes beziehen sich auf den SPX: Für ES den aktuellen Abstand zwischen ES und SPX dazurechnen, das macht der Umrechner. Die Checkliste ist eine Lernhilfe, keine Anlageberatung.</p>
+  <p class="foot">ES-Tick = 0,25 Punkte = 12,50 $ (MES: 1,25 $). Die reguläre US-Sitzung läuft 15:30 bis 22:00 Uhr deutscher Zeit; wenn die Zeitumstellung in den USA und Europa nicht in derselben Woche ist, verschiebt sich das für ein bis zwei Wochen um eine Stunde. Gamma-Level von Gexmetrix sind SPX-Preise: Für ES den Abstand zwischen ES und SPX zur selben Uhrzeit dazurechnen, das macht der Umrechner. Der Abstand ändert sich nur langsam, einmal am Tag ausrechnen reicht. Die Checkliste ist eine Lernhilfe, keine Anlageberatung.</p>
 </div>
 
 <script>
@@ -181,7 +189,7 @@ const ITEMS=[
   {id:'overlap',req:1,t:'FVG und LVN überlappen sich',h:'Nur die Schnittmenge ist deine Einstiegszone.'},
   {id:'trigger',req:1,t:{long:'Bookmap: Absorption, dann dreht das Delta ins Plus',short:'Bookmap: gefangene Käufer, dann dreht das Delta ins Minus'},h:{long:'Verkäufer drücken rein, der Preis fällt nicht weiter, die Mauer hält, dann grüne Punkte.',short:'Käufer drücken rein, der Preis steigt nicht weiter, dann rote Punkte und Abverkauf.'}},
   {id:'crv',req:1,auto:1,t:'Chance-Risiko mindestens 1:2',h:'Wird automatisch aus dem Rechner übernommen.'},
-  {id:'confl',bonus:1,t:'Zone trifft Value-Area-Kante oder großen Gamma-Strike',h:'VAH, VAL, POC oder ein umgerechneter SPX-Strike liegt in deiner Zone.'}
+  {id:'confl',bonus:1,t:'Zone trifft Value-Area-Kante oder Gamma-Level, mit Blau dahinter',h:{long:'VAH, VAL, POC, Kante blau/rot oder Magnet liegt in deiner Zone, und unter der Zone ist blau. Stop unter die Kante.',short:'VAH, VAL, POC, Kante oder Magnet liegt in deiner Zone, und über der Zone ist blau. Stop über die Kante.'}}
 ];
 const txt=(x)=>typeof x==='string'?x:x[S.dir];
 
@@ -204,12 +212,14 @@ $('#news').onchange=()=>{store.set('news',$('#news').checked);update()};
 // SPX -> ES conversion
 function conv(){
   const es=+$('#esNow').value,spx=+$('#spxNow').value;
-  if(!es||!spx){$('#conv').textContent='ES- und SPX-Kurs eintragen, dann rechne ich die Strikes um.';return []}
+  if(!es||!spx){$('#conv').textContent='SPX und ES zur selben Uhrzeit eintragen, dann rechne ich die Level um.';return []}
   const basis=es-spx;
-  const strikes=$('#strikes').value.split(/[;,\s]+/).map(x=>parseFloat(x.replace(',','.'))).filter(x=>isFinite(x));
-  const lv=strikes.map(s=>({s,es:Math.round((s+basis)*4)/4}));
-  $('#conv').innerHTML=`Abstand ES zu SPX: <b>${basis>=0?'+':''}${n2(basis)}</b> Punkte`+(lv.length?`<ul>${lv.map(l=>`<li>SPX ${n2(l.s)} → ES ${n2(l.es)}</li>`).join('')}</ul>`:'');
-  return lv.map(l=>l.es);
+  const lv=[['Magnet','gMag'],['Kante blau/rot','gEdge'],['Größter roter Balken','gRed'],['Zero Gamma','gZero']]
+    .map(([n,id])=>({n,s:+$('#'+id).value})).filter(l=>l.s).map(l=>({...l,es:Math.round((l.s+basis)*4)/4}));
+  const z=lv.find(l=>l.n==='Zero Gamma');
+  const regime=z?(es>z.es?'ES liegt <b>über</b> Zero Gamma: eher ruhig, Regime „Positiv“.':'ES liegt <b>unter</b> Zero Gamma: eher schnell, Regime „Negativ“.'):'';
+  $('#conv').innerHTML=`Abstand: <b>${basis>=0?'+':''}${n2(basis)}</b> Punkte. In NinjaTrader einzeichnen:`+(lv.length?`<ul>${lv.map(l=>`<li>${l.n}: SPX ${n2(l.s)} → <b>ES ${n2(l.es)}</b></li>`).join('')}</ul>`:'')+(regime?`<p style="margin:6px 0 0">${regime}</p>`:'');
+  return lv.map(l=>[l.n,l.es]);
 }
 
 // Position size
@@ -241,7 +251,7 @@ function update(){
   // auto-hint for confluence
   let near=[];
   if(c){const [lo,hi]=c.zone,pad=1.5;
-    [['VAH',+$('#vah').value],['POC',+$('#poc').value],['VAL',+$('#val').value],...lv.map(x=>['Gamma-Strike',x])].forEach(([n,v])=>{if(v&&v>=lo-pad&&v<=hi+pad)near.push(`${n} ${n2(v)}`)})}
+    [['VAH',+$('#vah').value],['POC',+$('#poc').value],['VAL',+$('#val').value],...lv].forEach(([n,v])=>{if(v&&v>=lo-pad&&v<=hi+pad)near.push(`${n} ${n2(v)}`)})}
   const req=ITEMS.filter(i=>i.req),miss=req.filter(i=>!checks[i.id]),bonus=!!checks.confl;
   const news=$('#news').checked,V=$('#verdict');
   let cls,g,p,list=[];
@@ -264,7 +274,7 @@ $('#wkPlus').onclick=()=>addWk(1);$('#wkMinus').onclick=()=>addWk(-1);
 $('#took').onclick=()=>addWk(1);
 $('#newTrade').onclick=()=>{checks={};store.set('checks',checks);renderChecks();update()};
 
-const IDS=['vah','poc','val','esNow','spxNow','strikes','acct','riskPct','entry','stop','t1','t2'];
+const IDS=['vah','poc','val','esNow','spxNow','gZero','gMag','gEdge','gRed','acct','riskPct','entry','stop','t1','t2'];
 const saved=store.get('inputs',{});IDS.forEach(id=>{if(saved[id]!==undefined)$('#'+id).value=saved[id];$('#'+id).addEventListener('input',()=>{saved[id]=$('#'+id).value;store.set('inputs',saved);update()})});
 
 seg('dir','dir');seg('gex','gex');seg('ctr','ctr');
