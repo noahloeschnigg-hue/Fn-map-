@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LeckCoin $LECK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Rubik:wght@400;500;700;800&family=Martian+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: sticker-style one-pager. Yolk-yellow hero with egg mascot, ink marquee, alternating yolk/ink bands, hard-shadow cards */
+:root{
+  --yolk:#ffc21a; --yolk-deep:#f2a900; --shell:#fff6df; --ink:#1e1433; --ink-2:#2d2148; --tongue:#ff4f7b; --sky:#7fd3ff;
+  --f-display:"Bowlby One","Arial Black",Impact,sans-serif;
+  --f-body:"Rubik","Segoe UI",system-ui,sans-serif;
+  --f-mono:"Martian Mono",ui-monospace,Menlo,monospace;
+  --edge:3px solid var(--ink); --pop:6px 6px 0 var(--ink);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--yolk);color:var(--ink)}
+html{overflow-x:clip}
+body{font-family:var(--f-body);font-size:17px;line-height:1.55;overflow-x:clip}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--tongue);outline-offset:3px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;line-height:1;margin:0;text-wrap:balance}
+.wrap{max-width:1140px;margin:0 auto;padding-inline:16px}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--f-display);font-size:18px;letter-spacing:.02em;text-decoration:none;color:var(--ink);background:var(--shell);border:var(--edge);border-radius:14px;padding:13px 22px;box-shadow:var(--pop);transition:transform .12s,box-shadow .12s;cursor:pointer}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--ink)}
+.btn:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+.btn.hot{background:var(--tongue);color:#fff}
+
+/* Nav */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--yolk);border-bottom:var(--edge)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:10px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--f-display);font-size:22px}
+.logo svg{width:42px;height:42px}
+.links{display:flex;gap:22px;font-weight:700}
+.links a{text-decoration:none}
+.links a:hover{text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:5px}
+.nav .btn{padding:8px 16px;font-size:15px;box-shadow:4px 4px 0 var(--ink)}
+@media (max-width:820px){.links{display:none}}
+
+/* Hero */
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:28px;align-items:center;padding-block:56px 70px}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:13px;font-weight:700;background:var(--ink);color:var(--yolk);border-radius:999px;padding:6px 14px;transform:rotate(-2deg)}
+.hero h1{font-size:clamp(52px,8.6vw,112px);letter-spacing:-.01em;color:var(--shell);-webkit-text-stroke:3px var(--ink);text-shadow:6px 6px 0 var(--ink);margin:18px 0 8px}
+.hero h1 span{color:var(--tongue)}
+.lede{font-size:clamp(19px,2.2vw,23px);font-weight:500;max-width:30ch;margin:0 0 26px}
+.ca{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--shell);border:var(--edge);border-radius:14px;padding:10px 12px;max-width:520px;margin-bottom:26px}
+.ca b{font-family:var(--f-display);font-weight:400;font-size:15px}
+.ca code{font-family:var(--f-mono);font-size:13px;flex:1;min-width:0;overflow-wrap:anywhere}
+.ca button{font:inherit;font-weight:700;font-size:13px;border:2px solid var(--ink);background:var(--yolk);border-radius:8px;padding:5px 10px;cursor:pointer}
+.ca button:disabled{opacity:.5;cursor:not-allowed}
+.cta{display:flex;gap:16px;flex-wrap:wrap}
+.mascot{position:relative;display:grid;place-items:center}
+.mascot button{background:none;border:0;padding:0;cursor:pointer;width:min(100%,400px)}
+.mascot svg{width:100%;height:auto;display:block;animation:bob 2.6s ease-in-out infinite;filter:drop-shadow(10px 12px 0 var(--ink))}
+.mascot .tongue{transform-origin:200px 300px;animation:lick .9s ease-in-out infinite}
+.mascot button:active svg{animation:squish .25s}
+.licks{position:absolute;bottom:-6px;right:6%;font-family:var(--f-display);font-size:16px;background:var(--tongue);color:#fff;border:var(--edge);border-radius:12px;padding:6px 12px;transform:rotate(4deg);box-shadow:4px 4px 0 var(--ink)}
+.bubble{position:absolute;top:2%;left:-2%;font-family:var(--f-display);font-size:18px;background:var(--shell);border:var(--edge);border-radius:18px;padding:10px 14px;transform:rotate(-6deg)}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+@keyframes lick{0%,100%{transform:scaleY(1) rotate(-4deg)}50%{transform:scaleY(1.18) rotate(5deg)}}
+@keyframes squish{50%{transform:scale(1.08,.9)}}
+.pop{position:fixed;pointer-events:none;font-family:var(--f-display);color:var(--tongue);-webkit-text-stroke:1.5px var(--ink);font-size:26px;z-index:30;animation:rise .9s ease-out forwards}
+@keyframes rise{to{transform:translateY(-90px) rotate(12deg);opacity:0}}
+@media (max-width:820px){.hero .wrap{grid-template-columns:minmax(0,1fr);padding-block:34px 56px}.mascot{order:-1;max-width:330px;margin:0 auto}}
+
+/* Marquee */
+.marquee{background:var(--ink);color:var(--yolk);border-block:var(--edge);overflow:hidden;transform:rotate(-1.2deg);margin-inline:-20px}
+.marquee div{display:flex;gap:40px;white-space:nowrap;padding-block:14px;font-family:var(--f-display);font-size:24px;animation:slide 22s linear infinite;width:max-content}
+.marquee i{font-style:normal;color:var(--tongue)}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* Sections */
+section{padding-block:84px}
+.eyebrow{font-family:var(--f-mono);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.h2{font-size:clamp(40px,6vw,72px);margin:10px 0 18px}
+.ink{background:var(--ink);color:var(--shell)}
+.ink .eyebrow{color:var(--yolk)}
+.story .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start}
+.story p{margin:0 0 16px;max-width:60ch}
+.facts{display:grid;gap:14px}
+.fact{background:var(--shell);color:var(--ink);border:var(--edge);border-radius:18px;padding:18px 20px;box-shadow:6px 6px 0 var(--yolk)}
+.fact b{display:block;font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1}
+.fact span{font-weight:500}
+@media (max-width:820px){.story .wrap{grid-template-columns:minmax(0,1fr)}}
+
+/* Tokenomics */
+.tok .wrap{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:40px;align-items:center}
+.supply{font-family:var(--f-display);font-size:clamp(28px,4.6vw,54px);line-height:1.05;margin:6px 0 4px;white-space:nowrap}
+.supply small{display:block;font-size:.55em;color:var(--tongue);-webkit-text-stroke:1.5px var(--ink)}
+.donut{position:relative;max-width:420px;width:100%;margin:0 auto}
+.donut svg{width:100%;height:auto;display:block;transform:rotate(-90deg)}
+.donut .mid{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-family:var(--f-display);font-size:clamp(22px,3vw,30px);line-height:1.05}
+.legend{display:grid;gap:10px;margin-top:22px}
+.legend div{display:flex;align-items:center;gap:12px;background:var(--shell);border:var(--edge);border-radius:12px;padding:10px 14px;font-weight:700}
+.legend i{width:20px;height:20px;border-radius:6px;border:2px solid var(--ink);flex:0 0 auto}
+.legend em{margin-left:auto;font-style:normal;font-family:var(--f-mono);font-size:15px}
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.chip{font-family:var(--f-mono);font-size:13px;font-weight:700;background:var(--ink);color:var(--yolk);border-radius:999px;padding:7px 14px}
+@media (max-width:820px){.tok .wrap{grid-template-columns:minmax(0,1fr)}}
+
+/* Steps */
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:30px}
+.step{background:var(--shell);color:var(--ink);border:var(--edge);border-radius:18px;padding:22px 20px;box-shadow:6px 6px 0 var(--tongue);display:flex;flex-direction:column;gap:8px}
+.step .n{font-family:var(--f-display);font-size:44px;line-height:1;color:var(--tongue);-webkit-text-stroke:2px var(--ink)}
+.step h3{font-size:22px}
+.step p{margin:0;font-size:15.5px}
+@media (max-width:980px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
+
+/* Roadmap */
+.road{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:30px;position:relative}
+.phase{background:var(--shell);border:var(--edge);border-radius:18px;padding:20px;box-shadow:var(--pop);display:flex;flex-direction:column;gap:10px}
+.phase:nth-child(even){transform:rotate(1.2deg)}.phase:nth-child(odd){transform:rotate(-1deg)}
+.phase .ph{font-family:var(--f-mono);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.phase h3{font-size:24px}
+.phase ul{margin:0;padding-left:18px;font-size:15.5px}
+.phase li+li{margin-top:4px}
+.phase .em{width:56px;height:56px}
+@media (max-width:980px){.road{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.road{grid-template-columns:minmax(0,1fr)}}
+
+/* Community */
+.comm{text-align:center}
+.comm .h2{margin-inline:auto;max-width:16ch}
+.comm p{max-width:52ch;margin:0 auto 28px}
+.socials{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.soon{font-family:var(--f-mono);font-size:11px;background:var(--ink);color:var(--yolk);border-radius:999px;padding:3px 8px;font-weight:700}
+
+footer{background:var(--ink);color:var(--shell);padding-block:40px;border-top:var(--edge)}
+footer .wrap{display:flex;flex-direction:column;gap:14px}
+footer .logo{color:var(--shell)}
+.disc{font-size:14px;opacity:.82;max-width:80ch;margin:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--yolk);font-weight:700;border-radius:12px;padding:10px 16px;opacity:0;transition:.25s;z-index:40;pointer-events:none;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="coin" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="29" fill="#ffc21a" stroke="#1e1433" stroke-width="4"/>
+      <circle cx="32" cy="32" r="21" fill="none" stroke="#1e1433" stroke-width="2" stroke-dasharray="3 4"/>
+      <path d="M32 15c-8 0-13 11-13 20 0 8 6 13 13 13s13-5 13-13c0-9-5-20-13-20z" fill="#fff6df" stroke="#1e1433" stroke-width="3"/>
+      <path d="M27 39q5 4 10 0" fill="none" stroke="#1e1433" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M30 40q2 7 4 0" fill="#ff4f7b" stroke="#1e1433" stroke-width="2"/>
+    </symbol>
+  </defs>
+</svg>
+
+<nav class="nav" aria-label="Hauptnavigation"><div class="wrap">
+  <a class="logo" href="#top"><svg aria-hidden="true"><use href="#coin"/></svg>LeckCoin</a>
+  <div class="links"><a href="#story">Story</a><a href="#tokenomics">Tokenomics</a><a href="#kaufen">Kaufen</a><a href="#roadmap">Roadmap</a><a href="#community">Community</a></div>
+  <a class="btn hot" href="#kaufen">$LECK holen</a>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <div>
+    <span class="tag">$LECK · Meme-Coin auf Solana</span>
+    <h1>LECK<span>COIN</span></h1>
+    <p class="lede">Der einzige Coin, der deinem Portfolio ehrlich sagt, was er von ihm hält. Kein Plan, kein Nutzen, nur Eier.</p>
+    <div class="ca" aria-label="Kontraktadresse"><b>CA</b><code id="ca">wird beim Launch veröffentlicht</code><button type="button" id="copy" disabled>Kopieren</button></div>
+    <div class="cta"><a class="btn hot" href="#kaufen">So kaufst du $LECK</a><a class="btn" href="#community">Zur Community</a></div>
+  </div>
+  <div class="mascot">
+    <span class="bubble">Leck mich!</span>
+    <button type="button" id="egg" aria-label="Ei anstupsen">
+      <svg viewBox="0 0 400 440" aria-hidden="true">
+        <ellipse cx="200" cy="420" rx="120" ry="14" fill="#1e1433" opacity=".18"/>
+        <path d="M200 30C120 30 62 160 62 255c0 95 62 150 138 150s138-55 138-150C338 160 280 30 200 30z" fill="#fff6df" stroke="#1e1433" stroke-width="8"/>
+        <path d="M110 120c10-30 30-55 52-66" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity=".9"/>
+        <path d="M250 62l-14 26 18 12-12 22" fill="none" stroke="#1e1433" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <g>
+          <rect x="96" y="178" width="92" height="56" rx="16" fill="#1e1433"/>
+          <rect x="212" y="178" width="92" height="56" rx="16" fill="#1e1433"/>
+          <path d="M188 196h24" stroke="#1e1433" stroke-width="8"/>
+          <path d="M110 190l26 0" stroke="#7fd3ff" stroke-width="6" stroke-linecap="round"/>
+          <path d="M226 190l26 0" stroke="#7fd3ff" stroke-width="6" stroke-linecap="round"/>
+        </g>
+        <ellipse cx="118" cy="268" rx="22" ry="12" fill="#ff4f7b" opacity=".45"/>
+        <ellipse cx="282" cy="268" rx="22" ry="12" fill="#ff4f7b" opacity=".45"/>
+        <path d="M148 272q52 52 104 0" fill="#1e1433" stroke="#1e1433" stroke-width="8" stroke-linejoin="round"/>
+        <g class="tongue"><path d="M176 292c0 36 8 62 24 62s24-26 24-62z" fill="#ff4f7b" stroke="#1e1433" stroke-width="7" stroke-linejoin="round"/><path d="M200 300v34" stroke="#c42a52" stroke-width="5" stroke-linecap="round"/></g>
+      </svg>
+    </button>
+    <span class="licks" id="licks">0 Licks</span>
+  </div>
+</div></header>
+
+<div class="marquee" aria-hidden="true"><div>
+  <span>$LECK</span><i>●</i><span>LECK EIER</span><i>●</i><span>67.000.000.000 SUPPLY</span><i>●</i><span>0 % STEUER</span><i>●</i><span>AB INS NEST</span><i>●</i><span>KEIN NUTZEN, NUR VIBES</span><i>●</i>
+  <span>$LECK</span><i>●</i><span>LECK EIER</span><i>●</i><span>67.000.000.000 SUPPLY</span><i>●</i><span>0 % STEUER</span><i>●</i><span>AB INS NEST</span><i>●</i><span>KEIN NUTZEN, NUR VIBES</span><i>●</i>
+</div></div>
+
+<section class="story ink" id="story"><div class="wrap">
+  <div>
+    <span class="eyebrow">Die Legende</span>
+    <h2 class="h2">Ein Ei. Eine Zunge. Eine Mission.</h2>
+    <p>Es war einmal ein Ei, das sich alle Charts angeschaut hat und nur eine Antwort hatte. Statt Whitepaper, Utility und Versprechen gibt es bei $LECK genau das: eine Haltung.</p>
+    <p>LeckCoin ist ein Community-Meme. Er gehört denen, die drüber lachen, ihn teilen und ihre Freunde damit nerven. Mehr nicht, aber auch nicht weniger.</p>
+  </div>
+  <div class="facts">
+    <div class="fact"><b>67 Mrd.</b><span>$LECK insgesamt. Weil 67.</span></div>
+    <div class="fact"><b>0 % / 0 %</b><span>Steuer beim Kaufen und Verkaufen.</span></div>
+    <div class="fact"><b>100 % Meme</b><span>Kein Nutzen, kein Fahrplan zum Mond, nur Eier.</span></div>
+  </div>
+</div></section>
+
+<section class="tok" id="tokenomics"><div class="wrap">
+  <div>
+    <span class="eyebrow">Tokenomics</span>
+    <h2 class="h2">Wie das Ei aufgeteilt ist</h2>
+    <p>Gesamtmenge</p>
+    <p class="supply">67.000.000.000<small>$LECK</small></p>
+    <div class="legend" id="legend"></div>
+    <div class="chips"><span class="chip">Chain: Solana</span><span class="chip">Steuer: 0 %</span><span class="chip">Ticker: $LECK</span></div>
+  </div>
+  <div class="donut"><svg viewBox="0 0 42 42" id="donut" aria-label="Verteilung der Token als Ringdiagramm" role="img"></svg><div class="mid">67 Mrd.<br>$LECK</div></div>
+</div></section>
+
+<section class="ink" id="kaufen"><div class="wrap">
+  <span class="eyebrow">Kaufen</span>
+  <h2 class="h2">In vier Schritten ins Nest</h2>
+  <div class="steps">
+    <div class="step"><span class="n">1</span><h3>Wallet holen</h3><p>Lade eine Solana-Wallet wie Phantom oder Solflare herunter und sichere deine Wiederherstellungsphrase offline.</p></div>
+    <div class="step"><span class="n">2</span><h3>SOL besorgen</h3><p>Kauf SOL bei einer Börse deiner Wahl und schick es an deine Wallet-Adresse.</p></div>
+    <div class="step"><span class="n">3</span><h3>DEX öffnen</h3><p>Verbinde deine Wallet mit einer Solana-DEX und füge die offizielle $LECK-Kontraktadresse von dieser Seite ein.</p></div>
+    <div class="step"><span class="n">4</span><h3>Tauschen</h3><p>Tausch SOL gegen $LECK, bestätige in der Wallet und willkommen im Nest.</p></div>
+  </div>
+</div></section>
+
+<section id="roadmap"><div class="wrap">
+  <span class="eyebrow">Roadmap</span>
+  <h2 class="h2">Vom Ei zum Adler</h2>
+  <div class="road">
+    <div class="phase"><svg class="em" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6C20 6 12 26 12 40c0 12 9 19 20 19s20-7 20-19C52 26 44 6 32 6z" fill="#fff6df" stroke="#1e1433" stroke-width="4"/></svg><span class="ph">Phase 1</span><h3>Ei gelegt</h3><ul><li>Website live</li><li>Launch von $LECK</li><li>Erste Memes in die Welt</li></ul></div>
+    <div class="phase"><svg class="em" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6C20 6 12 26 12 40c0 12 9 19 20 19s20-7 20-19C52 26 44 6 32 6z" fill="#fff6df" stroke="#1e1433" stroke-width="4"/><path d="M14 34l8-5 6 6 7-7 6 6 7-5 4 3" fill="none" stroke="#1e1433" stroke-width="3.5" stroke-linejoin="round"/></svg><span class="ph">Phase 2</span><h3>Es knackt</h3><ul><li>1.000 Holder als Ziel</li><li>Community-Kanäle starten</li><li>Meme-Wettbewerb</li></ul></div>
+    <div class="phase"><svg class="em" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="34" r="18" fill="#ffc21a" stroke="#1e1433" stroke-width="4"/><circle cx="26" cy="30" r="2.5" fill="#1e1433"/><circle cx="38" cy="30" r="2.5" fill="#1e1433"/><path d="M28 37l4 4 4-4z" fill="#ff8a1a" stroke="#1e1433" stroke-width="2"/></svg><span class="ph">Phase 3</span><h3>Küken schlüpft</h3><ul><li>Merch mit dem Ei</li><li>Eintrag bei Tracking-Seiten beantragen</li><li>Leck-Eier-Casino-Turniere</li></ul></div>
+    <div class="phase"><svg class="em" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 36c10-14 20-14 26-4 6-10 16-10 26 4-10-4-16-2-26 12C22 34 16 32 6 36z" fill="#ffc21a" stroke="#1e1433" stroke-width="4" stroke-linejoin="round"/></svg><span class="ph">Phase 4</span><h3>Abflug</h3><ul><li>Was die Community entscheidet</li><li>Mehr Memes</li><li>Noch mehr Eier</li></ul></div>
+  </div>
+</div></section>
+
+<section class="comm ink" id="community"><div class="wrap">
+  <span class="eyebrow">Community</span>
+  <h2 class="h2">Komm ins Nest</h2>
+  <p>Teil das Ei, mach Memes, nerv deine Freunde. Die offiziellen Kanäle kommen hier rein, sobald sie stehen.</p>
+  <div class="socials">
+    <span class="btn">X / Twitter <span class="soon">bald</span></span>
+    <span class="btn">Telegram <span class="soon">bald</span></span>
+    <button class="btn hot" type="button" id="share">Seite teilen</button>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <a class="logo" href="#top"><svg aria-hidden="true"><use href="#coin"/></svg>LeckCoin</a>
+  <p class="disc">$LECK ist ein Meme-Coin ohne inneren Wert, ohne Team-Versprechen und ohne Gewinnerwartung. Nichts auf dieser Seite ist Finanzberatung. Krypto ist extrem riskant: Kauf nur mit Geld, dessen Verlust du verkraftest, und prüfe die Kontraktadresse immer selbst.</p>
+</div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+let tt;const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2400)};
+
+// Contract address: put the real one here at launch; the copy button turns on automatically.
+const CA='';
+if(CA){$('#ca').textContent=CA;$('#copy').disabled=false}
+$('#copy').onclick=()=>{navigator.clipboard.writeText(CA).then(()=>toast('Adresse kopiert'),()=>{const r=document.createRange();r.selectNodeContents($('#ca'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Adresse markiert, jetzt kopieren')})};
+
+// Tokenomics donut
+const DIST=[['Liquidität',80,'#ff4f7b'],['Community & Airdrops',10,'#7fd3ff'],['Marketing',6.7,'#fff6df'],['Team',3.3,'#ffc21a']];
+let off=0;
+$('#donut').innerHTML='<circle cx="21" cy="21" r="15.9155" fill="none" stroke="#1e1433" stroke-width="9.5"/>'+DIST.map(([n,v,c])=>{const s=`<circle cx="21" cy="21" r="15.9155" fill="none" stroke="${c}" stroke-width="7" stroke-dasharray="${v} ${100-v}" stroke-dashoffset="${-off}"><title>${n}: ${String(v).replace('.',',')} %</title></circle>`;off+=v;return s}).join('');
+$('#legend').innerHTML=DIST.map(([n,v,c])=>`<div><i style="background:${c}"></i>${n}<em>${String(v).replace('.',',')} %</em></div>`).join('');
+
+// Egg clicker
+let licks=0;try{licks=+localStorage.getItem('leck.licks')||0}catch(e){}
+const show=()=>{$('#licks').textContent=licks.toLocaleString('de-DE')+(licks===1?' Lick':' Licks')};show();
+const WORDS=['LECK!','+1','EI!','$LECK','67!','SLURP'];
+$('#egg').addEventListener('click',e=>{
+  licks++;show();try{localStorage.setItem('leck.licks',licks)}catch(err){}
+  const p=document.createElement('span');p.className='pop';p.textContent=licks%67===0?'67!!!':WORDS[Math.floor(Math.random()*WORDS.length)];
+  p.style.left=(e.clientX||innerWidth/2)-20+'px';p.style.top=(e.clientY||innerHeight/2)-20+'px';document.body.appendChild(p);setTimeout(()=>p.remove(),900);
+  if(licks%67===0)toast('67 Licks geschafft. Das Ei ist stolz auf dich.');
+});
+
+// Share
+$('#share').onclick=()=>{const url=location.href.split('#')[0];
+  navigator.clipboard.writeText(url).then(()=>toast('Link kopiert. Ab damit in den Gruppenchat.'),()=>toast('Kopiere den Link aus der Adresszeile.'))};
+})();
+</script>
+</body>
+</html>
