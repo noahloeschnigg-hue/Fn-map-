@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ES A+ Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Archivo+Black&display=swap">
+<style>
+/* Layout: two columns on desktop: left = pre-session + setup checklist, right = sticky verdict + position calculator; stacks on phones */
+:root{
+  --bg:#f3f5f9; --card:#ffffff; --line:#d9dfe9; --fg:#121a2b; --muted:#5d6b82;
+  --accent:#2457d6; --accent-soft:#e3ebff; --good:#127a45; --good-soft:#dcf3e6; --warn:#a45a00; --warn-soft:#fff0d9; --bad:#c0263a; --bad-soft:#fde3e6;
+  --f-display:"Archivo Black","Arial Black",sans-serif; --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1422; --card:#151d2f; --line:#26324a; --fg:#e8edf6; --muted:#93a1ba;
+  --accent:#6f9bff; --accent-soft:#1c2a4d; --good:#4fd18b; --good-soft:#123323; --warn:#ffb54d; --warn-soft:#3a2a10; --bad:#ff6b7d; --bad-soft:#3d1820; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1422; --card:#151d2f; --line:#26324a; --fg:#e8edf6; --muted:#93a1ba;
+  --accent:#6f9bff; --accent-soft:#1c2a4d; --good:#4fd18b; --good-soft:#123323; --warn:#ffb54d; --warn-soft:#3a2a10; --bad:#ff6b7d; --bad-soft:#3d1820; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:16px;padding-block:22px 48px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 24px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,4.4vw,40px);line-height:1;margin:0;letter-spacing:.01em}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:6px 0 0}
+.week{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.week b{font-family:var(--f-mono);font-size:18px}
+.week small{color:var(--muted)}
+.mini{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr);gap:18px;align-items:start}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;flex-direction:column;gap:18px}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}.side{position:static}}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;display:flex;gap:10px;align-items:center}
+.card h2 i{font-style:normal;width:22px;height:22px;border-radius:6px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;letter-spacing:0}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:none;border-radius:8px;padding:8px 6px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg button[data-v="neg"][aria-pressed="true"],.seg button[data-v="long"][aria-pressed="true"]{color:var(--good)}
+.seg button[data-v="pos"][aria-pressed="true"],.seg button[data-v="short"][aria-pressed="true"]{color:var(--bad)}
+.hint{color:var(--muted);font-size:13.5px;margin:8px 0 0}
+.row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.row{grid-template-columns:repeat(2,minmax(0,1fr))}.row2.segs{grid-template-columns:minmax(0,1fr)}}
+.seg button{min-width:0}
+label.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+label.f span{font-size:12px;color:var(--muted);font-weight:600}
+input[type=number],input[type=text],select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:var(--f-mono);font-size:14px;width:100%;min-width:0}
+.conv{margin-top:12px;background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:14px}
+.conv b{font-family:var(--f-mono)}
+.conv ul{margin:6px 0 0;padding-left:18px;font-family:var(--f-mono);font-size:13.5px}
+.chk{display:flex;flex-direction:column;gap:2px}
+.item{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start;padding:10px 8px;border-radius:10px;cursor:pointer}
+.item:hover{background:var(--bg)}
+.item input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);cursor:pointer}
+.item b{display:block;font-weight:600}
+.item small{color:var(--muted);font-size:13px}
+.item.req b::after{content:" Pflicht";font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-left:6px;vertical-align:1px}
+.item.bonus b::after{content:" Bonus";font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--good);margin-left:6px;vertical-align:1px}
+.item.auto{cursor:default}
+.verdict{border-radius:14px;padding:18px;border:1px solid var(--line);background:var(--card)}
+.verdict .g{font-family:var(--f-display);font-size:44px;line-height:1}
+.verdict p{margin:8px 0 0}
+.verdict ul{margin:8px 0 0;padding-left:18px;font-size:14px}
+.verdict.aplus{background:var(--good-soft);border-color:var(--good)}.verdict.aplus .g{color:var(--good)}
+.verdict.b{background:var(--warn-soft);border-color:var(--warn)}.verdict.b .g{color:var(--warn)}
+.verdict.no{background:var(--bad-soft);border-color:var(--bad)}.verdict.no .g{color:var(--bad)}
+.verdict.wait{background:var(--accent-soft);border-color:var(--accent)}.verdict.wait .g{color:var(--accent)}
+.res{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
+.res div{background:var(--bg);border-radius:10px;padding:10px 12px}
+.res span{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.res b{font-family:var(--f-mono);font-size:17px;font-variant-numeric:tabular-nums}
+.res .big{grid-column:1/-1}
+.res .big b{font-size:24px}
+.err{color:var(--bad);font-weight:600;font-size:14px;margin:10px 0 0}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}
+.btn.ghost{background:var(--bg);color:var(--fg);border:1px solid var(--line)}
+.foot{color:var(--muted);font-size:13px;margin-top:20px;max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>ES <span>A+</span> Check</h1>
+      <p class="sub">Trend-Rücksetzer mit Fib, LVN, FVG und Bookmap. GEX und Value Area als Filter.</p>
+    </div>
+    <div class="week" aria-live="polite"><small>Trades diese Woche</small><b id="wk">0 / 3</b><button class="mini" type="button" id="wkMinus" aria-label="Einen Trade abziehen">−</button><button class="mini" type="button" id="wkPlus" aria-label="Einen Trade hinzufügen">+</button></div>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <section class="card">
+        <h2><i>1</i>Vor Handelsbeginn (bis 15:30 Uhr)</h2>
+        <div class="row2 segs">
+          <div><label class="f"><span>Richtung</span></label><div class="seg" id="dir"><button type="button" data-v="long" aria-pressed="true">Long</button><button type="button" data-v="short" aria-pressed="false">Short</button></div></div>
+          <div><label class="f"><span>GEX-Regime (SPX)</span></label><div class="seg" id="gex"><button type="button" data-v="neg" aria-pressed="true">Negativ</button><button type="button" data-v="pos" aria-pressed="false">Positiv</button><button type="button" data-v="unk" aria-pressed="false">Unklar</button></div></div>
+        </div>
+        <p class="hint" id="gexHint"></p>
+
+        <label class="item" style="margin-top:6px"><input type="checkbox" id="news"><span><b>Keine großen News im Handelsfenster</b><small>CPI, FOMC, Arbeitsmarktdaten (NFP) oder große Reden. Vor diesen Terminen kein Einstieg.</small></span></label>
+
+        <div style="margin-top:12px"><label class="f"><span>Vortag Value Area (ES, nur reguläre Sitzung)</span></label></div>
+        <div class="row" style="margin-top:6px">
+          <label class="f"><span>VAH</span><input type="number" step="0.25" id="vah" value="7731.50"></label>
+          <label class="f"><span>POC</span><input type="number" step="0.25" id="poc" value="7718.00"></label>
+          <label class="f"><span>VAL</span><input type="number" step="0.25" id="val" value="7703.25"></label>
+        </div>
+
+        <div style="margin-top:14px"><label class="f"><span>SPX → ES umrechnen (Gamma-Strikes)</span></label></div>
+        <div class="row" style="margin-top:6px">
+          <label class="f"><span>ES jetzt</span><input type="number" step="0.25" id="esNow" value="7724.50"></label>
+          <label class="f"><span>SPX jetzt</span><input type="number" step="0.01" id="spxNow" value="7705.36"></label>
+          <label class="f"><span>SPX-Strikes</span><input type="text" id="strikes" value="7650, 7700, 7750" inputmode="decimal"></label>
+        </div>
+        <div class="conv" id="conv"></div>
+      </section>
+
+      <section class="card">
+        <h2><i>2</i>Setup prüfen</h2>
+        <div class="chk" id="chk"></div>
+      </section>
+    </div>
+
+    <aside class="side">
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+
+      <section class="card">
+        <h2><i>3</i>Positionsgröße <span class="tag">Beispielwerte</span></h2>
+        <div class="row2">
+          <label class="f"><span>Konto ($)</span><input type="number" step="100" id="acct" value="50000"></label>
+          <label class="f"><span>Risiko pro Trade (%)</span><input type="number" step="0.1" id="riskPct" value="1"></label>
+        </div>
+        <div style="margin-top:10px"><label class="f"><span>Kontrakt</span></label><div class="seg" id="ctr"><button type="button" data-v="ES" aria-pressed="false">ES · 50 $/Punkt</button><button type="button" data-v="MES" aria-pressed="true">MES · 5 $/Punkt</button></div></div>
+        <div class="row2" style="margin-top:10px">
+          <label class="f"><span>Einstieg</span><input type="number" step="0.25" id="entry" value="7712.25"></label>
+          <label class="f"><span>Stop</span><input type="number" step="0.25" id="stop" value="7706.75"></label>
+          <label class="f"><span>Ziel 1 (z. B. POC)</span><input type="number" step="0.25" id="t1" value="7726.50"></label>
+          <label class="f"><span>Ziel 2 (z. B. Hoch)</span><input type="number" step="0.25" id="t2" value="7738.00"></label>
+        </div>
+        <div class="res" id="res"></div>
+        <p class="err" id="err" hidden></p>
+      </section>
+
+      <div class="actions"><button class="btn" type="button" id="newTrade">Neuer Trade</button><button class="btn ghost" type="button" id="took">Trade genommen (+1)</button></div>
+    </aside>
+  </div>
+
+  <p class="foot">ES-Tick = 0,25 Punkte = 12,50 $ (MES: 1,25 $). Die reguläre US-Sitzung läuft 15:30 bis 22:00 Uhr deutscher Zeit; wenn die Zeitumstellung in den USA und Europa nicht in derselben Woche ist, verschiebt sich das für ein bis zwei Wochen um eine Stunde. GEX-Strikes beziehen sich auf den SPX: Für ES den aktuellen Abstand zwischen ES und SPX dazurechnen, das macht der Umrechner. Die Checkliste ist eine Lernhilfe, keine Anlageberatung.</p>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem('esck.'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('esck.'+k,JSON.stringify(v))}catch(e){}}};
+const n2=v=>v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const usd=v=>v.toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0})+' $';
+
+const S=Object.assign({dir:'long',gex:'neg',ctr:'MES'},store.get('state',{}));
+let checks=store.get('checks',{});
+
+const ITEMS=[
+  {id:'trend',req:1,t:{long:'Trend zeigt nach oben',short:'Trend zeigt nach unten'},h:{long:'Höheres Hoch und höheres Tief, auch auf dem höheren Zeitrahmen.',short:'Tieferes Tief und tieferes Hoch, auch auf dem höheren Zeitrahmen.'}},
+  {id:'impuls',req:1,t:{long:'Starker Impuls nach oben',short:'Starker Impuls nach unten'},h:'Großes Volumen, große Kerzen, das letzte Extrem wurde klar gebrochen.'},
+  {id:'fib',req:1,t:'Preis in der goldenen Zone',h:{long:'Fib vom Low zum neuen Hoch, Rücksetzer bis 0,618 bis 0,65.',short:'Fib vom High zum neuen Tief, Rücksetzer bis 0,618 bis 0,65.'}},
+  {id:'fvg',req:1,t:'Offenes FVG im Impuls, erster Test',h:'Das Fair Value Gap wurde vorher noch nicht gefüllt.'},
+  {id:'lvn',req:1,t:'LVN im Volumenprofil des Impulses',h:'Festes Profil über genau denselben Impuls.'},
+  {id:'overlap',req:1,t:'FVG und LVN überlappen sich',h:'Nur die Schnittmenge ist deine Einstiegszone.'},
+  {id:'trigger',req:1,t:{long:'Bookmap: Absorption, dann dreht das Delta ins Plus',short:'Bookmap: gefangene Käufer, dann dreht das Delta ins Minus'},h:{long:'Verkäufer drücken rein, der Preis fällt nicht weiter, die Mauer hält, dann grüne Punkte.',short:'Käufer drücken rein, der Preis steigt nicht weiter, dann rote Punkte und Abverkauf.'}},
+  {id:'crv',req:1,auto:1,t:'Chance-Risiko mindestens 1:2',h:'Wird automatisch aus dem Rechner übernommen.'},
+  {id:'confl',bonus:1,t:'Zone trifft Value-Area-Kante oder großen Gamma-Strike',h:'VAH, VAL, POC oder ein umgerechneter SPX-Strike liegt in deiner Zone.'}
+];
+const txt=(x)=>typeof x==='string'?x:x[S.dir];
+
+function seg(id,key){
+  const el=$('#'+id);
+  el.onclick=e=>{const b=e.target.closest('button');if(!b)return;S[key]=b.dataset.v;store.set('state',S);paintSeg();renderChecks();update()};
+}
+function paintSeg(){
+  for(const [id,key] of [['dir','dir'],['gex','gex'],['ctr','ctr']])
+    document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S[key]));
+  $('#gexHint').textContent={neg:'Negatives Gamma: Market Maker verstärken Bewegungen. Trends laufen eher weiter, Rücksetzer im Trend sind dein bestes Umfeld.',pos:'Positives Gamma: Market Maker bremsen. Der Markt pendelt eher. A+ nur, wenn deine Zone an einer Value-Area-Kante oder einem großen Strike liegt.',unk:'Unklar oder nicht geprüft: höchstens B-Setup, also kleinere Größe.'}[S.gex];
+}
+function renderChecks(){
+  $('#chk').innerHTML=ITEMS.map(it=>`<label class="item ${it.req?'req':''} ${it.bonus?'bonus':''} ${it.auto?'auto':''}"><input type="checkbox" data-id="${it.id}" ${checks[it.id]?'checked':''} ${it.auto?'disabled':''}><span><b>${txt(it.t)}</b><small>${txt(it.h)}</small></span></label>`).join('');
+}
+$('#chk').addEventListener('change',e=>{const c=e.target.closest('input[data-id]');if(!c)return;checks[c.dataset.id]=c.checked;store.set('checks',checks);update()});
+$('#news').checked=!!store.get('news',false);
+$('#news').onchange=()=>{store.set('news',$('#news').checked);update()};
+
+// SPX -> ES conversion
+function conv(){
+  const es=+$('#esNow').value,spx=+$('#spxNow').value;
+  if(!es||!spx){$('#conv').textContent='ES- und SPX-Kurs eintragen, dann rechne ich die Strikes um.';return []}
+  const basis=es-spx;
+  const strikes=$('#strikes').value.split(/[;,\s]+/).map(x=>parseFloat(x.replace(',','.'))).filter(x=>isFinite(x));
+  const lv=strikes.map(s=>({s,es:Math.round((s+basis)*4)/4}));
+  $('#conv').innerHTML=`Abstand ES zu SPX: <b>${basis>=0?'+':''}${n2(basis)}</b> Punkte`+(lv.length?`<ul>${lv.map(l=>`<li>SPX ${n2(l.s)} → ES ${n2(l.es)}</li>`).join('')}</ul>`:'');
+  return lv.map(l=>l.es);
+}
+
+// Position size
+function calc(){
+  const pv=S.ctr==='ES'?50:5,acct=+$('#acct').value,rp=+$('#riskPct').value,en=+$('#entry').value,st=+$('#stop').value,t1=+$('#t1').value,t2=+$('#t2').value;
+  const long=S.dir==='long',E=$('#err');E.hidden=true;
+  const bad=m=>{E.textContent=m;E.hidden=false;$('#res').innerHTML='';return null};
+  if(!(acct>0&&rp>0&&en&&st))return bad('Konto, Risiko, Einstieg und Stop eintragen.');
+  if(long?st>=en:st<=en)return bad(long?'Bei Long muss der Stop unter dem Einstieg liegen.':'Bei Short muss der Stop über dem Einstieg liegen.');
+  const riskPts=Math.abs(en-st),ticks=Math.round(riskPts*4),perC=riskPts*pv,budget=acct*rp/100,qty=Math.floor(budget/perC);
+  const rr=t=>t?(long?t-en:en-t)/riskPts:null,r1=rr(t1),r2=rr(t2);
+  if((t1&&r1<=0)||(t2&&r2<=0))return bad(long?'Ziele müssen über dem Einstieg liegen.':'Ziele müssen unter dem Einstieg liegen.');
+  $('#res').innerHTML=`<div class="big"><span>Kontrakte ${S.ctr}</span><b>${qty}</b></div>
+   <div><span>Stop</span><b>${ticks} Ticks · ${n2(riskPts)} Pkt</b></div>
+   <div><span>Risiko / Kontrakt</span><b>${n2(perC)} $</b></div>
+   <div><span>Risiko-Budget</span><b>${usd(budget)}</b></div>
+   <div><span>Echtes Risiko</span><b>${usd(qty*perC)}</b></div>
+   <div><span>CRV Ziel 1</span><b>${r1?'1 : '+n2(r1):'–'}</b></div>
+   <div><span>CRV Ziel 2</span><b>${r2?'1 : '+n2(r2):'–'}</b></div>
+   <div><span>Gewinn Ziel 1</span><b>${r1?usd(qty*perC*r1):'–'}</b></div>
+   <div><span>Gewinn Ziel 2</span><b>${r2?usd(qty*perC*r2):'–'}</b></div>`;
+  if(qty<1)return bad(`Stop zu weit für dein Budget: 1 ${S.ctr} riskiert ${usd(perC)}, dein Budget ist ${usd(budget)}.${S.ctr==='ES'?' Nimm MES.':''}`),{rr:Math.max(r1||0,r2||0),zone:[Math.min(en,st),Math.max(en,st)]};
+  return {rr:Math.max(r1||0,r2||0),zone:[Math.min(en,st),Math.max(en,st)]};
+}
+
+function update(){
+  const lv=conv(),c=calc();
+  const crvOk=!!(c&&c.rr>=2);checks.crv=crvOk;const cb=document.querySelector('input[data-id="crv"]');if(cb)cb.checked=crvOk;
+  // auto-hint for confluence
+  let near=[];
+  if(c){const [lo,hi]=c.zone,pad=1.5;
+    [['VAH',+$('#vah').value],['POC',+$('#poc').value],['VAL',+$('#val').value],...lv.map(x=>['Gamma-Strike',x])].forEach(([n,v])=>{if(v&&v>=lo-pad&&v<=hi+pad)near.push(`${n} ${n2(v)}`)})}
+  const req=ITEMS.filter(i=>i.req),miss=req.filter(i=>!checks[i.id]),bonus=!!checks.confl;
+  const news=$('#news').checked,V=$('#verdict');
+  let cls,g,p,list=[];
+  if(!news){cls='no';g='STOP';p='Erst die News-Lage prüfen. Vor großen Terminen ist Orderflow unzuverlässig.'}
+  else if(miss.length===0&&(S.gex==='neg'||(S.gex==='pos'&&bonus))){cls='aplus';g='A+';p='Alles erfüllt. Volle Größe laut Rechner, Stop setzen, bei Ziel 1 Teilgewinn und Stop auf Einstand.'}
+  else if(miss.length===1&&miss[0].id==='trigger'){cls='wait';g='WARTEN';p='Zone passt, aber der Auslöser fehlt noch. Kein Einstieg, bis Bookmap ihn zeigt.'}
+  else if(miss.length===0){cls='b';g='B';p=S.gex==='pos'?'Positives Gamma ohne Zusatz-Bestätigung. Wenn überhaupt, halbe Größe.':'GEX unklar. Wenn überhaupt, halbe Größe.'}
+  else if(miss.length===1&&!['trend','trigger','crv'].includes(miss[0].id)){cls='b';g='B';p='Ein Punkt fehlt. Wenn überhaupt, halbe Größe, besser auslassen.';list=miss.map(i=>txt(i.t))}
+  else{cls='no';g='KEIN TRADE';p='Zu viel fehlt. Das ist kein A+, also warten.';list=miss.map(i=>txt(i.t))}
+  V.className='verdict '+cls;
+  V.innerHTML=`<div class="g">${g}</div><p>${p}</p>${list.length?`<ul>${list.map(x=>`<li>Fehlt: ${x}</li>`).join('')}</ul>`:''}${near.length?`<p style="font-size:14px">In deiner Zone: <b>${near.join(', ')}</b>${bonus?'':' – Bonus abhaken?'}</p>`:''}`;
+}
+
+// weekly counter (ISO week)
+const wkKey=()=>{const d=new Date(),t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return t.getUTCFullYear()+'-'+Math.ceil(((t-y)/864e5+1)/7)};
+let wk=store.get('wk',{});
+const paintWk=()=>{const n=wk[wkKey()]||0;$('#wk').textContent=`${n} / 3`;$('#wk').style.color=n>=3?'var(--bad)':''};
+const addWk=d=>{const k=wkKey();wk[k]=Math.max(0,(wk[k]||0)+d);store.set('wk',wk);paintWk()};
+$('#wkPlus').onclick=()=>addWk(1);$('#wkMinus').onclick=()=>addWk(-1);
+$('#took').onclick=()=>addWk(1);
+$('#newTrade').onclick=()=>{checks={};store.set('checks',checks);renderChecks();update()};
+
+const IDS=['vah','poc','val','esNow','spxNow','strikes','acct','riskPct','entry','stop','t1','t2'];
+const saved=store.get('inputs',{});IDS.forEach(id=>{if(saved[id]!==undefined)$('#'+id).value=saved[id];$('#'+id).addEventListener('input',()=>{saved[id]=$('#'+id).value;store.set('inputs',saved);update()})});
+
+seg('dir','dir');seg('gex','gex');seg('ctr','ctr');
+paintSeg();renderChecks();paintWk();update();
+})();
+</script>
+</body>
+</html>
