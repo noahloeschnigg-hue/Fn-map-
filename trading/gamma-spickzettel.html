@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gamma-Spickzettel ES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Archivo+Black&display=swap">
+<style>
+/* Layout: single reading column; colour key, two drawn setups side by side, don'ts, daily routine, Monday levels */
+:root{
+  --bg:#f4f6fa; --card:#ffffff; --line:#d8dfea; --fg:#141b2d; --muted:#5b6880;
+  --blue:#2f6fd8; --blue-soft:#dce8ff; --red:#d23a4c; --red-soft:#fde0e3; --zero:#1d8a4e; --accent:#2457d6; --good:#127a45; --bad:#c0263a; --price:#141b2d;
+  --f-display:"Archivo Black","Arial Black",sans-serif; --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1422; --card:#151d2f; --line:#27334b; --fg:#e8edf6; --muted:#97a5bd;
+  --blue:#6d9bff; --blue-soft:#1b2c52; --red:#ff6b7d; --red-soft:#3e1a22; --zero:#4fd18b; --accent:#6f9bff; --good:#4fd18b; --bad:#ff6b7d; --price:#e8edf6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1422; --card:#151d2f; --line:#27334b; --fg:#e8edf6; --muted:#97a5bd;
+  --blue:#6d9bff; --blue-soft:#1b2c52; --red:#ff6b7d; --red-soft:#3e1a22; --zero:#4fd18b; --accent:#6f9bff; --good:#4fd18b; --bad:#ff6b7d; --price:#e8edf6; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:16px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:28px 56px;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,5vw,46px);line-height:1;margin:0}
+h2{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+.motto{font-size:clamp(17px,2.2vw,20px);font-weight:600;margin:12px 0 0;max-width:60ch}
+.motto b.b{color:var(--blue)}.motto b.r{color:var(--red)}.motto b.z{color:var(--zero)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.key{border-radius:12px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.key .sw{height:12px;border-radius:4px}
+.key b{font-size:17px}
+.key span{color:var(--muted);font-size:14.5px}
+.key em{font-style:normal;font-weight:700;font-size:14px}
+.k-blue .sw{background:var(--blue)}.k-mag .sw{background:var(--blue);height:12px;box-shadow:0 0 0 3px var(--blue-soft)}
+.k-red .sw{background:var(--red)}.k-edge .sw{background:linear-gradient(90deg,var(--blue) 50%,var(--red) 50%)}
+.k-zero .sw{background:repeating-linear-gradient(90deg,var(--zero) 0 10px,transparent 10px 16px)}
+.ok{color:var(--good)}.no{color:var(--bad)}
+.setups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.setups{grid-template-columns:minmax(0,1fr)}}
+.setup h3{margin:0 0 4px;font-size:20px}
+.setup p{margin:0 0 10px;color:var(--muted);font-size:14.5px}
+svg.dg{width:100%;height:auto;display:block;max-width:100%}
+.dg text{font-family:var(--f-body);font-size:12px;fill:var(--fg)}
+.dg .m{fill:var(--muted)}
+.dg .zb{fill:var(--blue-soft)}.dg .zr{fill:var(--red-soft)}
+.dg .lb{stroke:var(--blue);stroke-width:3}.dg .le{stroke:var(--blue);stroke-width:2;stroke-dasharray:6 5}
+.dg .lr{stroke:var(--red);stroke-width:2.5}.dg .ls{stroke:var(--bad);stroke-width:2;stroke-dasharray:3 4}
+.dg .pp{fill:none;stroke:var(--price);stroke-width:2.5;stroke-linejoin:round}
+.dg .en{fill:var(--accent)}.dg .tg{fill:var(--good)}
+ol.steps{margin:10px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+ol.steps li{padding-left:4px}
+.donts{display:grid;gap:10px}
+.dont{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start}
+.dont i{font-style:normal;width:28px;height:28px;border-radius:8px;background:var(--red-soft);color:var(--bad);display:grid;place-items:center;font-weight:700}
+.dont b{display:block}
+.dont span{color:var(--muted);font-size:14.5px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:460px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:0}
+.foot{color:var(--muted);font-size:13.5px;margin:0}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Gamma-Spickzettel</h1>
+    <p class="motto"><b class="b">Blau</b> bremst und hält fest. <b class="r">Rot</b> beschleunigt. Die <b class="b">Kante</b> dazwischen ist dein Stop. Der längste blaue Balken ist dein Ziel.</p>
+  </header>
+
+  <section class="card">
+    <h2>Was jede Farbe in Gexmetrix macht</h2>
+    <div class="keys">
+      <div class="key k-blue"><div class="sw"></div><b>Blaue Balken</b><span>Bremse. Der Preis wird ruhiger, Rücksetzer werden aufgefangen.</span><em class="ok">Hier darfst du long gehen</em></div>
+      <div class="key k-mag"><div class="sw"></div><b>Längster blauer Balken</b><span>Magnet mit Kleber. Der Preis wird hingezogen und bleibt dort hängen.</span><em class="ok">Dein Ziel, Gewinne nehmen</em></div>
+      <div class="key k-red"><div class="sw"></div><b>Rote Balken</b><span>Gas. Der Preis rauscht durch, nichts hält.</span><em class="no">Hier nicht einsteigen</em></div>
+      <div class="key k-edge"><div class="sw"></div><b>Kante blau / rot</b><span>Die Grenze zwischen Bremse und Gas.</span><em class="ok">Dein Stop kommt auf die andere Seite</em></div>
+      <div class="key k-zero"><div class="sw"></div><b>Grüne gestrichelte Linie</b><span>Zero Gamma. Darüber ist der ganze Markt ruhiger, darunter schneller.</span><em>Nur für die Positionsgröße</em></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Die zwei guten Einstiege</h2>
+    <div class="setups">
+      <div class="card setup">
+        <h3 class="ok">Long: Rücksetzer im Blauen</h3>
+        <p>Der Preis kommt von oben zurück, bleibt aber über der Kante. Bookmap zeigt Absorption. Einstieg, Stop unter der Kante, Ziel am Magneten.</p>
+        <svg class="dg" viewBox="0 0 380 270" role="img" aria-label="Long: Preis fällt vom Magneten in den blauen Bereich, dreht über der Kante nach oben und läuft zurück zum Magneten">
+          <rect class="zb" x="0" y="20" width="380" height="130"/>
+          <rect class="zr" x="0" y="150" width="380" height="110"/>
+          <line class="lb" x1="0" y1="50" x2="380" y2="50"/>
+          <line class="le" x1="0" y1="150" x2="380" y2="150"/>
+          <line class="lr" x1="0" y1="232" x2="380" y2="232"/>
+          <line class="ls" x1="150" y1="168" x2="380" y2="168"/>
+          <polyline class="pp" points="12,60 40,78 58,70 86,100 104,92 130,122 150,116 168,132 186,124 210,104 228,110 256,82 276,88 304,62 330,56 368,50"/>
+          <circle class="en" cx="168" cy="132" r="7"/>
+          <circle class="tg" cx="330" cy="54" r="7"/>
+          <text x="8" y="42">Magnet = Ziel</text>
+          <text x="8" y="143">Kante</text>
+          <text x="8" y="226">größter roter Balken</text>
+          <text x="186" y="163" class="m">Stop unter der Kante</text>
+          <text x="160" y="145" text-anchor="end" style="font-weight:700">Einstieg</text>
+          <text x="300" y="78" style="font-weight:700">Ziel</text>
+          <text x="250" y="140" class="m">blau = Bremse</text>
+          <text x="250" y="200" class="m">rot = Gas</text>
+        </svg>
+      </div>
+      <div class="card setup">
+        <h3 class="no">Short: Kante von unten</h3>
+        <p>Der Preis ist unter die Kante gefallen und läuft von unten zurück. Bookmap zeigt gefangene Käufer. Einstieg, Stop über der Kante, Ziel unten im Roten.</p>
+        <svg class="dg" viewBox="0 0 380 270" role="img" aria-label="Short: Preis fällt unter die Kante, läuft von unten zurück an die Kante und fällt dann schnell zum größten roten Balken">
+          <rect class="zb" x="0" y="20" width="380" height="130"/>
+          <rect class="zr" x="0" y="150" width="380" height="110"/>
+          <line class="lb" x1="0" y1="50" x2="380" y2="50"/>
+          <line class="le" x1="0" y1="150" x2="380" y2="150"/>
+          <line class="lr" x1="0" y1="232" x2="380" y2="232"/>
+          <line class="ls" x1="150" y1="132" x2="380" y2="132"/>
+          <polyline class="pp" points="12,96 34,110 50,104 72,136 90,170 104,192 120,186 140,170 156,160 172,154 186,162 204,180 226,198 248,210 272,222 300,228 336,232 368,236"/>
+          <circle class="en" cx="172" cy="154" r="7"/>
+          <circle class="tg" cx="336" cy="232" r="7"/>
+          <text x="8" y="42">Magnet</text>
+          <text x="8" y="143">Kante</text>
+          <text x="8" y="252">größter roter Balken = Ziel</text>
+          <text x="196" y="126" class="m">Stop über der Kante</text>
+          <text x="160" y="143" text-anchor="end" style="font-weight:700">Einstieg</text>
+          <text x="318" y="214" style="font-weight:700">Ziel</text>
+          <text x="250" y="90" class="m">blau = Bremse</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Das machst du nicht</h2>
+    <div class="donts">
+      <div class="dont"><i>✕</i><div><b>Long knapp unter der Kante</b><span>Darunter ist rot. Hält die Kante nicht, rauscht der Preis durch.</span></div></div>
+      <div class="dont"><i>✕</i><div><b>Neuer Trade direkt am Magneten</b><span>Dort klebt der Preis fest. Kaum Bewegung, schlechtes Chance-Risiko, egal ob long oder short.</span></div></div>
+      <div class="dont"><i>✕</i><div><b>Einstieg mitten im Roten</b><span>Rot ist die Rutschbahn. Da gibt es keinen Halt, an dem du einsteigen könntest.</span></div></div>
+      <div class="dont"><i>✕</i><div><b>Einstieg nur wegen Gamma</b><span>Gamma zeigt dir, wo du hinschauen sollst. Der Einstieg kommt erst mit deinem Setup und Bookmap.</span></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Ablauf jeden Tag vor 15:30 Uhr</h2>
+    <ol class="steps">
+      <li>Gexmetrix öffnen und prüfen, ob bei „Data Timestamp“ <b>das heutige Datum</b> steht.</li>
+      <li>Vier Werte ablesen: <b>längster blauer Balken</b>, <b>Kante blau/rot</b>, <b>längster roter Balken</b>, <b>Zero Gamma</b>.</li>
+      <li>Auf jeden Wert den <b>Abstand ES − SPX</b> addieren (zurzeit +49,5).</li>
+      <li>In NinjaTrader die alten Linien löschen und die neuen einzeichnen.</li>
+      <li>Dein Setup suchen: Fib 0,618–0,65, LVN und FVG überlappen sich.</li>
+      <li>Liegt das Setup <b>im Blauen über der Kante</b> (Long) oder <b>im Roten unter der Kante</b> (Short)? Dann auf Bookmap warten und erst bei Absorption oder gefangenen Käufern einsteigen.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Deine Level für Montag (Stand Freitag, 9.10.)</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Linie</th><th>SPX</th><th>ES (+49,5)</th><th>Bedeutung</th></tr></thead>
+      <tbody>
+        <tr><td><span class="dot" style="background:var(--blue)"></span>Magnet</td><td class="n">7.820</td><td class="n">7.869,50</td><td>Ziel für Longs, dort kein neuer Trade</td></tr>
+        <tr><td><span class="dot" style="background:linear-gradient(90deg,var(--blue) 50%,var(--red) 50%)"></span>Kante blau / rot</td><td class="n">7.800</td><td class="n">7.849,50</td><td>Long darüber, Short darunter, Stop jeweils auf der anderen Seite</td></tr>
+        <tr><td><span class="dot" style="background:var(--red)"></span>Größter roter Balken</td><td class="n">7.750</td><td class="n">7.799,50</td><td>Ziel für Shorts</td></tr>
+        <tr><td><span class="dot" style="background:var(--zero)"></span>Zero Gamma</td><td class="n">7.676,50</td><td class="n">7.726,00</td><td>Darunter wird alles schneller, dann nur MES</td></tr>
+      </tbody>
+    </table></div>
+    <p class="foot" style="margin-top:12px">ES hat am Freitag bei 7.866 geschlossen, also im Blauen kurz unter dem Magneten. Für Montag sind Long-Rücksetzer über 7.849,50 die erste Idee. Ein Short wird erst interessant, wenn ES unter 7.849,50 fällt und von unten zurückkommt. Am Montag vor 15:30 Uhr die Werte neu laden, sie ändern sich täglich.</p>
+  </section>
+
+  <p class="foot">Lernhilfe, keine Anlageberatung. Gamma-Level sind Wahrscheinlichkeiten, keine Garantie.</p>
+</div>
+</body>
+</html>
