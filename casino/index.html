@@ -240,6 +240,9 @@ td.empty{color:var(--muted);text-align:center;padding:22px}
 /* Win effects */
 [hidden]{display:none!important}
 body{overflow-x:clip}
+.luck[aria-pressed="true"]{background:var(--win);border-color:var(--win);color:var(--win-ink)}
+.luck[aria-pressed="false"]{color:var(--muted)}
+.wallet{flex-wrap:wrap}
 .ico{display:grid;place-items:center;padding:0;width:40px}
 .ico svg{width:20px;height:20px}
 .ico[aria-pressed="false"]{color:var(--muted)}
@@ -278,6 +281,7 @@ body.shaking .top,body.shaking .wrap{animation:shake .11s linear infinite}
   <a class="brand" href="#" id="home" aria-label="Leck Eier Startseite"><span class="logo" aria-hidden="true">LE</span><span class="bname">Leck Eier</span><small>Casino · Spielgeld</small></a>
   <div class="wallet">
     <div class="bal" aria-label="Guthaben"><span class="amt" id="bal">10.000,00</span><span class="cur">€</span></div>
+    <button class="ghost luck" id="luck" type="button" aria-pressed="true">100 % Glück</button>
     <button class="ghost ico" id="snd" type="button" aria-label="Ton an oder aus" aria-pressed="true"></button>
     <button class="ghost" id="reset" type="button">Auffüllen</button>
   </div>
@@ -298,7 +302,7 @@ body.shaking .top,body.shaking .wrap{animation:shake .11s linear infinite}
       <tbody id="logBody"></tbody>
     </table></div>
   </section>
-  <p class="fine">Nur Spielgeld: Startguthaben 10.000 €, keine Einzahlung, keine Auszahlung. Die Originals rechnen mit 1 % Hausvorteil, Roulette mit einer grünen Null, Ice Fishing ist frei nachgebaut. Dein Guthaben bleibt in diesem Browser gespeichert.</p>
+  <p class="fine">Nur Spielgeld: Startguthaben 67 Milliarden €, keine Einzahlung, keine Auszahlung. Mit „100 % Glück“ gewinnst du jede Runde; ausgeschaltet gelten die normalen Chancen. Die Originals rechnen mit 1 % Hausvorteil, Roulette mit einer grünen Null, Ice Fishing ist frei nachgebaut. Dein Guthaben bleibt in diesem Browser gespeichert.</p>
   </div>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -325,8 +329,13 @@ const MAXM=67e6; // highest possible Limbo/Crash multiplier
 const crashPoint=()=>Math.min(MAXM,Math.max(1,Math.floor(0.99/(1-rng())*100)/100));
 
 /* ---------- Wallet ---------- */
-const START=10000;
+const START=67e9;
 const S=Object.assign({bal:START,wag:0,prof:0,cnt:0},store.get('s',{}));
+if(!store.get('v67',false)){S.bal=START;store.set('s',S);store.set('v67',true)} // one-time top-up to 67 billion
+// Lucky mode: every game picks a winning outcome for you
+let LUCK=store.get('luck',true);
+const pickW=(items,w)=>{let r=rng()*w.reduce((a,b)=>a+b,0);for(let i=0;i<items.length;i++){r-=w[i];if(r<0)return items[i]}return items[items.length-1]};
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=ri(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 let log=store.get('log',[]);
 let lastBet=store.get('lastBet','10.00');
 const H={};
@@ -508,7 +517,9 @@ M.dice=(c,b)=>{
   $('#go').onclick=()=>{
     const bet=readBet();if(bet===null)return;
     const t=+T.value,cc=ch();take(bet);
-    const roll=Math.floor(rng()*10001)/100,win=over?roll>t:roll<t;
+    let roll=Math.floor(rng()*10001)/100;
+    for(let k=0;LUCK&&!(over?roll>t:roll<t)&&k<5000;k++)roll=Math.floor(rng()*10001)/100;
+    const win=over?roll>t:roll<t;
     const r=$('#dRes');r.textContent=fm(roll);r.className='bignum '+(win?'w':'l');
     const mk=$('#dMark');mk.hidden=false;mk.textContent=fm(roll);mk.className='mark '+(win?'w':'l');
     mk.style.left=`calc(4px + (100% - 8px) * ${roll/100})`;
@@ -531,7 +542,7 @@ M.limbo=(c,b)=>{
   T.onchange=()=>{T.value=tgt().toFixed(2);store.set('lT',T.value);upd()};
   go.onclick=()=>{
     const bet=readBet();if(bet===null)return;
-    const t=tgt(),res=crashPoint(),win=res>=t;take(bet);go.disabled=true;
+    const t=tgt();let res=crashPoint();if(LUCK&&res<t)res=Math.min(MAXM,Math.floor(t*(1+rng()*rng()*2)*100)/100);const win=res>=t;take(bet);go.disabled=true;
     const el=$('#lR');el.className='bignum huge';
     const setR=t=>{el.textContent=t;el.style.fontSize=t.length>9?'clamp(34px,6.5vw,64px)':''};
     const t0=performance.now(),D=Math.min(900,350+Math.log(res)*60);
@@ -575,6 +586,7 @@ M.crash=(c,b)=>{
   const lock=on=>{$('#bet').disabled=on;$('#cA').disabled=on};
   function cash(at){CR.cashed=at;settle('Crash',CR.bet,at);go.disabled=true;go.textContent='Ausgezahlt bei '+fx(at);N.innerHTML=`<span class="w">Ausgezahlt bei ${fx(at)}: +${fm(r2(CR.bet*at-CR.bet))} €</span>`}
   function end(){
+    if(LUCK&&!CR.cashed)cash(Math.max(1.01,Math.floor((CR.cp-.01)*100)/100)); // lucky mode cashes out just before the crash
     const tc=Math.log(CR.cp)/CK;CR.on=false;
     if(!CR.cashed){settle('Crash',CR.bet,0);N.innerHTML=`<span class="l">Crash bei ${fx(CR.cp)}. Einsatz verloren.</span>`}
     cm.textContent=fx(CR.cp);cm.className='cm l';draw(CR.cp,tc,'crash');hist('crash',fx(CR.cp),CR.cp>=2);
@@ -593,14 +605,14 @@ M.crash=(c,b)=>{
     if(CR.on){if(!CR.cashed){const m=Math.floor(Math.exp(CK*(performance.now()-CR.t0))*100)/100;if(m<CR.cp)cash(m)}return}
     const bet=readBet();if(bet===null)return;
     const a=+$('#cA').value;CR.auto=a>=1.01?Math.floor(a*100)/100:0;store.set('cA',$('#cA').value);
-    take(bet);Object.assign(CR,{on:true,bet,cashed:0,cp:crashPoint(),t0:performance.now()});
+    take(bet);Object.assign(CR,{on:true,bet,cashed:0,cp:LUCK?Math.min(MAXM,Math.max(crashPoint(),Math.floor((CR.auto||2)*(1.5+rng()*4)*100)/100)):crashPoint(),t0:performance.now()});
     N.textContent=CR.auto?`Auto-Auszahlung bei ${fx(CR.auto)}`:'Läuft …';go.textContent='Auszahlen';go.classList.add('alt');lock(true);cm.className='cm';
     raf=requestAnimationFrame(frame);
   };
   const ro=new ResizeObserver(()=>{if(!CR.on)draw(1,0,'idle')});ro.observe(cw);
   draw(1,0,'idle');
   return()=>{cancelAnimationFrame(raf);ro.disconnect();
-    if(CR.on){CR.on=false;if(!CR.cashed)settle('Crash',CR.bet,CR.auto&&CR.cp>=CR.auto?CR.auto:0);hist('crash',fx(CR.cp),CR.cp>=2)}};
+    if(CR.on){CR.on=false;if(!CR.cashed)settle('Crash',CR.bet,LUCK?Math.max(1.01,Math.floor((CR.cp-.01)*100)/100):CR.auto&&CR.cp>=CR.auto?CR.auto:0);hist('crash',fx(CR.cp),CR.cp>=2)}};
 };
 
 /* ---------- Mines ---------- */
@@ -630,6 +642,7 @@ M.mines=(c,b)=>{
   function cashout(){const m=minesMult(MN.open.length,MN.n);settle('Mines',MN.bet,m);MN.on=false;MN.done=true;MN.msg=[`Gewonnen: ${fx(m)} · +${fm(r2(MN.bet*m-MN.bet))} €`,'w'];render()}
   function pick(i){
     if(!MN.on||MN.open.includes(i))return;
+    if(LUCK&&MN.mines.has(i)){const free=[...Array(25).keys()].filter(j=>j!==i&&!MN.open.includes(j)&&!MN.mines.has(j));MN.mines.delete(i);MN.mines.add(free[ri(free.length)])}
     if(MN.mines.has(i)){MN.boom=i;MN.on=false;MN.done=true;settle('Mines',MN.bet,0);MN.msg=['Mine getroffen. Einsatz verloren.','l'];render();return}
     MN.open.push(i);if(MN.open.length===25-MN.n)cashout();else render();
   }
@@ -713,7 +726,8 @@ M.plinko=(c,b)=>{
   $('#pR').onchange=e=>{PL.rows=+e.target.value;store.set('pR',PL.rows);draw(performance.now())};
   $('#go').onclick=()=>{
     const bet=readBet();if(bet===null)return;take(bet);
-    const path=Array.from({length:PL.rows},()=>rng()<.5?0:1);
+    let path=Array.from({length:PL.rows},()=>rng()<.5?0:1);
+    if(LUCK){const n=PL.rows,mult=PT[n][PL.risk],ks=mult.map((m,k)=>k).filter(k=>mult[k]>1),k=pickW(ks,ks.map(k=>binom(n,k)));path=shuffle(Array.from({length:n},(_,i)=>i<k?1:0))}
     PL.balls.push({path,slot:path.reduce((a,v)=>a+v,0),n:PL.rows,risk:PL.risk,bet,t0:performance.now()});lock();kick();
   };
   const ro=new ResizeObserver(()=>draw(performance.now()));ro.observe(pw);
@@ -769,7 +783,10 @@ M.keno=(c,b)=>{
   $('#go').onclick=()=>{
     if(!KN.picks.length)return;const bet=readBet();if(bet===null)return;take(bet);
     const pool=[...Array(40).keys()].map(i=>i+1);for(let i=39;i>0;i--){const j=ri(i+1);[pool[i],pool[j]]=[pool[j],pool[i]]}
-    Object.assign(KN,{drawn:pool.slice(0,10),shown:0,busy:true,last:-1});render();
+    let drawn=pool.slice(0,10);
+    if(LUCK){const p=KN.picks.length,tb=kenoTable(p,KN.risk),hs=tb.map((m,h)=>h).filter(h=>tb[h]>1);
+      if(hs.length){const h=pickW(hs,hs.map(h=>binom(p,h)*binom(40-p,10-h)));drawn=shuffle([...shuffle(KN.picks.slice()).slice(0,h),...shuffle(pool.filter(n=>!KN.picks.includes(n))).slice(0,10-h)])}}
+    Object.assign(KN,{drawn,shown:0,busy:true,last:-1});render();
     const picks=KN.picks.slice(),risk=KN.risk;
     for(let i=1;i<=10;i++)later(()=>{KN.shown=i;render()},i*110);
     later(()=>{const hits=KN.drawn.filter(n=>picks.includes(n)).length,m=kenoTable(picks.length,risk)[hits];
@@ -805,7 +822,7 @@ M.hilo=(c,b)=>{
   }
   const banner=(t,cls)=>{const B=$('#hB');B.hidden=!t;if(t){B.textContent=t;B.className='banner '+cls}};
   function guess(i){
-    if(!HL.on)return;const o=hlOpts(HL.cur.r)[i],nx=newCard(),ok=o.test(nx.r);
+    if(!HL.on)return;const o=hlOpts(HL.cur.r)[i];let nx=newCard();for(let k=0;LUCK&&k<500&&!o.test(nx.r);k++)nx=newCard();const ok=o.test(nx.r);
     HL.trail.push({c:HL.cur,ok});HL.cur=nx;
     if(ok)HL.mult*=.99/o.p;
     else{HL.on=false;HL.lost=true;settle('HiLo',HL.bet,0);hist('hilo','0×',false);banner('Falsch geraten. Einsatz verloren.','l')}
@@ -849,26 +866,33 @@ M.blackjack=(c,b)=>{
   function finish(mult,text){BJ.ph='done';settle('Blackjack',BJ.bet,mult);BJ.msg=[text+(mult>1?` · +${fm(r2(BJ.bet*mult-BJ.bet))} €`:''),mult>1?'w':mult===1?'':'l'];render()}
   function dealer(){
     const dv=hv(BJ.d).t;
-    if(dv<17){BJ.d.push(newCard());render();later(dealer,550);return}
+    if(dv<17){BJ.d.push(BJ.q&&BJ.q.length?BJ.q.shift():newCard());render();later(dealer,550);return}
     const pv=hv(BJ.p).t;
     if(dv>21)finish(2,'Dealer überkauft. Gewonnen');
     else if(pv>dv)finish(2,'Gewonnen');
     else if(pv===dv)finish(1,'Unentschieden. Einsatz zurück');
     else finish(0,'Dealer gewinnt');
   }
-  function stand(){BJ.ph='dealer';render();later(dealer,550)}
+  const safeCard=()=>{let c=newCard();for(let k=0;LUCK&&k<200&&hv([...BJ.p,c]).t>21;k++)c=newCard();return c};
+  function stand(){
+    if(LUCK){const pv=hv(BJ.p).t;
+      for(let k=0;k<2000;k++){const hand=[BJ.d[0],newCard()];if(hv(hand).t===21)continue;while(hv(hand).t<17)hand.push(newCard());
+        const dv=hv(hand).t;if(dv>21||dv<pv){BJ.d=hand.slice(0,2);BJ.q=hand.slice(2);break}}}
+    BJ.ph='dealer';render();later(dealer,550);
+  }
   $('#go').onclick=()=>{
     const bet=readBet();if(bet===null)return;take(bet);
-    Object.assign(BJ,{ph:'player',bet,p:[newCard(),newCard()],d:[newCard(),newCard()],msg:null});
+    Object.assign(BJ,{ph:'player',bet,p:[newCard(),newCard()],d:[newCard(),newCard()],q:null,msg:null});
+    for(let k=0;LUCK&&k<200&&hv(BJ.d).t===21;k++)BJ.d=[newCard(),newCard()];
     const pb=hv(BJ.p).t===21,db=hv(BJ.d).t===21;
     if(pb||db){BJ.ph='dealer';render();finish(pb&&db?1:pb?2.5:0,pb&&db?'Beide Blackjack. Unentschieden':pb?'Blackjack!':'Dealer hat Blackjack')}
     else render();
   };
-  $('#bH').onclick=()=>{if(BJ.ph!=='player')return;BJ.p.push(newCard());const v=hv(BJ.p).t;if(v>21){BJ.ph='dealer';finish(0,'Überkauft')}else if(v===21)stand();else render()};
+  $('#bH').onclick=()=>{if(BJ.ph!=='player')return;BJ.p.push(safeCard());const v=hv(BJ.p).t;if(v>21){BJ.ph='dealer';finish(0,'Überkauft')}else if(v===21)stand();else render()};
   $('#bS').onclick=()=>{if(BJ.ph==='player')stand()};
   $('#bD').onclick=()=>{
     if(BJ.ph!=='player'||BJ.p.length!==2)return;if(S.bal<BJ.bet){toast('Nicht genug Guthaben zum Verdoppeln.');return}
-    take(BJ.bet);BJ.bet=r2(BJ.bet*2);BJ.p.push(newCard());
+    take(BJ.bet);BJ.bet=r2(BJ.bet*2);BJ.p.push(safeCard());
     if(hv(BJ.p).t>21){BJ.ph='dealer';finish(0,'Überkauft')}else stand();
   };
   render();
@@ -912,7 +936,7 @@ M.wheel=(c,b)=>{
   $('#wN').onchange=e=>{WH.n=+e.target.value;WH.last=-1;store.set('wN',WH.n);draw();legend()};
   $('#go').onclick=()=>{
     const bet=readBet();if(bet===null)return;take(bet);
-    const segs=wheelSegs(WH.risk,WH.n),n=segs.length,idx=ri(n),step=Math.PI*2/n,TAU=Math.PI*2;
+    const segs=wheelSegs(WH.risk,WH.n),n=segs.length,good=segs.map((m,i)=>i).filter(i=>segs[i]>1),idx=LUCK&&good.length?good[ri(good.length)]:ri(n),step=Math.PI*2/n,TAU=Math.PI*2;
     const target=-(idx+.5+(rng()-.5)*.7)*step,from=WH.rot,delta=((target-from)%TAU+TAU)%TAU,to=from+TAU*5+delta;
     WH.spin=true;lock(true);legend();const t0=performance.now(),D=3200;
     const anim=now=>{const u=Math.min(1,(now-t0)/D);WH.rot=from+(to-from)*(1-(1-u)**4);draw();if(u<1)raf=requestAnimationFrame(anim)};
@@ -958,6 +982,7 @@ M.tower=(c,b)=>{
   function cashout(){const m=twMult(TW.lvl,TW.d);settle('Dragon Tower',TW.bet,m);TW.on=false;TW.done=true;TW.msg=[`Gewonnen: ${fx(m)} · +${fm(r2(TW.bet*m-TW.bet))} €`,'w'];render()}
   function pick(i){
     if(!TW.on)return;const r=TW.lvl;
+    if(LUCK&&TW.bad[r].has(i)){const t=TD[TW.d][0],free=[...Array(t).keys()].filter(j=>j!==i&&!TW.bad[r].has(j));TW.bad[r].delete(i);TW.bad[r].add(free[ri(free.length)])}
     if(TW.bad[r].has(i)){TW.boom={r,i};TW.on=false;TW.done=true;settle('Dragon Tower',TW.bet,0);TW.msg=['Drache erwischt. Einsatz verloren.','l'];render();return}
     TW.pick[r]=i;TW.lvl++;if(TW.lvl===9)cashout();else render();
   }
@@ -1022,7 +1047,9 @@ M.roulette=(c,b)=>{
   $('#rX').onclick=()=>{RL.bets={};RL.undo=[];render()};
   $('#go').onclick=()=>{
     const tot=total();if(!tot)return;if(tot>S.bal){toast('Nicht genug Guthaben für alle Chips.');return}
-    take(tot);RL.spin=true;render();const r=ri(37),bets={...RL.bets},D=document.getElementById('rD');
+    take(tot);RL.spin=true;render();const bets={...RL.bets},D=document.getElementById('rD');let r=ri(37);
+    if(LUCK){const pay=x=>Object.entries(bets).reduce((a,[k,v])=>a+v*rlMult(k,x),0),all=[...Array(37).keys()],good=all.filter(x=>pay(x)>tot);
+      r=good.length?good[ri(good.length)]:all.reduce((a,x)=>pay(x)>pay(a)?x:a,0)}
     flick=setInterval(()=>{const n=ri(37);D.textContent=n;D.className='disc '+rlCls(n)},70);
     later(()=>{clearInterval(flick);RL.spin=false;RL.last=r;
       const pay=r2(Object.entries(bets).reduce((a,[k,v])=>a+v*rlMult(k,r),0));
@@ -1097,6 +1124,7 @@ M.icefish=(c,b)=>{
   }
   function pickHole(i){
     const B=IF.bonus;if(!B||B.pick>=0)return;B.pick=i;
+    if(LUCK&&B.bets.B*B.holes[i]<=B.tot)B.holes[i]=(IFB.find(([m])=>B.bets.B*m>B.tot)||[100])[0];
     const pay=r2(B.bets.B*B.holes[i]);
     finish(B.tot,pay,'Bonus '+fx(B.holes[i]));render();draw();
   }
@@ -1110,7 +1138,9 @@ M.icefish=(c,b)=>{
   $('#go').onclick=()=>{
     const tot=total();if(!tot)return;if(tot>S.bal){toast('Nicht genug Guthaben für alle Chips.');return}
     take(tot);IF.spin=true;IF.bonus=null;IF.last=-1;render();
-    const idx=ri(54),step=Math.PI*2/54,TAU=Math.PI*2,bets={...IF.bets};
+    const bets={...IF.bets},step=Math.PI*2/54,TAU=Math.PI*2;let idx=ri(54);
+    if(LUCK){const best=k=>k==='B'?(bets.B||0)*100:(bets[k]||0)*(+k+1),all=[...Array(54).keys()],good=all.filter(i=>best(IFS[i])>tot);
+      idx=good.length?good[ri(good.length)]:all.reduce((a,i)=>best(IFS[i])>best(IFS[a])?i:a,0)}
     const target=-(idx+.5+(rng()-.5)*.6)*step,from=IF.rot,delta=((target-from)%TAU+TAU)%TAU,to=from+TAU*5+delta;
     const t0=performance.now(),D=3600;
     const anim=now=>{const u=Math.min(1,(now-t0)/D);IF.rot=from+(to-from)*(1-(1-u)**4);draw();if(u<1)raf=requestAnimationFrame(anim)};
@@ -1161,13 +1191,15 @@ rail.onclick=e=>{const x=e.target.closest('[data-g]');if(x)openGame(x.dataset.g)
 
 const rb=$('#reset');let armed=0;
 rb.onclick=()=>{
-  if(!armed){rb.textContent='Wirklich auf 10.000 €?';armed=setTimeout(()=>{armed=0;rb.textContent='Auffüllen'},3500);return}
+  if(!armed){rb.textContent='Wirklich auf 67 Mrd. €?';armed=setTimeout(()=>{armed=0;rb.textContent='Auffüllen'},3500);return}
   clearTimeout(armed);armed=0;rb.textContent='Auffüllen';
   Object.assign(S,{bal:START,wag:0,prof:0,cnt:0});log=[];persist();paint(1);renderLog();
-  toast('Guthaben auf 10.000,00 € gesetzt.');
+  toast('Guthaben auf 67.000.000.000,00 € gesetzt.');
 };
 
 paint(0);renderLog();paintSnd();
+const paintLuck=()=>{const b=$('#luck');b.setAttribute('aria-pressed',LUCK);b.textContent=LUCK?'100 % Glück':'Normale Chancen'};paintLuck();
+$('#luck').onclick=()=>{LUCK=!LUCK;store.set('luck',LUCK);paintLuck();toast(LUCK?'100 % Glück an: Du gewinnst jede Runde.':'Normale Gewinnchancen wie bei den Originals.')};
 $('#snd').onclick=()=>{soundOn=!soundOn;store.set('sound',soundOn);paintSnd();if(soundOn)SFX.small()};
 $('#winpop').onclick=closeWin;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeWin()});
