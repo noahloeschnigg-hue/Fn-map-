@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spielgeld Casino</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: sticky wallet bar, scrolling game rail, two-pane table (bet controls | game board), bet log below */
+:root{
+  --bg:#0d1720; --deep:#09121a; --panel:#13212e; --raise:#1b2d3d; --line:#274055;
+  --fg:#e7eef4; --muted:#87a1b6;
+  --accent:#f0b545; --accent-ink:#1f1503;
+  --win:#33d17a; --win-ink:#04190c; --lose:#ff4d63; --lose-ink:#2a0007;
+  --f-display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --f-body:"Barlow","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.45}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.01em;white-space:nowrap}
+.brand b{color:var(--accent)}
+.brand small{font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:8px}
+.wallet{display:flex;align-items:stretch;gap:8px}
+.bal{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--deep)}
+.bal .amt{font-family:var(--f-mono);font-weight:700;font-variant-numeric:tabular-nums;padding:8px 12px;min-width:12ch;text-align:right}
+.bal .cur{background:var(--accent);color:var(--accent-ink);font-family:var(--f-display);font-weight:700;padding:8px 11px}
+.amt.up{animation:up .7s ease-out}.amt.down{animation:down .5s ease-out}
+@keyframes up{from{color:var(--win)}}@keyframes down{from{color:var(--lose)}}
+.ghost{background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-weight:600}
+.ghost:hover:not(:disabled){background:var(--line)}
+.ghost:disabled{opacity:.45}
+
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
+.rail{display:flex;gap:6px;overflow-x:auto;padding-block:14px;scrollbar-width:thin}
+.rail button{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-family:var(--f-display);font-weight:600;font-size:14px;letter-spacing:.02em}
+.rail button:hover{border-color:var(--muted)}
+.rail button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+.stage{display:grid;grid-template-columns:300px minmax(0,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.ctrl{padding:16px;display:flex;flex-direction:column;gap:14px;border-right:1px solid var(--line);min-width:0}
+.board{background:var(--deep);padding:20px;min-height:470px;display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:760px){
+  .stage{grid-template-columns:minmax(0,1fr)}
+  .ctrl{border-right:0;border-top:1px solid var(--line);order:2}
+  .board{min-height:0;padding:14px}
+  .bal .amt{min-width:0}
+}
+
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fld>span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+input,select{font:inherit;font-family:var(--f-mono);font-size:14px;background:var(--deep);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%;min-width:0}
+input:disabled,select:disabled{opacity:.6}
+.betrow{display:flex;gap:4px}
+.betrow input{flex:1}
+.mini{background:var(--raise);border:1px solid var(--line);border-radius:6px;padding:0 10px;font-family:var(--f-mono);font-size:13px;font-weight:700}
+.mini:hover{background:var(--line)}
+.out{font-family:var(--f-mono);font-size:14px;background:var(--deep);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.out{text-align:left}
+button.out:hover{border-color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.play{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:14px;font-family:var(--f-display);font-weight:700;font-size:16px;letter-spacing:.02em;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.play:hover:not(:disabled){filter:brightness(1.08)}
+.play:disabled{opacity:.5}
+.play.alt{background:var(--win);color:var(--win-ink)}
+.note{margin:0;color:var(--muted);font-size:13.5px;min-height:1.4em}
+.sub{margin:0;color:var(--muted);text-align:center}
+
+.pills{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;min-height:26px}
+.pill{font-family:var(--f-mono);font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:var(--raise);color:var(--muted)}
+.pill.w{background:var(--win);color:var(--win-ink)}
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.bignum{font-family:var(--f-display);font-weight:700;font-size:clamp(46px,9vw,84px);line-height:1;text-align:center;font-variant-numeric:tabular-nums}
+.bignum.huge{font-size:clamp(56px,13vw,120px)}
+.w{color:var(--win)}.l{color:var(--lose)}
+.banner{margin:0;padding:10px 14px;border-radius:8px;text-align:center;font-family:var(--f-display);font-weight:700;font-size:17px;background:var(--raise)}
+.banner.w{background:var(--win);color:var(--win-ink)}
+.banner.l{background:var(--lose);color:#fff}
+
+/* Dice */
+.sl{position:relative;padding:46px 4px 4px}
+.mark{position:absolute;top:0;transform:translateX(-50%);font-family:var(--f-mono);font-weight:700;font-size:14px;padding:5px 9px;border-radius:6px;transition:left .3s ease-out}
+.mark.w{background:var(--win);color:var(--win-ink)}.mark.l{background:var(--lose);color:#fff}
+input[type=range]{-webkit-appearance:none;appearance:none;height:12px;border-radius:6px;padding:0;border:0;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:7px;background:var(--fg);border:4px solid var(--accent);cursor:grab}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:7px;background:var(--fg);border:4px solid var(--accent);cursor:grab}
+.scale{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:8px}
+
+/* Crash */
+.cw{position:relative;flex:1;min-height:320px;border-radius:10px;overflow:hidden;background:var(--panel)}
+.cw canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cm{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:clamp(42px,9vw,76px);pointer-events:none;font-variant-numeric:tabular-nums}
+
+/* Mines, Tower */
+.mgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:100%;max-width:470px;margin:auto}
+.tile{aspect-ratio:1;max-width:100%;border:0;border-radius:9px;background:var(--raise);box-shadow:inset 0 -5px 0 rgba(0,0,0,.28);display:grid;place-items:center;transition:transform .12s,background .15s;padding:0}
+.tile:hover:not(:disabled){background:var(--line);transform:translateY(-2px)}
+.tile:disabled{cursor:default}
+.tile.open{background:var(--panel);box-shadow:none;animation:pop .25s ease-out}
+.tile.fade{opacity:.4;animation:none}
+.tile.boom{background:var(--lose-ink);opacity:1}
+.tile svg{width:58%;height:58%}
+@keyframes pop{from{transform:scale(.85)}}
+.tower{display:flex;flex-direction:column;gap:6px;width:100%;max-width:480px;margin:auto}
+.trow{display:grid;gap:6px;padding:4px;border-radius:9px}
+.trow.act{background:var(--raise)}
+.trow .tile{aspect-ratio:auto;height:44px;font-family:var(--f-mono);font-size:12.5px;font-weight:700;color:var(--muted)}
+.trow.act .tile{color:var(--fg);background:var(--line)}
+.trow.act .tile:hover:not(:disabled){background:var(--accent);color:var(--accent-ink)}
+.trow .tile svg{width:28px;height:28px}
+
+/* Plinko */
+.pw{width:100%;margin:auto 0}
+.pw canvas{display:block;width:100%}
+
+/* Keno */
+.kgrid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;width:100%;max-width:640px;margin:0 auto}
+.kt{aspect-ratio:1;max-width:100%;border:0;border-radius:8px;background:var(--raise);box-shadow:inset 0 -4px 0 rgba(0,0,0,.28);font-family:var(--f-mono);font-weight:700;font-size:clamp(12px,2.4vw,17px);padding:0}
+.kt:hover:not(:disabled){background:var(--line)}
+.kt.pk{background:var(--accent);color:var(--accent-ink)}
+.kt.dr{background:var(--panel);color:var(--lose);box-shadow:inset 0 0 0 2px var(--lose)}
+.kt.hit{background:var(--win);color:var(--win-ink);box-shadow:inset 0 0 0 3px #b8ffd6;animation:pop .25s ease-out}
+.kpay{display:flex;gap:4px;overflow-x:auto;width:100%;max-width:640px;margin:0 auto;padding-bottom:4px}
+.kc{flex:1 0 54px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 4px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.kc b{font-family:var(--f-mono);font-size:12.5px}
+.kc span{font-size:11px;color:var(--muted)}
+.kc.on{background:var(--win);border-color:var(--win);color:var(--win-ink)}
+.kc.on span{color:var(--win-ink)}
+
+/* Cards */
+.card{width:96px;aspect-ratio:5/7;border-radius:10px;background:#f4f7fa;color:#15212c;display:flex;flex-direction:column;justify-content:space-between;padding:8px 9px;font-family:var(--f-display);font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.4);flex:0 0 auto;animation:deal .25s ease-out}
+.card.red{color:#d42a40}
+.card .r{font-size:30px;line-height:1}
+.card .s{font-size:32px;line-height:1;align-self:flex-end}
+.card.back{background:repeating-linear-gradient(45deg,var(--accent) 0 7px,#c7901f 7px 14px);border:4px solid #f4f7fa}
+.card.big{width:132px;padding:10px 12px}.card.big .r{font-size:42px}.card.big .s{font-size:46px}
+.card.sm{width:46px;padding:4px 5px;border-radius:6px;box-shadow:none;animation:none}.card.sm .r,.card.sm .s{font-size:15px}
+.card.bad{box-shadow:0 0 0 4px var(--lose)}.card.ok{box-shadow:0 0 0 3px var(--win)}.card.skip{opacity:.55}
+@keyframes deal{from{transform:translateY(-14px);opacity:0}}
+.trail{display:flex;gap:6px;overflow-x:auto;min-height:72px;padding:4px}
+.hand{display:flex;justify-content:center;padding-inline:20px}
+.hand .card+.card{margin-left:-46px}
+.seat{display:flex;flex-direction:column;align-items:center;gap:10px}
+.tot{font-family:var(--f-mono);font-weight:700;background:var(--raise);border-radius:999px;padding:3px 12px;font-size:14px}
+.seat-label{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+.felt{flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:20px;align-items:center}
+.hl-odds{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;color:var(--muted);font-size:13.5px}
+
+/* Wheel */
+.ww{position:relative;width:min(100%,420px);margin:0 auto}
+.ww canvas{display:block;width:100%;height:auto;aspect-ratio:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.lg{display:flex;gap:7px;align-items:center;padding:6px 10px;background:var(--panel);border:1px solid var(--line);border-radius:6px;font-family:var(--f-mono);font-size:12.5px}
+.lg i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.lg em{font-style:normal;color:var(--muted)}
+.lg.on{border-color:var(--fg)}
+
+/* Roulette */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chipbtn{width:44px;height:44px;border-radius:50%;border:3px dashed rgba(255,255,255,.55);font-family:var(--f-mono);font-weight:700;font-size:12px;color:#fff;padding:0}
+.chipbtn[aria-pressed="true"]{outline:3px solid var(--fg);outline-offset:2px}
+.rtop{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.disc{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:34px;color:#fff;background:var(--raise);border:4px solid var(--line);flex:0 0 auto}
+.disc.red{background:#c42539}.disc.blk{background:#1d2a36}.disc.z{background:#17844d}
+.tscroll{overflow-x:auto;padding-bottom:6px;margin:auto 0}
+.rt{display:grid;grid-template-columns:46px repeat(12,minmax(36px,1fr)) 46px;grid-template-rows:repeat(3,44px) 40px 40px;gap:3px;min-width:560px}
+.rc{position:relative;border:0;border-radius:5px;color:#fff;font-family:var(--f-mono);font-weight:700;font-size:14px;padding:0}
+.rc:hover:not(:disabled){filter:brightness(1.25)}
+.rc.red{background:#c42539}.rc.blk{background:#1d2a36}.rc.z{background:#17844d}.rc.o{background:var(--raise);font-family:var(--f-body);font-size:13px}
+.rc.hitc{box-shadow:inset 0 0 0 3px var(--accent)}
+.rc .chip{position:absolute;top:-6px;right:-4px;z-index:1;font-size:10.5px;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 5px;border:2px solid var(--deep)}
+.sw{display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:middle}
+
+/* Log */
+.logbox{margin-top:22px}
+.loghead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.loghead h2{font-family:var(--f-display);font-size:19px;margin:0}
+.stats{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:13.5px}
+.stats b{color:var(--fg);font-family:var(--f-mono);font-weight:500}
+.pos{color:var(--win)!important}.neg{color:var(--lose)!important}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{width:100%;border-collapse:collapse;min-width:420px}
+th,td{padding:9px 14px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;white-space:nowrap;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td.empty{color:var(--muted);text-align:center;padding:22px}
+.fine{color:var(--muted);font-size:13px;margin-top:16px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="top-in">
+  <div class="brand">Spielgeld<b>.</b>Casino<small>Originals</small></div>
+  <div class="wallet">
+    <div class="bal" aria-label="Guthaben"><span class="amt" id="bal">10.000,00</span><span class="cur">€</span></div>
+    <button class="ghost" id="reset" type="button">Auffüllen</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+  <nav class="rail" id="rail" aria-label="Spiele"></nav>
+  <section class="stage">
+    <div class="ctrl" id="ctrl"></div>
+    <div class="board" id="board"></div>
+  </section>
+  <section class="logbox">
+    <div class="loghead"><h2>Meine Wetten</h2><div class="stats" id="stats"></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>Spiel</th><th class="num">Einsatz</th><th class="num">Multiplikator</th><th class="num">Ergebnis</th></tr></thead>
+      <tbody id="logBody"></tbody>
+    </table></div>
+  </section>
+  <p class="fine">Nur Spielgeld: Startguthaben 10.000 €, keine Einzahlung, keine Auszahlung. Die Spiele rechnen mit 1 % Hausvorteil wie die Originals, Roulette mit einer grünen Null. Dein Guthaben bleibt in diesem Browser gespeichert.</p>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(()=>{
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const rng=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
+const ri=n=>Math.floor(rng()*n);
+const r2=v=>Math.round(v*100)/100;
+const fm=v=>v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fx=m=>fm(m)+'×';
+const V=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const store={
+  get(k,d){try{const v=localStorage.getItem('sgc.'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('sgc.'+k,JSON.stringify(v))}catch(e){}}
+};
+// Same crash/limbo distribution as the originals: P(result >= x) = 0.99 / x
+const crashPoint=()=>Math.min(1e6,Math.max(1,Math.floor(0.99/(1-rng())*100)/100));
+
+/* ---------- Wallet ---------- */
+const START=10000;
+const S=Object.assign({bal:START,wag:0,prof:0,cnt:0},store.get('s',{}));
+let log=store.get('log',[]);
+let lastBet=store.get('lastBet','10.00');
+const H={};
+
+function persist(){store.set('s',S);store.set('log',log);store.set('lastBet',lastBet)}
+function paint(dir){
+  const el=$('#bal');el.textContent=fm(S.bal);
+  if(dir){el.classList.remove('up','down');void el.offsetWidth;el.classList.add(dir>0?'up':'down')}
+  $('#stats').innerHTML=`<span>Wetten <b>${S.cnt.toLocaleString('de-DE')}</b></span><span>Umsatz <b>${fm(S.wag)} €</b></span><span>Gewinn <b class="${S.prof>=0?'pos':'neg'}">${S.prof>0?'+':''}${fm(S.prof)} €</b></span>`;
+}
+function renderLog(){
+  const tb=$('#logBody');
+  if(!log.length){tb.innerHTML='<tr><td colspan="4" class="empty">Noch keine Wetten. Wähl oben ein Spiel und leg los.</td></tr>';return}
+  tb.innerHTML=log.slice(0,25).map(x=>{const net=r2(x.p-x.b);
+    return `<tr><td>${x.g}</td><td class="num">${fm(x.b)} €</td><td class="num">${fx(x.m)}</td><td class="num ${net>0?'pos':net<0?'neg':''}">${net>0?'+':''}${fm(net)} €</td></tr>`}).join('');
+}
+let tt;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2600)}
+function readBet(id='bet'){
+  const el=$('#'+id),v=r2(+el.value);
+  if(!isFinite(v)||v<0){toast('Bitte einen gültigen Einsatz eingeben.');return null}
+  if(v>S.bal){toast('Nicht genug Guthaben. Oben auf „Auffüllen“ tippen.');return null}
+  lastBet=v.toFixed(2);el.value=lastBet;return v;
+}
+function take(v){S.bal=r2(S.bal-v);S.wag=r2(S.wag+v);persist();paint(-1)}
+function settle(game,bet,mult){
+  const pay=r2(bet*mult);
+  S.bal=r2(S.bal+pay);S.prof=r2(S.prof+pay-bet);S.cnt++;
+  log.unshift({g:game,b:bet,m:mult,p:pay});if(log.length>40)log.length=40;
+  persist();paint(pay>0?1:0);renderLog();
+}
+const betHTML=(id='bet')=>`<label class="fld" for="${id}"><span>Einsatz (€)</span><div class="betrow"><input id="${id}" type="number" inputmode="decimal" min="0" step="0.01" value="${lastBet}"><button type="button" class="mini" data-b="half" aria-label="Einsatz halbieren">½</button><button type="button" class="mini" data-b="dbl" aria-label="Einsatz verdoppeln">2×</button><button type="button" class="mini" data-b="max">Max</button></div></label>`;
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-b]');if(!b)return;
+  const inp=b.parentElement.querySelector('input');if(!inp||inp.disabled)return;
+  let v=+inp.value||0;v=b.dataset.b==='half'?v/2:b.dataset.b==='dbl'?v*2:S.bal;
+  inp.value=r2(Math.min(v,S.bal)).toFixed(2);inp.dispatchEvent(new Event('input',{bubbles:true}));
+});
+function hist(game,text,win){(H[game]=H[game]||[]).push({text,win});if(H[game].length>10)H[game].shift();pills(game)}
+function pills(game){const el=$('#hist');if(el)el.innerHTML=(H[game]||[]).map(h=>`<span class="pill ${h.win?'w':''}">${h.text}</span>`).join('')}
+
+// Timers that settle a bet; flushed when switching games so no bet is lost.
+let timers=[];
+function later(fn,ms){const t={fn};t.id=setTimeout(()=>{timers=timers.filter(x=>x!==t);fn()},ms);timers.push(t)}
+function flush(){while(timers.length){const ts=timers;timers=[];ts.forEach(t=>{clearTimeout(t.id);t.fn()})}}
+function fitCanvas(cv,W,Hh){const d=window.devicePixelRatio||1;if(cv.width!==Math.round(W*d)||cv.height!==Math.round(Hh*d)){cv.width=Math.round(W*d);cv.height=Math.round(Hh*d)}const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);return g}
+const niceStep=(range,n)=>{const raw=range/n,p=10**Math.floor(Math.log10(raw)),f=raw/p;return(f<=1?1:f<=2?2:f<=5?5:10)*p};
+const opts=(list,sel)=>list.map(([v,l])=>`<option value="${v}"${String(v)===String(sel)?' selected':''}>${l}</option>`).join('');
+
+const GEM='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l5 6-10 12L2 9z" fill="#33d17a"/><path d="M2 9h20L12 21z" fill="#22a75d"/><path d="M7 3l5 6 5-6z" fill="#8ff0b8"/></svg>';
+const BOMB='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="14" r="8" fill="#ff4d63"/><circle cx="8" cy="11" r="2.3" fill="#ffd0d6"/><path d="M15.5 7.5 19 4" stroke="#f0b545" stroke-width="2.6" stroke-linecap="round"/></svg>';
+const RK=['A','2','3','4','5','6','7','8','9','10','J','Q','K'],SU=['♠','♥','♦','♣'];
+const newCard=()=>({r:ri(13)+1,s:ri(4)});
+const cardHTML=(c,cls='')=>`<div class="card ${c.s===1||c.s===2?'red':''} ${cls}"><span class="r">${RK[c.r-1]}</span><span class="s">${SU[c.s]}</span></div>`;
+
+const M={};
+
+/* ---------- Dice ---------- */
+M.dice=(c,b)=>{
+  c.innerHTML=betHTML()+`<div class="fld"><span>Gewinn bei Treffer</span><div class="out" id="dProf"></div></div><button class="play" id="go" type="button">Würfeln</button>`;
+  b.innerHTML=`<div class="pills" id="hist"></div><div class="center"><div class="bignum" id="dRes">00,00</div></div>
+  <div class="sl"><div class="mark" id="dMark" hidden></div><input type="range" id="dT" min="2" max="98" step="0.01" value="${store.get('dT','50.50')}" aria-label="Zielwert"><div class="scale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div></div>
+  <div class="grid3"><label class="fld" for="dM"><span>Multiplikator</span><input id="dM" type="number" step="0.0001" min="1.0102" max="49.5"></label>
+  <div class="fld"><span id="dML">Über</span><button type="button" class="out" id="dMode" title="Über/Unter wechseln"></button></div>
+  <label class="fld" for="dC"><span>Gewinnchance %</span><input id="dC" type="number" step="0.01" min="2" max="98"></label></div>`;
+  pills('dice');
+  const T=$('#dT'),Mi=$('#dM'),C=$('#dC'),mode=$('#dMode');
+  let over=store.get('dOver',true);
+  const ch=()=>over?100-+T.value:+T.value;
+  const upd=src=>{
+    const t=+T.value,cc=ch();
+    if(src!=='m')Mi.value=(99/cc).toFixed(4);
+    if(src!=='c')C.value=cc.toFixed(2);
+    $('#dML').textContent=over?'Würfeln über':'Würfeln unter';
+    mode.textContent=fm(t)+'  ⇄';
+    T.style.background=over?`linear-gradient(90deg,var(--lose) ${t}%,var(--win) ${t}%)`:`linear-gradient(90deg,var(--win) ${t}%,var(--lose) ${t}%)`;
+    $('#dProf').textContent='+'+fm(r2((+$('#bet').value||0)*(99/cc-1)))+' €';
+    store.set('dT',T.value);
+  };
+  const setCh=cc=>{cc=Math.min(98,Math.max(2,cc||50));T.value=(over?100-cc:cc).toFixed(2)};
+  T.oninput=()=>upd();
+  Mi.onchange=()=>{setCh(99/(+Mi.value||2));upd()};
+  C.onchange=()=>{setCh(+C.value);upd()};
+  mode.onclick=()=>{over=!over;store.set('dOver',over);T.value=(100-+T.value).toFixed(2);upd()};
+  $('#bet').oninput=()=>upd();
+  $('#go').onclick=()=>{
+    const bet=readBet();if(bet===null)return;
+    const t=+T.value,cc=ch();take(bet);
+    const roll=Math.floor(rng()*10001)/100,win=over?roll>t:roll<t;
+    const r=$('#dRes');r.textContent=fm(roll);r.className='bignum '+(win?'w':'l');
+    const mk=$('#dMark');mk.hidden=false;mk.textContent=fm(roll);mk.className='mark '+(win?'w':'l');
+    mk.style.left=`calc(4px + (100% - 8px) * ${roll/100})`;
+    settle('Dice',bet,win?99/cc:0);hist('dice',fm(roll),win);
+  };
+  upd();
+};
+
+/* ---------- Limbo ---------- */
+M.limbo=(c,b)=>{
+  c.innerHTML=betHTML()+`<label class="fld" for="lT"><span>Ziel-Multiplikator</span><input id="lT" type="number" min="1.01" step="0.01" value="${store.get('lT','2.00')}"></label>
+  <div class="grid2"><div class="fld"><span>Gewinnchance</span><div class="out" id="lC"></div></div><div class="fld"><span>Gewinn</span><div class="out" id="lP"></div></div></div>
+  <button class="play" id="go" type="button">Wetten</button>`;
+  b.innerHTML=`<div class="pills" id="hist"></div><div class="center"><div class="bignum huge" id="lR">1,00×</div><p class="sub" id="lS">Ergebnis mindestens so hoch wie dein Ziel gewinnt.</p></div>`;
+  pills('limbo');
+  const T=$('#lT'),go=$('#go');
+  const tgt=()=>Math.min(1e6,Math.max(1.01,Math.floor((+T.value||2)*100)/100));
+  const upd=()=>{const t=tgt();$('#lC').textContent=fm(99/t)+' %';$('#lP').textContent='+'+fm(r2((+$('#bet').value||0)*(t-1)))+' €'};
+  T.oninput=upd;$('#bet').oninput=upd;
+  T.onchange=()=>{T.value=tgt().toFixed(2);store.set('lT',T.value);upd()};
+  go.onclick=()=>{
+    const bet=readBet();if(bet===null)return;
+    const t=tgt(),res=crashPoint(),win=res>=t;take(bet);go.disabled=true;
+    const el=$('#lR');el.className='bignum huge';
+    const t0=performance.now(),D=Math.min(900,350+Math.log(res)*60);
+    const step=now=>{if(!el.isConnected)return;const u=Math.min(1,(now-t0)/D);el.textContent=fx(Math.floor(Math.exp(Math.log(res)*u)*100)/100);if(u<1)requestAnimationFrame(step)};
+    requestAnimationFrame(step);
+    later(()=>{el.textContent=fx(res);el.className='bignum huge '+(win?'w':'l');go.disabled=false;
+      $('#lS').textContent=win?`Gewonnen: +${fm(r2(bet*t-bet))} €`:`Ziel ${fx(t)} nicht erreicht.`;
+      settle('Limbo',bet,win?t:0);hist('limbo',fx(res),win)},D+20);
+  };
+  upd();
+};
+
+/* ---------- Crash ---------- */
+const CR={on:false,bet:0,auto:0,cp:1,t0:0,cashed:0};
+const CK=0.00012; // growth per ms: 2× after ~5.8 s
+M.crash=(c,b)=>{
+  c.innerHTML=betHTML()+`<label class="fld" for="cA"><span>Auto-Auszahlung bei (leer = aus)</span><input id="cA" type="number" min="1.01" step="0.01" value="${store.get('cA','2.00')}"></label><button class="play" id="go" type="button">Wetten</button><p class="note" id="cN">Steig aus, bevor die Rakete crasht.</p>`;
+  b.innerHTML=`<div class="pills" id="hist"></div><div class="cw" id="cw"><canvas id="cc"></canvas><div class="cm" id="cm">1,00×</div></div>`;
+  pills('crash');
+  const cv=$('#cc'),cw=$('#cw'),cm=$('#cm'),go=$('#go'),N=$('#cN');let raf=0;
+  function draw(m,t,state){
+    const W=Math.max(1,cw.clientWidth),Hh=Math.max(1,cw.clientHeight),g=fitCanvas(cv,W,Hh);
+    g.clearRect(0,0,W,Hh);
+    const pl=50,pb=26,pt=18,pr=18,w=W-pl-pr,h=Hh-pt-pb;
+    const tm=Math.max(10000,t*1.12),mm=Math.max(2,m*1.18);
+    const X=x=>pl+x/tm*w,Y=v=>pt+h-(v-1)/(mm-1)*h;
+    g.font='11px "JetBrains Mono",monospace';g.lineWidth=1;g.fillStyle=V('--muted');g.strokeStyle=V('--line');
+    const ys=niceStep(mm-1,4);g.textAlign='right';g.textBaseline='middle';
+    for(let v=1;v<=mm+1e-9;v+=ys){const y=Y(v);g.beginPath();g.moveTo(pl,y);g.lineTo(W-pr,y);g.stroke();g.fillText(fm(v)+'×',pl-6,y)}
+    const xs=niceStep(tm/1000,5);g.textAlign='center';g.textBaseline='top';
+    for(let s=0;s*1000<=tm;s+=xs)g.fillText(s+'s',X(s*1000),Hh-pb+8);
+    if(t>0){
+      const col=state==='crash'?V('--lose'):state==='cashed'?V('--win'):V('--accent');
+      g.beginPath();g.moveTo(X(0),Y(1));
+      for(let i=1;i<=80;i++){const x=t*i/80;g.lineTo(X(x),Y(Math.min(m,Math.exp(CK*x))))}
+      g.strokeStyle=col;g.lineWidth=4;g.lineJoin='round';g.stroke();
+      g.lineTo(X(t),Y(1));g.closePath();g.globalAlpha=.16;g.fillStyle=col;g.fill();g.globalAlpha=1;
+      g.beginPath();g.arc(X(t),Y(m),6,0,7);g.fillStyle=col;g.fill();
+    }
+  }
+  const lock=on=>{$('#bet').disabled=on;$('#cA').disabled=on};
+  function cash(at){CR.cashed=at;settle('Crash',CR.bet,at);go.disabled=true;go.textContent='Ausgezahlt bei '+fx(at);N.innerHTML=`<span class="w">Ausgezahlt bei ${fx(at)}: +${fm(r2(CR.bet*at-CR.bet))} €</span>`}
+  function end(){
+    const tc=Math.log(CR.cp)/CK;CR.on=false;
+    if(!CR.cashed){settle('Crash',CR.bet,0);N.innerHTML=`<span class="l">Crash bei ${fx(CR.cp)}. Einsatz verloren.</span>`}
+    cm.textContent=fx(CR.cp);cm.className='cm l';draw(CR.cp,tc,'crash');hist('crash',fx(CR.cp),CR.cp>=2);
+    go.disabled=false;go.textContent='Wetten';go.classList.remove('alt');lock(false);
+  }
+  function frame(now){
+    const t=now-CR.t0;let m=Math.exp(CK*t);
+    if(CR.auto&&!CR.cashed&&m>=CR.auto&&CR.cp>=CR.auto)cash(CR.auto);
+    if(m>=CR.cp){end();return}
+    const mf=Math.floor(m*100)/100;
+    cm.textContent=fx(mf);cm.className='cm'+(CR.cashed?' w':'');
+    if(!CR.cashed)go.textContent='Auszahlen · '+fm(r2(CR.bet*mf))+' €';
+    draw(m,t,CR.cashed?'cashed':'run');raf=requestAnimationFrame(frame);
+  }
+  go.onclick=()=>{
+    if(CR.on){if(!CR.cashed){const m=Math.floor(Math.exp(CK*(performance.now()-CR.t0))*100)/100;if(m<CR.cp)cash(m)}return}
+    const bet=readBet();if(bet===null)return;
+    const a=+$('#cA').value;CR.auto=a>=1.01?Math.floor(a*100)/100:0;store.set('cA',$('#cA').value);
+    take(bet);Object.assign(CR,{on:true,bet,cashed:0,cp:crashPoint(),t0:performance.now()});
+    N.textContent=CR.auto?`Auto-Auszahlung bei ${fx(CR.auto)}`:'Läuft …';go.textContent='Auszahlen';go.classList.add('alt');lock(true);cm.className='cm';
+    raf=requestAnimationFrame(frame);
+  };
+  const ro=new ResizeObserver(()=>{if(!CR.on)draw(1,0,'idle')});ro.observe(cw);
+  draw(1,0,'idle');
+  return()=>{cancelAnimationFrame(raf);ro.disconnect();
+    if(CR.on){CR.on=false;if(!CR.cashed)settle('Crash',CR.bet,CR.auto&&CR.cp>=CR.auto?CR.auto:0);hist('crash',fx(CR.cp),CR.cp>=2)}};
+};
+
+/* ---------- Mines ---------- */
+const MN={on:false,bet:0,n:store.get('mN',3),mines:null,open:[],boom:-1,done:false,msg:null};
+const minesMult=(k,n)=>{let m=0.99;for(let i=0;i<k;i++)m*=(25-i)/(25-n-i);return m};
+M.mines=(c,b)=>{
+  c.innerHTML=betHTML()+`<label class="fld" for="mN"><span>Minen</span><select id="mN">${opts(Array.from({length:24},(_,i)=>[i+1,i+1]),MN.n)}</select></label>
+  <div class="grid2"><div class="fld"><span>Multiplikator</span><div class="out" id="mM"></div></div><div class="fld"><span>Nächstes Feld</span><div class="out" id="mX"></div></div></div>
+  <button class="play" id="go" type="button"></button><button class="ghost" id="mR" type="button">Zufälliges Feld</button>`;
+  b.innerHTML=`<div class="mgrid" id="mg">${Array.from({length:25},(_,i)=>`<button class="tile" type="button" data-i="${i}" aria-label="Feld ${i+1}"></button>`).join('')}</div><p class="banner" id="mB" hidden></p>`;
+  const go=$('#go'),tiles=$$('#mg .tile');
+  function render(){
+    const k=MN.open.length,safe=25-MN.n;
+    $('#mN').value=MN.n;$('#mN').disabled=MN.on;$('#bet').disabled=MN.on;if(MN.on)$('#bet').value=MN.bet.toFixed(2);
+    $('#mM').textContent=fx(k?minesMult(k,MN.n):1);$('#mX').textContent=k<safe?fx(minesMult(k+1,MN.n)):'–';
+    go.textContent=!MN.on?'Wetten':k?'Auszahlen · '+fm(r2(MN.bet*minesMult(k,MN.n)))+' €':'Feld wählen …';
+    go.disabled=MN.on&&!k;go.classList.toggle('alt',MN.on&&k>0);$('#mR').disabled=!MN.on;
+    tiles.forEach((t,i)=>{
+      const isOpen=MN.open.includes(i);
+      if(isOpen){t.className='tile open';t.innerHTML=GEM}
+      else if(MN.done&&MN.mines){t.className='tile open '+(i===MN.boom?'boom':'fade');t.innerHTML=MN.mines.has(i)?BOMB:GEM}
+      else{t.className='tile';t.innerHTML=''}
+      t.disabled=!MN.on||isOpen;
+    });
+    const B=$('#mB');B.hidden=!MN.msg;if(MN.msg){B.textContent=MN.msg[0];B.className='banner '+MN.msg[1]}
+  }
+  function cashout(){const m=minesMult(MN.open.length,MN.n);settle('Mines',MN.bet,m);MN.on=false;MN.done=true;MN.msg=[`Gewonnen: ${fx(m)} · +${fm(r2(MN.bet*m-MN.bet))} €`,'w'];render()}
+  function pick(i){
+    if(!MN.on||MN.open.includes(i))return;
+    if(MN.mines.has(i)){MN.boom=i;MN.on=false;MN.done=true;settle('Mines',MN.bet,0);MN.msg=['Mine getroffen. Einsatz verloren.','l'];render();return}
+    MN.open.push(i);if(MN.open.length===25-MN.n)cashout();else render();
+  }
+  $('#mN').onchange=e=>{MN.n=+e.target.value;store.set('mN',MN.n);render()};
+  go.onclick=()=>{
+    if(MN.on){if(MN.open.length)cashout();return}
+    const bet=readBet();if(bet===null)return;take(bet);
+    const s=new Set();while(s.size<MN.n)s.add(ri(25));
+    Object.assign(MN,{on:true,bet,mines:s,open:[],boom:-1,done:false,msg:null});render();
+  };
+  $('#mR').onclick=()=>{const free=[...Array(25).keys()].filter(i=>!MN.open.includes(i));if(free.length)pick(free[ri(free.length)])};
+  $('#mg').onclick=e=>{const t=e.target.closest('.tile');if(t)pick(+t.dataset.i)};
+  render();
+};
+
+/* ---------- Plinko ---------- */
+const PT={
+ 8:{low:[5.6,2.1,1.1,1,.5,1,1.1,2.1,5.6],med:[13,3,1.3,.7,.4,.7,1.3,3,13],high:[29,4,1.5,.3,.2,.3,1.5,4,29]},
+ 9:{low:[5.6,2,1.6,1,.7,.7,1,1.6,2,5.6],med:[18,4,1.7,.9,.5,.5,.9,1.7,4,18],high:[43,7,2,.6,.2,.2,.6,2,7,43]},
+ 10:{low:[8.9,3,1.4,1.1,1,.5,1,1.1,1.4,3,8.9],med:[22,5,2,1.4,.6,.4,.6,1.4,2,5,22],high:[76,10,3,.9,.3,.2,.3,.9,3,10,76]},
+ 11:{low:[8.4,3,1.9,1.3,1,.7,.7,1,1.3,1.9,3,8.4],med:[24,6,3,1.8,.7,.5,.5,.7,1.8,3,6,24],high:[120,14,5.2,1.4,.4,.2,.2,.4,1.4,5.2,14,120]},
+ 12:{low:[10,3,1.6,1.4,1.1,1,.5,1,1.1,1.4,1.6,3,10],med:[33,11,4,2,1.1,.6,.3,.6,1.1,2,4,11,33],high:[170,24,8.1,2,.7,.2,.2,.2,.7,2,8.1,24,170]},
+ 13:{low:[8.1,4,3,1.9,1.2,.9,.7,.7,.9,1.2,1.9,3,4,8.1],med:[43,13,6,3,1.3,.7,.4,.4,.7,1.3,3,6,13,43],high:[260,37,11,4,1,.2,.2,.2,.2,1,4,11,37,260]},
+ 14:{low:[7.1,4,1.9,1.4,1.3,1.1,1,.5,1,1.1,1.3,1.4,1.9,4,7.1],med:[58,15,7,4,1.9,1,.5,.2,.5,1,1.9,4,7,15,58],high:[420,56,18,5,1.9,.3,.2,.2,.2,.3,1.9,5,18,56,420]},
+ 15:{low:[15,8,3,2,1.5,1.1,1,.7,.7,1,1.1,1.5,2,3,8,15],med:[88,18,11,5,3,1.3,.5,.3,.3,.5,1.3,3,5,11,18,88],high:[620,83,27,8,3,.5,.2,.2,.2,.2,.5,3,8,27,83,620]},
+ 16:{low:[16,9,2,1.4,1.4,1.2,1.1,1,.5,1,1.1,1.2,1.4,1.4,2,9,16],med:[110,41,10,5,3,1.5,1,.5,.3,.5,1,1.5,3,5,10,41,110],high:[1000,130,26,9,4,2,.2,.2,.2,.2,.2,2,4,9,26,130,1000]}
+};
+const PL={rows:store.get('pR',16),risk:store.get('pK','med'),balls:[],hits:{}};
+const SEG=75;
+M.plinko=(c,b)=>{
+  c.innerHTML=betHTML()+`<label class="fld" for="pK"><span>Risiko</span><select id="pK">${opts([['low','Niedrig'],['med','Mittel'],['high','Hoch']],PL.risk)}</select></label>
+  <label class="fld" for="pR"><span>Reihen</span><select id="pR">${opts([8,9,10,11,12,13,14,15,16].map(n=>[n,n]),PL.rows)}</select></label>
+  <button class="play" id="go" type="button">Ball werfen</button><p class="note">Mehrere Bälle gleichzeitig sind erlaubt.</p>`;
+  b.innerHTML=`<div class="pills" id="hist"></div><div class="pw" id="pw"><canvas id="pc"></canvas></div>`;
+  pills('plinko');
+  const pw=$('#pw'),cv=$('#pc');let raf=0;
+  function geo(n){
+    const W=pw.clientWidth||600,maxH=Math.max(300,Math.min(560,innerHeight*.62));
+    const dx=Math.min(W/(n+2),maxH/(n*.86+2.2)),dy=dx*.86,top=dx*.8,cx=W/2;
+    const slotY=top+(n-1)*dy+dy*1.05,sh=dx*.72;
+    return{W,dx,dy,top,cx,slotY,sh,Hh:slotY+sh/2+6};
+  }
+  function pos(ball,G,now){
+    const n=ball.n,u=(now-ball.t0)/SEG,i=Math.floor(u),f=u-i,br=G.dx*.22;
+    const P=r=>{if(r<0)return[G.cx,G.top-G.dy*.9];let s=0;for(let k=0;k<r;k++)s+=ball.path[k];
+      return[G.cx+(s-r/2)*G.dx,r===n?G.slotY-G.sh/2-br:G.top+r*G.dy-G.dx*.1-br]};
+    const a=P(i-1),z=P(i);
+    return[a[0]+(z[0]-a[0])*f,a[1]+(z[1]-a[1])*(i===0?f*f:f)-(i>0?Math.sin(Math.PI*f)*G.dy*.38:0)];
+  }
+  function draw(now){
+    const n=PL.rows,G=geo(n),g=fitCanvas(cv,G.W,G.Hh);cv.style.height=G.Hh+'px';
+    g.clearRect(0,0,G.W,G.Hh);
+    g.fillStyle='#dfe8ef';
+    for(let r=0;r<n;r++)for(let j=0;j<r+3;j++){g.beginPath();g.arc(G.cx+(j-(r+2)/2)*G.dx,G.top+r*G.dy,Math.max(2,G.dx*.1),0,7);g.fill()}
+    const mult=PT[n][PL.risk];
+    g.textAlign='center';g.textBaseline='middle';g.font=`700 ${Math.max(8,Math.min(13,G.dx*.3))}px "JetBrains Mono",monospace`;
+    mult.forEach((m,k)=>{
+      const d=Math.abs(k-n/2)/(n/2),x=G.cx+(k-n/2)*G.dx,hit=PL.hits[k+'/'+n],bump=hit&&now-hit<260?Math.sin((now-hit)/260*Math.PI)*G.sh*.35:0;
+      g.fillStyle=`hsl(${48-48*d} 92% ${56-6*d}%)`;
+      const w=G.dx*.9,x0=x-w/2,y0=G.slotY-G.sh/2+bump;
+      g.beginPath();g.roundRect?g.roundRect(x0,y0,w,G.sh,4):g.rect(x0,y0,w,G.sh);g.fill();
+      g.fillStyle='#1d1204';g.fillText(String(m).replace('.',','),x,y0+G.sh/2+1);
+    });
+    g.fillStyle=V('--accent');
+    for(const ball of PL.balls){if(now<ball.t0)continue;const[x,y]=pos(ball,G,now);g.beginPath();g.arc(x,y,G.dx*.22,0,7);g.fill()}
+  }
+  const lock=()=>{$('#pK').disabled=$('#pR').disabled=PL.balls.length>0};
+  function land(ball){
+    const m=PT[ball.n][ball.risk][ball.slot];
+    PL.hits[ball.slot+'/'+ball.n]=performance.now();settle('Plinko',ball.bet,m);hist('plinko',String(m).replace('.',',')+'×',m>=1);
+  }
+  function loop(now){
+    const done=PL.balls.filter(bl=>now-bl.t0>=SEG*(bl.n+1));
+    if(done.length){PL.balls=PL.balls.filter(bl=>!done.includes(bl));done.forEach(land);lock()}
+    draw(now);
+    const busy=PL.balls.length||Object.values(PL.hits).some(h=>now-h<300);
+    raf=busy?requestAnimationFrame(loop):0;
+  }
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(loop)};
+  $('#pK').onchange=e=>{PL.risk=e.target.value;store.set('pK',PL.risk);draw(performance.now())};
+  $('#pR').onchange=e=>{PL.rows=+e.target.value;store.set('pR',PL.rows);draw(performance.now())};
+  $('#go').onclick=()=>{
+    const bet=readBet();if(bet===null)return;take(bet);
+    const path=Array.from({length:PL.rows},()=>rng()<.5?0:1);
+    PL.balls.push({path,slot:path.reduce((a,v)=>a+v,0),n:PL.rows,risk:PL.risk,bet,t0:performance.now()});lock();kick();
+  };
+  const ro=new ResizeObserver(()=>draw(performance.now()));ro.observe(pw);
+  lock();draw(performance.now());
+  return()=>{cancelAnimationFrame(raf);ro.disconnect();const bs=PL.balls;PL.balls=[];bs.forEach(land)};
+};
+
+/* ---------- Keno ---------- */
+function binom(n,k){if(k<0||k>n)return 0;let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return r}
+const kenoCache={};
+function kenoTable(p,risk){
+  const key=p+risk;if(kenoCache[key])return kenoCache[key];
+  const tot=binom(40,10),P=h=>binom(p,h)*binom(40-p,10-h)/tot;
+  const [minF,a,cap]={low:[.3,.5,100],mid:[.4,.65,500],high:[.5,.8,1000]}[risk];
+  const min=Math.max(1,Math.ceil(p*minF)),w=[],m=[];
+  for(let h=0;h<=p;h++)w[h]=h>=min&&P(h)>0?P(h)**-a:0;
+  const capped=new Set();
+  for(let it=0;it<6;it++){
+    let rest=.99,s=0;
+    for(let h=0;h<=p;h++){if(capped.has(h))rest-=P(h)*cap;else s+=P(h)*w[h]}
+    let more=false;
+    for(let h=0;h<=p;h++){if(capped.has(h)){m[h]=cap;continue}m[h]=s?w[h]*rest/s:0;if(m[h]>cap){capped.add(h);more=true}}
+    if(!more)break;
+  }
+  return kenoCache[key]=m.map(x=>Math.floor(x*100)/100);
+}
+const KN={picks:store.get('kP',[3,8,12,17,22,26,31,35]),risk:store.get('kR','mid'),drawn:[],shown:0,busy:false,last:-1};
+M.keno=(c,b)=>{
+  c.innerHTML=betHTML()+`<label class="fld" for="kR"><span>Risiko</span><select id="kR">${opts([['low','Niedrig'],['mid','Mittel'],['high','Hoch']],KN.risk)}</select></label>
+  <div class="grid2"><button class="ghost" id="kA" type="button">Zufällig wählen</button><button class="ghost" id="kC" type="button">Leeren</button></div>
+  <button class="play" id="go" type="button">Spielen</button><p class="note" id="kN"></p>`;
+  b.innerHTML=`<div class="kgrid" id="kg">${Array.from({length:40},(_,i)=>`<button class="kt" type="button" data-n="${i+1}">${i+1}</button>`).join('')}</div><div class="kpay" id="kpay"></div>`;
+  const tiles=$$('#kg .kt');
+  function render(){
+    if(!$('#kg'))return;
+    const shown=KN.drawn.slice(0,KN.shown);
+    tiles.forEach(t=>{const n=+t.dataset.n,pk=KN.picks.includes(n),dr=shown.includes(n);
+      t.className='kt'+(dr?(pk?' hit':' dr'):pk?' pk':'');t.disabled=KN.busy});
+    const p=KN.picks.length;
+    $('#kN').textContent=`${p} von 10 Zahlen gewählt.`;
+    $('#go').disabled=KN.busy||!p;$('#kR').disabled=$('#kA').disabled=$('#kC').disabled=$('#bet').disabled=KN.busy;
+    if(!p){$('#kpay').innerHTML='<p class="sub" style="width:100%">Wähle 1 bis 10 Zahlen auf dem Feld.</p>';return}
+    const tb=kenoTable(p,KN.risk);
+    $('#kpay').innerHTML=tb.map((m,h)=>`<div class="kc ${!KN.busy&&KN.last===h?'on':''}"><b>${fx(m)}</b><span>${h} Treffer</span></div>`).join('');
+  }
+  const clearDraw=()=>{KN.drawn=[];KN.shown=0;KN.last=-1};
+  $('#kg').onclick=e=>{const t=e.target.closest('.kt');if(!t||KN.busy)return;const n=+t.dataset.n;clearDraw();
+    if(KN.picks.includes(n))KN.picks=KN.picks.filter(x=>x!==n);else if(KN.picks.length<10)KN.picks.push(n);else toast('Maximal 10 Zahlen.');
+    store.set('kP',KN.picks);render()};
+  $('#kR').onchange=e=>{KN.risk=e.target.value;store.set('kR',KN.risk);KN.last=-1;render()};
+  $('#kA').onclick=()=>{const s=new Set();while(s.size<10)s.add(ri(40)+1);KN.picks=[...s];clearDraw();store.set('kP',KN.picks);render()};
+  $('#kC').onclick=()=>{KN.picks=[];clearDraw();store.set('kP',KN.picks);render()};
+  $('#go').onclick=()=>{
+    if(!KN.picks.length)return;const bet=readBet();if(bet===null)return;take(bet);
+    const pool=[...Array(40).keys()].map(i=>i+1);for(let i=39;i>0;i--){const j=ri(i+1);[pool[i],pool[j]]=[pool[j],pool[i]]}
+    Object.assign(KN,{drawn:pool.slice(0,10),shown:0,busy:true,last:-1});render();
+    const picks=KN.picks.slice(),risk=KN.risk;
+    for(let i=1;i<=10;i++)later(()=>{KN.shown=i;render()},i*110);
+    later(()=>{const hits=KN.drawn.filter(n=>picks.includes(n)).length,m=kenoTable(picks.length,risk)[hits];
+      KN.busy=false;KN.last=hits;settle('Keno',bet,m);hist('keno',hits+' / '+picks.length,m>=1);render()},10*110+150);
+  };
+  render();
+};
+
+/* ---------- HiLo ---------- */
+const HL={on:false,bet:0,mult:1,cur:newCard(),trail:[],lost:false};
+function hlOpts(r){
+  if(r===1)return[{label:'Höher',p:12/13,test:n=>n>r},{label:'Gleich',p:1/13,test:n=>n===r}];
+  if(r===13)return[{label:'Gleich',p:1/13,test:n=>n===r},{label:'Niedriger',p:12/13,test:n=>n<r}];
+  return[{label:'Höher oder gleich',p:(14-r)/13,test:n=>n>=r},{label:'Niedriger oder gleich',p:r/13,test:n=>n<=r}];
+}
+M.hilo=(c,b)=>{
+  c.innerHTML=betHTML()+`<div class="grid2"><button class="ghost" id="h0" type="button"></button><button class="ghost" id="h1" type="button"></button></div>
+  <button class="ghost" id="hS" type="button">Karte überspringen</button>
+  <div class="grid2"><div class="fld"><span>Multiplikator</span><div class="out" id="hM"></div></div><div class="fld"><span>Gewinn</span><div class="out" id="hP"></div></div></div>
+  <button class="play" id="go" type="button"></button>`;
+  b.innerHTML=`<div class="trail" id="hT"></div><div class="center"><div id="hC"></div><div class="hl-odds" id="hO"></div></div><p class="banner" id="hB" hidden></p>`;
+  const go=$('#go');
+  function render(){
+    const o=hlOpts(HL.cur.r);
+    o.forEach((x,i)=>{const bt=$('#h'+i);bt.innerHTML=`${x.label} <b>${fx(.99/x.p)}</b>`;bt.disabled=!HL.on});
+    $('#hO').innerHTML=o.map(x=>`<span>${x.label}: ${fm(x.p*100)} %</span>`).join('');
+    $('#hC').innerHTML=cardHTML(HL.cur,'big'+(HL.lost?' bad':''));
+    $('#hT').innerHTML=HL.trail.slice(-14).map(t=>cardHTML(t.c,'sm '+(t.ok===true?'ok':t.ok===false?'bad':'skip'))).join('');
+    $('#hM').textContent=fx(HL.mult);$('#hP').textContent='+'+fm(r2(HL.bet*HL.mult-HL.bet))+' €';
+    $('#bet').disabled=HL.on;if(HL.on)$('#bet').value=HL.bet.toFixed(2);
+    go.textContent=!HL.on?'Wetten':HL.mult>1?'Auszahlen · '+fm(r2(HL.bet*HL.mult))+' €':'Höher oder niedriger?';
+    go.disabled=HL.on&&HL.mult<=1;go.classList.toggle('alt',HL.on&&HL.mult>1);
+  }
+  const banner=(t,cls)=>{const B=$('#hB');B.hidden=!t;if(t){B.textContent=t;B.className='banner '+cls}};
+  function guess(i){
+    if(!HL.on)return;const o=hlOpts(HL.cur.r)[i],nx=newCard(),ok=o.test(nx.r);
+    HL.trail.push({c:HL.cur,ok});HL.cur=nx;
+    if(ok)HL.mult*=.99/o.p;
+    else{HL.on=false;HL.lost=true;settle('HiLo',HL.bet,0);hist('hilo','0×',false);banner('Falsch geraten. Einsatz verloren.','l')}
+    render();
+  }
+  $('#h0').onclick=()=>guess(0);$('#h1').onclick=()=>guess(1);
+  $('#hS').onclick=()=>{HL.trail.push({c:HL.cur,ok:null});HL.cur=newCard();HL.lost=false;render()};
+  go.onclick=()=>{
+    if(HL.on){if(HL.mult>1){settle('HiLo',HL.bet,HL.mult);banner(`Ausgezahlt: ${fx(HL.mult)} · +${fm(r2(HL.bet*HL.mult-HL.bet))} €`,'w');HL.on=false;render()}return}
+    const bet=readBet();if(bet===null)return;take(bet);
+    Object.assign(HL,{on:true,bet,mult:1,trail:[],lost:false});banner(null);render();
+  };
+  render();
+};
+
+/* ---------- Blackjack ---------- */
+const BJ={ph:'idle',bet:0,p:[],d:[],msg:null};
+const cval=c=>c.r===1?11:Math.min(10,c.r);
+function hv(cs){let t=0,a=0;for(const c of cs){t+=cval(c);if(c.r===1)a++}while(t>21&&a){t-=10;a--}return{t,soft:a>0}}
+const hvTxt=cs=>{const v=hv(cs);return v.soft&&v.t<21?`${v.t-10} / ${v.t}`:String(v.t)};
+M.blackjack=(c,b)=>{
+  c.innerHTML=betHTML()+`<div class="grid2"><button class="ghost" id="bH" type="button">Karte</button><button class="ghost" id="bS" type="button">Stehen</button></div>
+  <button class="ghost" id="bD" type="button">Verdoppeln</button><button class="play" id="go" type="button">Austeilen</button>
+  <p class="note">Blackjack zahlt 3:2. Dealer steht ab 17.</p>`;
+  b.innerHTML=`<div class="felt"><div class="seat"><span class="seat-label">Dealer</span><div class="hand" id="bjD"></div><span class="tot" id="bjDT"></span></div>
+  <p class="banner" id="bjB" hidden></p>
+  <div class="seat"><span class="tot" id="bjPT"></span><div class="hand" id="bjP"></div><span class="seat-label">Du</span></div></div>`;
+  function render(){
+    if(!$('#bjD'))return;
+    const hide=BJ.ph==='player';
+    $('#bjD').innerHTML=BJ.d.map((c,i)=>i===1&&hide?'<div class="card back"></div>':cardHTML(c)).join('');
+    $('#bjP').innerHTML=BJ.p.map(c=>cardHTML(c)).join('');
+    $('#bjDT').textContent=BJ.d.length?(hide?hvTxt([BJ.d[0]]):hvTxt(BJ.d)):'–';
+    $('#bjPT').textContent=BJ.p.length?hvTxt(BJ.p):'–';
+    const B=$('#bjB');B.hidden=!BJ.msg;if(BJ.msg){B.textContent=BJ.msg[0];B.className='banner '+BJ.msg[1]}
+    const pl=BJ.ph==='player';
+    $('#bH').disabled=$('#bS').disabled=!pl;$('#bD').disabled=!(pl&&BJ.p.length===2&&S.bal>=BJ.bet);
+    $('#go').disabled=pl||BJ.ph==='dealer';$('#bet').disabled=pl||BJ.ph==='dealer';
+    if(pl||BJ.ph==='dealer')$('#bet').value=BJ.bet.toFixed(2);
+  }
+  function finish(mult,text){BJ.ph='done';settle('Blackjack',BJ.bet,mult);BJ.msg=[text+(mult>1?` · +${fm(r2(BJ.bet*mult-BJ.bet))} €`:''),mult>1?'w':mult===1?'':'l'];render()}
+  function dealer(){
+    const dv=hv(BJ.d).t;
+    if(dv<17){BJ.d.push(newCard());render();later(dealer,550);return}
+    const pv=hv(BJ.p).t;
+    if(dv>21)finish(2,'Dealer überkauft. Gewonnen');
+    else if(pv>dv)finish(2,'Gewonnen');
+    else if(pv===dv)finish(1,'Unentschieden. Einsatz zurück');
+    else finish(0,'Dealer gewinnt');
+  }
+  function stand(){BJ.ph='dealer';render();later(dealer,550)}
+  $('#go').onclick=()=>{
+    const bet=readBet();if(bet===null)return;take(bet);
+    Object.assign(BJ,{ph:'player',bet,p:[newCard(),newCard()],d:[newCard(),newCard()],msg:null});
+    const pb=hv(BJ.p).t===21,db=hv(BJ.d).t===21;
+    if(pb||db){BJ.ph='dealer';render();finish(pb&&db?1:pb?2.5:0,pb&&db?'Beide Blackjack. Unentschieden':pb?'Blackjack!':'Dealer hat Blackjack')}
+    else render();
+  };
+  $('#bH').onclick=()=>{if(BJ.ph!=='player')return;BJ.p.push(newCard());const v=hv(BJ.p).t;if(v>21){BJ.ph='dealer';finish(0,'Überkauft')}else if(v===21)stand();else render()};
+  $('#bS').onclick=()=>{if(BJ.ph==='player')stand()};
+  $('#bD').onclick=()=>{
+    if(BJ.ph!=='player'||BJ.p.length!==2)return;if(S.bal<BJ.bet){toast('Nicht genug Guthaben zum Verdoppeln.');return}
+    take(BJ.bet);BJ.bet=r2(BJ.bet*2);BJ.p.push(newCard());
+    if(hv(BJ.p).t>21){BJ.ph='dealer';finish(0,'Überkauft')}else stand();
+  };
+  render();
+  if(BJ.ph==='dealer')later(dealer,300);
+};
+
+/* ---------- Wheel ---------- */
+const WH={risk:store.get('wK','mid'),n:store.get('wN',30),rot:0,last:-1,spin:false};
+function wheelSegs(risk,n){
+  if(risk==='high'){const a=Array(n).fill(0);a[0]=r2(.99*n);return a}
+  const base=risk==='low'?[1.5,1.2,1.2,1.2,0,1.2,1.2,1.2,1.2,0]:[0,1.9,0,1.5,0,2,0,1.5,0,3];
+  return Array.from({length:n},(_,i)=>base[i%10]);
+}
+const WC={0:'#2b3f52',1.2:'#cfdbe4',1.5:'#33d17a',1.9:'#f0b545',2:'#a98bff',3:'#ff8a3d'};
+const wcol=m=>WC[m]||'#ff4d63';
+M.wheel=(c,b)=>{
+  c.innerHTML=betHTML()+`<label class="fld" for="wK"><span>Risiko</span><select id="wK">${opts([['low','Niedrig'],['mid','Mittel'],['high','Hoch']],WH.risk)}</select></label>
+  <label class="fld" for="wN"><span>Segmente</span><select id="wN">${opts([10,20,30,40,50].map(n=>[n,n]),WH.n)}</select></label>
+  <button class="play" id="go" type="button">Drehen</button>`;
+  b.innerHTML=`<div class="pills" id="hist"></div><div class="ww"><canvas id="wc" width="420" height="420"></canvas></div><div class="legend" id="wl"></div>`;
+  pills('wheel');
+  const cv=$('#wc');let raf=0;
+  function draw(){
+    const S0=cv.clientWidth||420,g=fitCanvas(cv,S0,S0),segs=wheelSegs(WH.risk,WH.n),n=segs.length,R=S0/2-14,r=R*.74,cx=S0/2,cy=S0/2+6,step=Math.PI*2/n;
+    g.clearRect(0,0,S0,S0);
+    g.beginPath();g.arc(cx,cy,R+6,0,7);g.fillStyle=V('--panel');g.fill();
+    segs.forEach((m,i)=>{const a0=-Math.PI/2+WH.rot+i*step;g.beginPath();g.arc(cx,cy,R,a0+.004,a0+step-.004);g.arc(cx,cy,r,a0+step-.004,a0+.004,true);g.closePath();
+      g.fillStyle=wcol(m);g.globalAlpha=WH.last<0||WH.spin||WH.last===i?1:.55;g.fill();g.globalAlpha=1});
+    g.beginPath();g.arc(cx,cy,r-8,0,7);g.fillStyle=V('--deep');g.fill();
+    g.fillStyle=V('--fg');g.textAlign='center';g.textBaseline='middle';
+    g.font=`700 ${Math.round(S0*.11)}px "Chakra Petch",sans-serif`;
+    g.fillText(WH.last>=0&&!WH.spin?fx(segs[WH.last]):'', cx,cy);
+    g.beginPath();g.moveTo(cx-13,4);g.lineTo(cx+13,4);g.lineTo(cx,30);g.closePath();g.fillStyle=V('--accent');g.fill();
+  }
+  function legend(){
+    const segs=wheelSegs(WH.risk,WH.n),u=[...new Set(segs)].sort((a,b)=>a-b),cur=WH.last>=0&&!WH.spin?segs[WH.last]:null;
+    $('#wl').innerHTML=u.map(m=>`<span class="lg ${m===cur?'on':''}"><i style="background:${wcol(m)}"></i>${fx(m)} <em>${fm(segs.filter(x=>x===m).length/segs.length*100)} %</em></span>`).join('');
+  }
+  const lock=on=>{$('#wK').disabled=$('#wN').disabled=$('#go').disabled=$('#bet').disabled=on};
+  $('#wK').onchange=e=>{WH.risk=e.target.value;WH.last=-1;store.set('wK',WH.risk);draw();legend()};
+  $('#wN').onchange=e=>{WH.n=+e.target.value;WH.last=-1;store.set('wN',WH.n);draw();legend()};
+  $('#go').onclick=()=>{
+    const bet=readBet();if(bet===null)return;take(bet);
+    const segs=wheelSegs(WH.risk,WH.n),n=segs.length,idx=ri(n),step=Math.PI*2/n,TAU=Math.PI*2;
+    const target=-(idx+.5+(rng()-.5)*.7)*step,from=WH.rot,delta=((target-from)%TAU+TAU)%TAU,to=from+TAU*5+delta;
+    WH.spin=true;lock(true);legend();const t0=performance.now(),D=3200;
+    const anim=now=>{const u=Math.min(1,(now-t0)/D);WH.rot=from+(to-from)*(1-(1-u)**4);draw();if(u<1)raf=requestAnimationFrame(anim)};
+    raf=requestAnimationFrame(anim);
+    later(()=>{cancelAnimationFrame(raf);WH.rot=to%TAU;WH.spin=false;WH.last=idx;const m=segs[idx];
+      settle('Wheel',bet,m);hist('wheel',fx(m),m>=1);if($('#wc')){draw();legend();lock(false)}},D+40);
+  };
+  const ro=new ResizeObserver(draw);ro.observe(cv);
+  draw();legend();
+  return()=>{cancelAnimationFrame(raf);ro.disconnect()};
+};
+
+/* ---------- Dragon Tower ---------- */
+const TD={easy:[4,3,'Leicht'],medium:[3,2,'Mittel'],hard:[2,1,'Schwer'],expert:[3,1,'Experte'],master:[4,1,'Meister']};
+const TW={d:store.get('tD','medium'),on:false,bet:0,lvl:0,bad:[],pick:[],done:false,boom:null,msg:null};
+const twMult=(k,d)=>.99*Math.pow(TD[d][0]/TD[d][1],k);
+M.tower=(c,b)=>{
+  c.innerHTML=betHTML()+`<label class="fld" for="tD"><span>Schwierigkeit</span><select id="tD">${opts(Object.entries(TD).map(([k,v])=>[k,`${v[2]} · ${v[1]} von ${v[0]} sicher`]),TW.d)}</select></label>
+  <div class="grid2"><div class="fld"><span>Multiplikator</span><div class="out" id="tM"></div></div><div class="fld"><span>Nächste Stufe</span><div class="out" id="tX"></div></div></div>
+  <button class="play" id="go" type="button"></button><button class="ghost" id="tR" type="button">Zufälliges Feld</button>`;
+  b.innerHTML=`<div class="tower" id="tw"></div><p class="banner" id="tB" hidden></p>`;
+  const go=$('#go');
+  function render(){
+    const [t]=TD[TW.d];let h='';
+    for(let r=8;r>=0;r--){
+      const act=TW.on&&r===TW.lvl;h+=`<div class="trow ${act?'act':''}" style="grid-template-columns:repeat(${t},minmax(0,1fr))">`;
+      for(let i=0;i<t;i++){
+        let cls='tile',inner=fx(twMult(r+1,TW.d));
+        const picked=TW.pick[r]===i&&r<TW.lvl;
+        if(picked){cls+=' open';inner=GEM}
+        else if(TW.done&&TW.bad[r]){const bad=TW.bad[r].has(i);cls+=' open '+(TW.boom&&TW.boom.r===r&&TW.boom.i===i?'boom':'fade');inner=bad?BOMB:GEM}
+        h+=`<button type="button" class="${cls}" data-r="${r}" data-i="${i}" ${act?'':'disabled'} aria-label="Stufe ${r+1}, Feld ${i+1}">${inner}</button>`;
+      }
+      h+='</div>';
+    }
+    $('#tw').innerHTML=h;
+    $('#tD').value=TW.d;$('#tD').disabled=TW.on;$('#bet').disabled=TW.on;if(TW.on)$('#bet').value=TW.bet.toFixed(2);
+    $('#tM').textContent=fx(TW.lvl?twMult(TW.lvl,TW.d):1);$('#tX').textContent=TW.lvl<9?fx(twMult(TW.lvl+1,TW.d)):'–';
+    go.textContent=!TW.on?'Wetten':TW.lvl?'Auszahlen · '+fm(r2(TW.bet*twMult(TW.lvl,TW.d)))+' €':'Feld in der untersten Reihe wählen';
+    go.disabled=TW.on&&!TW.lvl;go.classList.toggle('alt',TW.on&&TW.lvl>0);$('#tR').disabled=!TW.on;
+    const B=$('#tB');B.hidden=!TW.msg;if(TW.msg){B.textContent=TW.msg[0];B.className='banner '+TW.msg[1]}
+  }
+  function cashout(){const m=twMult(TW.lvl,TW.d);settle('Dragon Tower',TW.bet,m);TW.on=false;TW.done=true;TW.msg=[`Gewonnen: ${fx(m)} · +${fm(r2(TW.bet*m-TW.bet))} €`,'w'];render()}
+  function pick(i){
+    if(!TW.on)return;const r=TW.lvl;
+    if(TW.bad[r].has(i)){TW.boom={r,i};TW.on=false;TW.done=true;settle('Dragon Tower',TW.bet,0);TW.msg=['Drache erwischt. Einsatz verloren.','l'];render();return}
+    TW.pick[r]=i;TW.lvl++;if(TW.lvl===9)cashout();else render();
+  }
+  $('#tD').onchange=e=>{TW.d=e.target.value;store.set('tD',TW.d);TW.done=false;TW.msg=null;TW.lvl=0;render()};
+  go.onclick=()=>{
+    if(TW.on){if(TW.lvl)cashout();return}
+    const bet=readBet();if(bet===null)return;take(bet);
+    const [t,s]=TD[TW.d];
+    const bad=Array.from({length:9},()=>{const set=new Set();while(set.size<t-s)set.add(ri(t));return set});
+    Object.assign(TW,{on:true,bet,lvl:0,bad,pick:[],done:false,boom:null,msg:null});render();
+  };
+  $('#tR').onclick=()=>pick(ri(TD[TW.d][0]));
+  $('#tw').onclick=e=>{const t=e.target.closest('.tile');if(t&&!t.disabled&&+t.dataset.r===TW.lvl)pick(+t.dataset.i)};
+  render();
+};
+
+/* ---------- Roulette ---------- */
+const RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const CHIPS=[[1,'#5f7b92'],[5,'#c42539'],[10,'#2a7de1'],[25,'#17844d'],[100,'#1d2a36'],[500,'#8b5cf6']];
+const RL={chip:store.get('rC',10),bets:{},undo:[],spin:false,last:null};
+function rlMult(k,r){
+  if(k[0]==='n')return +k.slice(1)===r?36:0;
+  if(r===0)return 0;
+  switch(k){
+    case'red':return RED.has(r)?2:0;case'black':return RED.has(r)?0:2;
+    case'even':return r%2===0?2:0;case'odd':return r%2?2:0;
+    case'low':return r<=18?2:0;case'high':return r>=19?2:0;
+    case'd1':return r<=12?3:0;case'd2':return r>12&&r<=24?3:0;case'd3':return r>24?3:0;
+    case'c1':return r%3===1?3:0;case'c2':return r%3===2?3:0;case'c3':return r%3===0?3:0;
+  }
+  return 0;
+}
+const rlCls=n=>n===0?'z':RED.has(n)?'red':'blk';
+M.roulette=(c,b)=>{
+  c.innerHTML=`<div class="fld"><span>Chip-Wert (€)</span><div class="chips" id="rch">${CHIPS.map(([v,col])=>`<button type="button" class="chipbtn" data-v="${v}" style="background:${col}" aria-pressed="${v===RL.chip}">${v}</button>`).join('')}</div></div>
+  <div class="fld"><span>Gesamteinsatz</span><div class="out" id="rTot"></div></div>
+  <div class="grid2"><button class="ghost" id="rU" type="button">Rückgängig</button><button class="ghost" id="rX" type="button">Leeren</button></div>
+  <button class="play" id="go" type="button">Drehen</button><p class="note" id="rN">Tippe auf Felder, um Chips zu setzen.</p>`;
+  let h='<button class="rc z" data-k="n0" style="grid-row:1/4;grid-column:1">0</button>';
+  for(let col=0;col<12;col++)for(let row=0;row<3;row++){const n=col*3+(3-row);h+=`<button class="rc ${rlCls(n)}" data-k="n${n}" style="grid-row:${row+1};grid-column:${col+2}">${n}</button>`}
+  for(let row=0;row<3;row++)h+=`<button class="rc o" data-k="c${3-row}" style="grid-row:${row+1};grid-column:14">2:1</button>`;
+  h+=`<button class="rc o" data-k="d1" style="grid-row:4;grid-column:2/6">1 bis 12</button><button class="rc o" data-k="d2" style="grid-row:4;grid-column:6/10">13 bis 24</button><button class="rc o" data-k="d3" style="grid-row:4;grid-column:10/14">25 bis 36</button>`;
+  h+=`<button class="rc o" data-k="low" style="grid-row:5;grid-column:2/4">1–18</button><button class="rc o" data-k="even" style="grid-row:5;grid-column:4/6">Gerade</button><button class="rc o" data-k="red" style="grid-row:5;grid-column:6/8" aria-label="Rot"><span class="sw" style="background:#c42539"></span></button><button class="rc o" data-k="black" style="grid-row:5;grid-column:8/10" aria-label="Schwarz"><span class="sw" style="background:#0b1218"></span></button><button class="rc o" data-k="odd" style="grid-row:5;grid-column:10/12">Ungerade</button><button class="rc o" data-k="high" style="grid-row:5;grid-column:12/14">19–36</button>`;
+  b.innerHTML=`<div class="rtop"><div class="disc" id="rD">–</div><div class="pills" id="hist"></div></div><div class="tscroll"><div class="rt" id="rt">${h}</div></div>`;
+  pills('roulette');
+  let flick=0;
+  const total=()=>r2(Object.values(RL.bets).reduce((a,v)=>a+v,0));
+  function render(){
+    if(!$('#rt'))return;
+    $$('#rt .rc').forEach(el=>{const k=el.dataset.k,v=RL.bets[k];let ch=el.querySelector('.chip');
+      if(v){if(!ch){ch=document.createElement('span');ch.className='chip';el.appendChild(ch)}ch.textContent=v>=1000?r2(v/1000)+'k':v}else if(ch)ch.remove();
+      el.disabled=RL.spin;el.classList.toggle('hitc',RL.last!==null&&!RL.spin&&k==='n'+RL.last)});
+    $('#rTot').textContent=fm(total())+' €';
+    $('#go').disabled=RL.spin||!total();$('#rU').disabled=RL.spin||!RL.undo.length;$('#rX').disabled=RL.spin||!total();
+    $$('#rch .chipbtn').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.v===RL.chip));
+  }
+  $('#rch').onclick=e=>{const x=e.target.closest('.chipbtn');if(!x)return;RL.chip=+x.dataset.v;store.set('rC',RL.chip);render()};
+  $('#rt').onclick=e=>{const x=e.target.closest('.rc');if(!x||RL.spin)return;
+    if(total()+RL.chip>S.bal){toast('Nicht genug Guthaben für diesen Chip.');return}
+    const k=x.dataset.k;RL.bets[k]=r2((RL.bets[k]||0)+RL.chip);RL.undo.push([k,RL.chip]);render()};
+  $('#rU').onclick=()=>{const u=RL.undo.pop();if(!u)return;RL.bets[u[0]]=r2(RL.bets[u[0]]-u[1]);if(RL.bets[u[0]]<=0)delete RL.bets[u[0]];render()};
+  $('#rX').onclick=()=>{RL.bets={};RL.undo=[];render()};
+  $('#go').onclick=()=>{
+    const tot=total();if(!tot)return;if(tot>S.bal){toast('Nicht genug Guthaben für alle Chips.');return}
+    take(tot);RL.spin=true;render();const r=ri(37),bets={...RL.bets},D=document.getElementById('rD');
+    flick=setInterval(()=>{const n=ri(37);D.textContent=n;D.className='disc '+rlCls(n)},70);
+    later(()=>{clearInterval(flick);RL.spin=false;RL.last=r;
+      const pay=r2(Object.entries(bets).reduce((a,[k,v])=>a+v*rlMult(k,r),0));
+      if(D.isConnected){D.textContent=r;D.className='disc '+rlCls(r)}
+      const n=$('#rN');if(n)n.innerHTML=pay>0?`<span class="w">${r} · Auszahlung ${fm(pay)} €</span>`:`<span class="l">${r} · Leider nichts getroffen.</span>`;
+      settle('Roulette',tot,pay/tot);hist('roulette',String(r),pay>tot);render()},1500);
+  };
+  render();
+  return()=>clearInterval(flick);
+};
+
+/* ---------- Shell ---------- */
+const GAMES=[['dice','Dice'],['limbo','Limbo'],['crash','Crash'],['mines','Mines'],['plinko','Plinko'],['keno','Keno'],['hilo','HiLo'],['blackjack','Blackjack'],['wheel','Wheel'],['tower','Dragon Tower'],['roulette','Roulette']];
+const rail=$('#rail');
+rail.innerHTML=GAMES.map(([id,n])=>`<button type="button" data-g="${id}" aria-pressed="false">${n}</button>`).join('');
+let cleanup=null;
+function openGame(id){
+  if(!M[id])id='dice';
+  if(cleanup){cleanup();cleanup=null}
+  flush();
+  $$('#rail button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.g===id));
+  const c=$('#ctrl'),b=$('#board');c.innerHTML='';b.innerHTML='';
+  cleanup=M[id](c,b)||null;store.set('game',id);
+  try{history.replaceState(null,'','#'+id)}catch(e){}
+}
+rail.onclick=e=>{const x=e.target.closest('[data-g]');if(x)openGame(x.dataset.g)};
+
+const rb=$('#reset');let armed=0;
+rb.onclick=()=>{
+  if(!armed){rb.textContent='Wirklich auf 10.000 €?';armed=setTimeout(()=>{armed=0;rb.textContent='Auffüllen'},3500);return}
+  clearTimeout(armed);armed=0;rb.textContent='Auffüllen';
+  Object.assign(S,{bal:START,wag:0,prof:0,cnt:0});log=[];persist();paint(1);renderLog();
+  toast('Guthaben auf 10.000,00 € gesetzt.');
+};
+
+paint(0);renderLog();
+openGame((location.hash||'').slice(1)||store.get('game','dice'));
+})();
+</script>
+</body>
+</html>
