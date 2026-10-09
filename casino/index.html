@@ -321,7 +321,8 @@ const store={
   set(k,v){try{localStorage.setItem('sgc.'+k,JSON.stringify(v))}catch(e){}}
 };
 // Same crash/limbo distribution as the originals: P(result >= x) = 0.99 / x
-const crashPoint=()=>Math.min(1e6,Math.max(1,Math.floor(0.99/(1-rng())*100)/100));
+const MAXM=67e6; // highest possible Limbo/Crash multiplier
+const crashPoint=()=>Math.min(MAXM,Math.max(1,Math.floor(0.99/(1-rng())*100)/100));
 
 /* ---------- Wallet ---------- */
 const START=10000;
@@ -524,7 +525,7 @@ M.limbo=(c,b)=>{
   b.innerHTML=`<div class="pills" id="hist"></div><div class="center"><div class="bignum huge" id="lR">1,00×</div><p class="sub" id="lS">Ergebnis mindestens so hoch wie dein Ziel gewinnt.</p></div>`;
   pills('limbo');
   const T=$('#lT'),go=$('#go');
-  const tgt=()=>Math.min(1e6,Math.max(1.01,Math.floor((+T.value||2)*100)/100));
+  const tgt=()=>Math.min(MAXM,Math.max(1.01,Math.floor((+T.value||2)*100)/100));
   const upd=()=>{const t=tgt();$('#lC').textContent=fm(99/t)+' %';$('#lP').textContent='+'+fm(r2((+$('#bet').value||0)*(t-1)))+' €'};
   T.oninput=upd;$('#bet').oninput=upd;
   T.onchange=()=>{T.value=tgt().toFixed(2);store.set('lT',T.value);upd()};
