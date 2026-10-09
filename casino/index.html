@@ -219,6 +219,29 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:7px;bac
 .hole svg{width:46%}
 .hole b{font-size:17px}
 
+.slot{position:relative;width:100%;max-width:640px;margin:auto;background:linear-gradient(180deg,#3a2406,#140c02);border:3px solid var(--accent);border-radius:18px;padding:10px;box-shadow:0 0 0 6px rgba(240,181,69,.14),0 14px 40px rgba(0,0,0,.5)}
+.fsbar{margin-bottom:8px;text-align:center;font-family:var(--f-display);font-weight:700;letter-spacing:.04em;color:var(--accent-ink);background:var(--accent);border-radius:8px;padding:6px}
+.reels{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;aspect-ratio:5/3;max-width:100%}
+.reel{position:relative;overflow:hidden;background:#f4efe4;border-radius:9px;box-shadow:inset 0 12px 14px -8px rgba(0,0,0,.5),inset 0 -12px 14px -8px rgba(0,0,0,.5)}
+.strip{position:absolute;left:0;right:0;top:0;height:100%;will-change:transform}
+.sym{display:grid;place-items:center;font-size:clamp(24px,6.2vw,50px);line-height:1;color:#1a1206}
+.sym.win{background:radial-gradient(circle,rgba(240,181,69,.55),rgba(240,181,69,0) 70%);animation:symwin .5s ease-in-out infinite alternate}
+@keyframes symwin{to{transform:scale(1.14)}}
+.s7{font-family:var(--f-display);font-weight:700;color:#d42a40;font-size:1.15em;text-shadow:0 3px 0 #7a0f1d}
+.swild{font-family:var(--f-display);font-weight:700;font-size:.4em;background:linear-gradient(#ffe08a,#e08a12);color:#3a2000;padding:.25em .35em;border-radius:6px;letter-spacing:.04em}
+.sstar{color:#f0a020;font-size:1.1em;text-shadow:0 0 10px rgba(240,160,32,.8),0 2px 0 #8a5200}
+.slines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.slines polyline{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.9;filter:drop-shadow(0 0 4px rgba(0,0,0,.6))}
+.slwins{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:30px}
+.slwins span{font-family:var(--f-mono);font-size:12.5px;padding:4px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--lc,var(--line));display:inline-flex;gap:4px;align-items:center}
+.slwins .s7,.slwins .sstar{font-size:1em}.slwins .swild{font-size:.75em}
+.paytab{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;width:100%;max-width:640px;margin:0 auto}
+.paytab summary{cursor:pointer;font-family:var(--f-display);font-weight:600}
+.paytab p{color:var(--muted);font-size:13px;margin:10px 0 0}
+.ptgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 10px;margin-top:10px;font-family:var(--f-mono);font-size:13px;align-items:center}
+.ptgrid b{font-family:var(--f-body);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.pts{font-size:22px;line-height:1.2}.pts .swild{font-size:.5em}
+
 /* Log */
 .logbox{margin-top:22px}
 .loghead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
@@ -361,8 +384,8 @@ function readBet(id='bet'){
   lastBet=v.toFixed(2);el.value=lastBet;return v;
 }
 function take(v){S.bal=r2(S.bal-v);S.wag=r2(S.wag+v);persist();paint(-1)}
-function settle(game,bet,mult){
-  const pay=r2(bet*mult);
+function settle(game,bet,mult,payOverride){
+  const pay=r2(payOverride===undefined?bet*mult:payOverride);
   S.bal=r2(S.bal+pay);S.prof=r2(S.prof+pay-bet);S.cnt++;
   log.unshift({g:game,b:bet,m:mult,p:pay});if(log.length>40)log.length=40;
   persist();paint(pay>0?1:0);renderLog();
@@ -1155,8 +1178,100 @@ M.icefish=(c,b)=>{
   return()=>{cancelAnimationFrame(raf);ro.disconnect();if(IF.bonus&&IF.bonus.pick<0)pickHole(ri(3))};
 };
 
+/* ---------- Slots ---------- */
+// [symbol, reel weight, pays for 3/4/5 in a row in line bets]; tuned by simulation to about 96.8 % return
+const SLOT=[['C',30,[7,16,50]],['L',28,[7,20,65]],['G',22,[11,30,100]],['B',15,[15,50,160]],['K',10,[25,80,250]],['7',6,[50,160,650]],['D',4,[80,320,1600]],['W',4,[160,650,3200]],['S',3,null]];
+const SLP={},SLW=SLOT.reduce((a,s)=>a+s[1],0);SLOT.forEach(s=>SLP[s[0]]=s[2]);
+const SLINES=[[1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],[0,0,1,2,2],[2,2,1,0,0],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,0]];
+const SLSC=[0,0,0,5,30,150];
+const LCOL=['#f0b545','#33d17a','#4fb3ff','#ff4d63','#a98bff','#ff8a3d','#e7eef4','#5ce1e6','#ff7ad9','#b6e35a'];
+const SLE={C:'🍒',L:'🍋',G:'🍇',B:'🔔',K:'🍀',D:'💎'};
+const symHTML=x=>x==='7'?'<span class="s7">7</span>':x==='W'?'<span class="swild">WILD</span>':x==='S'?'<span class="sstar">★</span>':SLE[x];
+const slSym=()=>{let r=rng()*SLW;for(const s of SLOT){r-=s[1];if(r<0)return s[0]}return'C'};
+const slGrid=()=>Array.from({length:5},()=>[slSym(),slSym(),slSym()]);
+function slEval(g,bet){
+  const lb=bet/10,wins=[];
+  SLINES.forEach((L,li)=>{
+    const row=L.map((r,c)=>g[c][r]);if(row[0]==='S')return;
+    let base=row.find(x=>x!=='W')||'W';if(base==='S')base='W';
+    let n=0;for(const x of row){if(x===base||x==='W')n++;else break}
+    if(n>=3&&SLP[base])wins.push({li,n,sym:base,pay:SLP[base][n-3]*lb});
+  });
+  const sc=[];g.forEach((col,c)=>col.forEach((x,r)=>{if(x==='S')sc.push([c,r])}));
+  const scPay=SLSC[Math.min(5,sc.length)]*bet;
+  return{wins,sc,scPay,total:r2(wins.reduce((a,w)=>a+w.pay,0)+scPay),fs:sc.length>=3};
+}
+const SL={grid:slGrid(),free:0,fbet:0,fsWin:0,spinning:false,res:null,auto:0};
+M.slots=(c,b)=>{
+  c.innerHTML=betHTML()+`<div class="grid2"><div class="fld"><span>Pro Linie</span><div class="out" id="slLB"></div></div><div class="fld"><span>Letzter Gewinn</span><div class="out" id="slW">–</div></div></div>
+  <button class="play" id="go" type="button">Drehen</button><button class="ghost" id="slA" type="button">Auto-Spin ×10</button><p class="note" id="slN">10 Linien. 3 Sterne irgendwo starten 10 Freispiele.</p>`;
+  b.innerHTML=`<div class="pills" id="hist"></div>
+  <div class="slot"><div class="fsbar" id="slF" hidden></div><div class="reels" id="slR">${[0,1,2,3,4].map(i=>`<div class="reel"><div class="strip" id="st${i}"></div></div>`).join('')}<svg class="slines" id="slL" viewBox="0 0 500 300" preserveAspectRatio="none" aria-hidden="true"></svg></div></div>
+  <div class="slwins" id="slWins"></div>
+  <details class="paytab"><summary>Gewinntabelle</summary><div class="ptgrid"><b>Symbol</b><b>3×</b><b>4×</b><b>5×</b>${SLOT.filter(s=>s[2]).slice().reverse().map(s=>`<span class="pts">${symHTML(s[0])}</span>${s[2].map(v=>`<span>${v}×</span>`).join('')}`).join('')}<span class="pts">${symHTML('S')}</span><span>5×</span><span>30×</span><span>150×</span></div>
+  <p>Symbole zahlen von links auf einer Linie, Werte mal Linieneinsatz (Einsatz ÷ 10). WILD ersetzt alles außer dem Stern. Sterne zahlen überall, mal Gesamteinsatz, und bringen ab 3 Stück 10 Freispiele.</p></details>`;
+  pills('slots');
+  const go=$('#go');
+  const syms=(arr)=>arr.map(x=>`<div class="sym" style="height:${100/arr.length}%">${symHTML(x)}</div>`).join('');
+  function renderStatic(){
+    if(!$('#slR'))return;
+    for(let i=0;i<5;i++){const st=$('#st'+i);st.style.transition='none';st.style.transform='none';st.style.height='100%';st.innerHTML=syms(SL.grid[i])}
+    const res=SL.res,L=$('#slL');L.innerHTML='';
+    if(res){
+      res.wins.forEach(w=>{const ln=SLINES[w.li];
+        for(let c=0;c<w.n;c++)$('#st'+c).children[ln[c]].classList.add('win');
+        L.insertAdjacentHTML('beforeend',`<polyline points="${ln.map((r,c)=>`${c*100+50},${r*100+50}`).join(' ')}" stroke="${LCOL[w.li]}"/>`)});
+      res.sc.forEach(([c,r])=>$('#st'+c).children[r].classList.add('win'));
+      $('#slWins').innerHTML=res.wins.map(w=>`<span style="--lc:${LCOL[w.li]}">Linie ${w.li+1}: ${w.n}× ${symHTML(w.sym)} · ${fm(w.pay)} €</span>`).join('')+(res.scPay?`<span style="--lc:#f0b545">${res.sc.length}× ${symHTML('S')} · ${fm(res.scPay)} €</span>`:'');
+    }else $('#slWins').innerHTML='';
+  }
+  function ui(){
+    if(!$('#slR'))return;
+    const free=SL.free>0,bet=free?SL.fbet:(+$('#bet').value||0);
+    $('#slLB').textContent=fm(r2(bet/10))+' €';
+    $('#bet').disabled=free||SL.spinning||SL.auto>0;if(free)$('#bet').value=SL.fbet.toFixed(2);
+    go.disabled=SL.spinning||free;go.textContent=free?`Freispiel … noch ${SL.free}`:SL.spinning?'Dreht …':'Drehen';
+    $('#slA').textContent=SL.auto>0?`Auto-Spin stoppen (${SL.auto})`:'Auto-Spin ×10';$('#slA').disabled=free;
+    const F=$('#slF');F.hidden=!free&&!SL.fsWin;F.textContent=free?`FREISPIELE: noch ${SL.free} · Gewinn bisher ${fm(SL.fsWin)} €`:`Freispiele beendet: ${fm(SL.fsWin)} € gewonnen`;
+  }
+  function tick(){if(!audio())return;const t=AC.currentTime;tone(220,t,.07,'square',.12,110);noise(t,.05,.08,2500)}
+  function spin(){
+    if(SL.spinning||!$('#slR'))return;
+    const free=SL.free>0;let bet;
+    if(free){bet=SL.fbet;SL.free--}
+    else{bet=readBet();if(bet===null){SL.auto=0;ui();return}take(bet);SL.fsWin=0}
+    let g=slGrid(),res=slEval(g,bet);
+    for(let k=0;LUCK&&k<4000&&!(res.total>(free?0:bet));k++){g=slGrid();res=slEval(g,bet)}
+    SL.spinning=true;SL.res=null;$('#slL').innerHTML='';$('#slWins').innerHTML='';ui();
+    for(let i=0;i<5;i++){
+      const st=$('#st'+i),arr=[...SL.grid[i],...Array.from({length:14+i*5},slSym),...g[i]],n=arr.length;
+      st.style.transition='none';st.style.transform='none';st.style.height=(n/3*100)+'%';st.innerHTML=syms(arr);void st.offsetHeight;
+      const d=.75+i*.22;st.style.transition=`transform ${d}s cubic-bezier(.2,.75,.3,1.04)`;st.style.transform=`translateY(-${(n-3)/n*100}%)`;
+      setTimeout(tick,d*1000-60);
+    }
+    later(()=>{
+      SL.grid=g;SL.spinning=false;SL.res=res;renderStatic();
+      const m=res.total/bet;$('#slW').textContent=res.total?fm(res.total)+' €':'–';
+      if(free){SL.fsWin=r2(SL.fsWin+res.total);settle('Slots Freispiel',0,m,res.total)}else settle('Slots',bet,m);
+      hist('slots',fx(m),res.total>(free?0:bet));
+      if(res.fs){SL.free+=10;SL.fbet=bet;toast('10 Freispiele gewonnen!');if(!RM)flash(1)}
+      if(!leaving&&SL.free>0)later(spin,1400);
+      else if(!free&&SL.auto>0){SL.auto--;if(!leaving&&SL.auto>0)later(spin,900)}
+      else if(free&&SL.free===0&&SL.auto>0&&!leaving)later(spin,1400);
+      ui();
+    },(.75+4*.22)*1000+120);
+  }
+  go.onclick=spin;
+  $('#slA').onclick=()=>{if(SL.auto>0){SL.auto=0;ui();return}SL.auto=10;ui();spin()};
+  $('#bet').addEventListener('input',ui);
+  renderStatic();ui();
+  if(SL.free>0)later(spin,800);
+  return()=>{SL.auto=0};
+};
+
 /* ---------- Shell ---------- */
 const GAMES=[
+  ['slots','Slots','5 Walzen, 10 Gewinnlinien, WILD und Freispiele ab 3 Sternen.','slot','Sl'],
   ['icefish','Ice Fishing','Setz auf 1, 2, 5, 10 oder den Angel-Bonus und dreh das Eisrad.','show','IF'],
   ['dice','Dice','Würfle über oder unter deinem Zielwert. Je knapper, desto höher der Multiplikator.','orig','Di'],
   ['limbo','Limbo','Das Ergebnis muss mindestens dein Ziel-Multiplikator sein.','orig','Li'],
@@ -1171,16 +1286,19 @@ const GAMES=[
   ['roulette','Roulette','Europäischer Tisch mit einer Null. Setz Chips auf Zahlen oder Felder.','orig','Ro']
 ];
 const rail=$('#rail');
-const navBtn=([id,n,,,ic])=>`<button type="button" data-g="${id}" aria-pressed="false"><i>${ic}</i>${n}${id==='icefish'?'<span class="new">Neu</span>':''}</button>`;
-rail.innerHTML='<h3>Gameshow</h3>'+GAMES.filter(g=>g[3]==='show').map(navBtn).join('')+'<h3>Originals</h3>'+GAMES.filter(g=>g[3]==='orig').map(navBtn).join('');
+const navBtn=([id,n,,,ic])=>`<button type="button" data-g="${id}" aria-pressed="false"><i>${ic}</i>${n}${id==='slots'?'<span class="new">Neu</span>':''}</button>`;
+const GROUPS={slot:'Slots',show:'Gameshow',orig:'Originals'};
+rail.innerHTML=Object.entries(GROUPS).map(([k,t])=>`<h3>${t}</h3>`+GAMES.filter(g=>g[3]===k).map(navBtn).join('')).join('');
 $('#home').onclick=e=>{e.preventDefault();openGame('icefish');scrollTo({top:0,behavior:'smooth'})};
 let cleanup=null;
+let leaving=false;
 function openGame(id){
   if(!M[id])id='dice';
-  flush();
+  leaving=true;flush();
   if(cleanup){cleanup();cleanup=null}
+  leaving=false;
   const G=GAMES.find(g=>g[0]===id);
-  $('#gName').textContent=G[1];$('#gDesc').textContent=G[2];$('#gGroup').textContent=G[3]==='show'?'Gameshow':'Originals';
+  $('#gName').textContent=G[1];$('#gDesc').textContent=G[2];$('#gGroup').textContent=GROUPS[G[3]];
   document.title=G[1]+' · Leck Eier';
   $$('#rail button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.g===id));
   const c=$('#ctrl'),b=$('#board');c.innerHTML='';b.innerHTML='';

@@ -4,7 +4,7 @@ Ein privates Spaß-Casino mit Spielgeld im Stil der „Originals“. Startguthab
 
 **Starten:** `casino/index.html` im Browser öffnen. Keine Installation nötig.
 
-Spiele: Ice Fishing (Glücksrad mit Angel-Bonus), Dice, Limbo, Crash, Mines, Plinko, Keno, HiLo, Blackjack, Wheel, Dragon Tower, Roulette.
+Spiele: Slots (5 Walzen, 10 Linien, Freispiele), Ice Fishing (Glücksrad mit Angel-Bonus), Dice, Limbo, Crash, Mines, Plinko, Keno, HiLo, Blackjack, Wheel, Dragon Tower, Roulette.
 
 - Guthaben, Statistik und letzte Wetten werden im Browser (localStorage) gespeichert.
 - „Auffüllen“ setzt das Guthaben wieder auf 67 Milliarden €.
