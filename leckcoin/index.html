@@ -87,6 +87,19 @@ section{padding-block:84px}
 .fact span{font-weight:500}
 @media (max-width:820px){.story .wrap{grid-template-columns:minmax(0,1fr)}}
 
+/* Coin */
+.coinsec .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center}
+.coinsec p{max-width:48ch;margin:0 0 14px}
+.motto{font-family:var(--f-display);font-size:clamp(26px,3.4vw,38px);color:var(--tongue);-webkit-text-stroke:2px var(--ink);margin:6px 0 24px!important}
+.c3d{perspective:1200px;width:min(100%,420px);aspect-ratio:1;margin:0 auto}
+.spin{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:coinspin 7s linear infinite}
+.spin.toss{animation:toss 1.4s cubic-bezier(.3,.6,.4,1) 1}
+.face{position:absolute;inset:0;width:100%;height:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;filter:drop-shadow(0 18px 0 rgba(30,20,51,.25))}
+.face.back{transform:rotateY(180deg)}
+@keyframes coinspin{0%,32%{transform:rotateY(0)}50%,82%{transform:rotateY(180deg)}100%{transform:rotateY(360deg)}}
+@keyframes toss{0%{transform:translateY(0) rotateY(0)}45%{transform:translateY(-120px) rotateY(1080deg)}100%{transform:translateY(0) rotateY(var(--end,1980deg))}}
+@media (max-width:820px){.coinsec .wrap{grid-template-columns:minmax(0,1fr)}.c3d{max-width:300px}}
+
 /* Tokenomics */
 .tok .wrap{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:40px;align-items:center}
 .supply{font-family:var(--f-display);font-size:clamp(28px,4.6vw,54px);line-height:1.05;margin:6px 0 4px;white-space:nowrap}
@@ -141,21 +154,54 @@ footer .logo{color:var(--shell)}
 </head>
 <body>
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <symbol id="coin" viewBox="0 0 64 64">
-      <circle cx="32" cy="32" r="29" fill="#ffc21a" stroke="#1e1433" stroke-width="4"/>
-      <circle cx="32" cy="32" r="21" fill="none" stroke="#1e1433" stroke-width="2" stroke-dasharray="3 4"/>
-      <path d="M32 15c-8 0-13 11-13 20 0 8 6 13 13 13s13-5 13-13c0-9-5-20-13-20z" fill="#fff6df" stroke="#1e1433" stroke-width="3"/>
-      <path d="M27 39q5 4 10 0" fill="none" stroke="#1e1433" stroke-width="2.5" stroke-linecap="round"/>
-      <path d="M30 40q2 7 4 0" fill="#ff4f7b" stroke="#1e1433" stroke-width="2"/>
-    </symbol>
-  </defs>
-</svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><radialGradient id="fg" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#fff4c2"/><stop offset=".42" stop-color="#ffc21a"/><stop offset="1" stop-color="#d98600"/></radialGradient>
+<linearGradient id="frim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe07a"/><stop offset=".5" stop-color="#e09a10"/><stop offset="1" stop-color="#9c5a00"/></linearGradient>
+<radialGradient id="fc" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#ffd54d"/><stop offset="1" stop-color="#f2a900"/></radialGradient>
+<path id="ftp" d="M256,256 m-182,0 a182,182 0 1,1 364,0 a182,182 0 1,1 -364,0"/>
+<clipPath id="fcl"><circle cx="256" cy="256" r="158"/></clipPath><radialGradient id="bg" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#fff4c2"/><stop offset=".42" stop-color="#ffc21a"/><stop offset="1" stop-color="#d98600"/></radialGradient>
+<linearGradient id="brim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe07a"/><stop offset=".5" stop-color="#e09a10"/><stop offset="1" stop-color="#9c5a00"/></linearGradient>
+<radialGradient id="bc" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#ffd54d"/><stop offset="1" stop-color="#f2a900"/></radialGradient>
+<path id="btp" d="M256,256 m-182,0 a182,182 0 1,1 364,0 a182,182 0 1,1 -364,0"/>
+<clipPath id="bcl"><circle cx="256" cy="256" r="158"/></clipPath><symbol id="coinF" viewBox="0 0 512 512"><circle cx="256" cy="256" r="250" fill="#1e1433"/>
+<circle cx="256" cy="256" r="240" fill="url(#frim)"/>
+<circle cx="256" cy="256" r="231" fill="none" stroke="#8a4f00" stroke-width="12" stroke-dasharray="2.2 4.2" opacity=".75"/>
+<circle cx="256" cy="256" r="220" fill="url(#fg)" stroke="#1e1433" stroke-width="7"/>
+<text font-family="'Bowlby One','Arial Black',Impact,sans-serif" font-size="27" fill="#1e1433" letter-spacing="1"><textPath href="#ftp" textLength="1138" lengthAdjust="spacing">LECKCOIN ★ $LECK ★ LECKCOIN ★ $LECK ★</textPath></text>
+<circle cx="256" cy="256" r="160" fill="url(#fc)" stroke="#1e1433" stroke-width="6"/>
+<g clip-path="url(#fcl)" fill="#fff6df" opacity=".22"><path d="M256 256L426.0 256.0L424.5 278.2z"/><path d="M256 256L420.2 300.0L413.1 321.1z"/><path d="M256 256L403.2 341.0L390.9 359.5z"/><path d="M256 256L376.2 376.2L359.5 390.9z"/><path d="M256 256L341.0 403.2L321.1 413.1z"/><path d="M256 256L300.0 420.2L278.2 424.5z"/><path d="M256 256L256.0 426.0L233.8 424.5z"/><path d="M256 256L212.0 420.2L190.9 413.1z"/><path d="M256 256L171.0 403.2L152.5 390.9z"/><path d="M256 256L135.8 376.2L121.1 359.5z"/><path d="M256 256L108.8 341.0L98.9 321.1z"/><path d="M256 256L91.8 300.0L87.5 278.2z"/><path d="M256 256L86.0 256.0L87.5 233.8z"/><path d="M256 256L91.8 212.0L98.9 190.9z"/><path d="M256 256L108.8 171.0L121.1 152.5z"/><path d="M256 256L135.8 135.8L152.5 121.1z"/><path d="M256 256L171.0 108.8L190.9 98.9z"/><path d="M256 256L212.0 91.8L233.8 87.5z"/><path d="M256 256L256.0 86.0L278.2 87.5z"/><path d="M256 256L300.0 91.8L321.1 98.9z"/><path d="M256 256L341.0 108.8L359.5 121.1z"/><path d="M256 256L376.2 135.8L390.9 152.5z"/><path d="M256 256L403.2 171.0L413.1 190.9z"/><path d="M256 256L420.2 212.0L424.5 233.8z"/></g>
+<circle cx="256" cy="256" r="160" fill="none" stroke="#1e1433" stroke-width="6"/>
+<g transform="translate(256 262) scale(.6) translate(-200 -228)">
+<path d="M200 30C120 30 62 160 62 255c0 95 62 150 138 150s138-55 138-150C338 160 280 30 200 30z" fill="#fff6df" stroke="#1e1433" stroke-width="11"/>
+<path d="M112 126c10-30 30-55 52-66" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round"/>
+<path d="M250 62l-14 26 18 12-12 22" fill="none" stroke="#1e1433" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="96" y="178" width="92" height="56" rx="16" fill="#1e1433"/><rect x="212" y="178" width="92" height="56" rx="16" fill="#1e1433"/>
+<path d="M188 196h24" stroke="#1e1433" stroke-width="10"/>
+<path d="M110 190h26M226 190h26" stroke="#7fd3ff" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="118" cy="268" rx="22" ry="12" fill="#ff4f7b" opacity=".5"/><ellipse cx="282" cy="268" rx="22" ry="12" fill="#ff4f7b" opacity=".5"/>
+<path d="M148 272q52 52 104 0" fill="#1e1433" stroke="#1e1433" stroke-width="10" stroke-linejoin="round"/>
+<path d="M176 292c0 36 8 62 24 62s24-26 24-62z" fill="#ff4f7b" stroke="#1e1433" stroke-width="9" stroke-linejoin="round"/>
+<path d="M200 300v34" stroke="#c42a52" stroke-width="6" stroke-linecap="round"/>
+</g>
+<path d="M120 112a190 190 0 0 1 120-68" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".55"/></symbol><symbol id="coinB" viewBox="0 0 512 512"><circle cx="256" cy="256" r="250" fill="#1e1433"/>
+<circle cx="256" cy="256" r="240" fill="url(#brim)"/>
+<circle cx="256" cy="256" r="231" fill="none" stroke="#8a4f00" stroke-width="12" stroke-dasharray="2.2 4.2" opacity=".75"/>
+<circle cx="256" cy="256" r="220" fill="url(#bg)" stroke="#1e1433" stroke-width="7"/>
+<text font-family="'Bowlby One','Arial Black',Impact,sans-serif" font-size="27" fill="#1e1433" letter-spacing="1"><textPath href="#btp" textLength="1138" lengthAdjust="spacing">IN EI WE TRUST ★ MMXXVI ★ IN EI WE TRUST ★ MMXXVI ★</textPath></text>
+<circle cx="256" cy="256" r="160" fill="url(#bc)" stroke="#1e1433" stroke-width="6"/>
+<g clip-path="url(#bcl)" fill="#fff6df" opacity=".22"><path d="M256 256L426.0 256.0L424.5 278.2z"/><path d="M256 256L420.2 300.0L413.1 321.1z"/><path d="M256 256L403.2 341.0L390.9 359.5z"/><path d="M256 256L376.2 376.2L359.5 390.9z"/><path d="M256 256L341.0 403.2L321.1 413.1z"/><path d="M256 256L300.0 420.2L278.2 424.5z"/><path d="M256 256L256.0 426.0L233.8 424.5z"/><path d="M256 256L212.0 420.2L190.9 413.1z"/><path d="M256 256L171.0 403.2L152.5 390.9z"/><path d="M256 256L135.8 376.2L121.1 359.5z"/><path d="M256 256L108.8 341.0L98.9 321.1z"/><path d="M256 256L91.8 300.0L87.5 278.2z"/><path d="M256 256L86.0 256.0L87.5 233.8z"/><path d="M256 256L91.8 212.0L98.9 190.9z"/><path d="M256 256L108.8 171.0L121.1 152.5z"/><path d="M256 256L135.8 135.8L152.5 121.1z"/><path d="M256 256L171.0 108.8L190.9 98.9z"/><path d="M256 256L212.0 91.8L233.8 87.5z"/><path d="M256 256L256.0 86.0L278.2 87.5z"/><path d="M256 256L300.0 91.8L321.1 98.9z"/><path d="M256 256L341.0 108.8L359.5 121.1z"/><path d="M256 256L376.2 135.8L390.9 152.5z"/><path d="M256 256L403.2 171.0L413.1 190.9z"/><path d="M256 256L420.2 212.0L424.5 233.8z"/></g>
+<circle cx="256" cy="256" r="160" fill="none" stroke="#1e1433" stroke-width="6"/>
+<g font-family="'Bowlby One','Arial Black',Impact,sans-serif" text-anchor="middle">
+<g transform="translate(256 150) scale(.16) translate(-200 -228)"><path d="M200 30C120 30 62 160 62 255c0 95 62 150 138 150s138-55 138-150C338 160 280 30 200 30z" fill="#fff6df" stroke="#1e1433" stroke-width="22"/><path d="M176 292c0 36 8 62 24 62s24-26 24-62z" fill="#ff4f7b" stroke="#1e1433" stroke-width="18"/></g>
+<text x="256" y="300" font-size="72" fill="#1e1433" transform="translate(5 5)">$LECK</text>
+<text x="256" y="300" font-size="72" fill="#fff6df" stroke="#1e1433" stroke-width="5" paint-order="stroke">$LECK</text>
+<text x="256" y="350" font-size="25" fill="#1e1433">67.000.000.000</text>
+<text x="256" y="378" font-size="13" fill="#1e1433" letter-spacing="3">GESAMTMENGE</text>
+</g>
+<path d="M120 112a190 190 0 0 1 120-68" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".55"/></symbol></defs></svg>
 
 <nav class="nav" aria-label="Hauptnavigation"><div class="wrap">
-  <a class="logo" href="#top"><svg aria-hidden="true"><use href="#coin"/></svg>LeckCoin</a>
-  <div class="links"><a href="#story">Story</a><a href="#tokenomics">Tokenomics</a><a href="#kaufen">Kaufen</a><a href="#roadmap">Roadmap</a><a href="#community">Community</a></div>
+  <a class="logo" href="#top"><svg aria-hidden="true"><use href="#coinF"/></svg>LeckCoin</a>
+  <div class="links"><a href="#coin">Coin</a><a href="#story">Story</a><a href="#tokenomics">Tokenomics</a><a href="#kaufen">Kaufen</a><a href="#roadmap">Roadmap</a><a href="#community">Community</a></div>
   <a class="btn hot" href="#kaufen">$LECK holen</a>
 </div></nav>
 
@@ -196,6 +242,19 @@ footer .logo{color:var(--shell)}
   <span>$LECK</span><i>●</i><span>LECK EIER</span><i>●</i><span>67.000.000.000 SUPPLY</span><i>●</i><span>0 % STEUER</span><i>●</i><span>AB INS NEST</span><i>●</i><span>KEIN NUTZEN, NUR VIBES</span><i>●</i>
   <span>$LECK</span><i>●</i><span>LECK EIER</span><i>●</i><span>67.000.000.000 SUPPLY</span><i>●</i><span>0 % STEUER</span><i>●</i><span>AB INS NEST</span><i>●</i><span>KEIN NUTZEN, NUR VIBES</span><i>●</i>
 </div></div>
+
+<section class="coinsec" id="coin"><div class="wrap">
+  <div class="c3d" id="c3d" role="img" aria-label="LeckCoin-Münze, Vorderseite mit Ei, Rückseite mit $LECK">
+    <div class="spin" id="spin"><svg class="face front" viewBox="0 0 512 512" aria-hidden="true"><use href="#coinF"/></svg><svg class="face back" viewBox="0 0 512 512" aria-hidden="true"><use href="#coinB"/></svg></div>
+  </div>
+  <div>
+    <span class="eyebrow">Der Coin</span>
+    <h2 class="h2">Eine Münze wie ein Ei</h2>
+    <p>Vorne das Ei mit Sonnenbrille und Zunge, umrandet von LECKCOIN und $LECK. Hinten der Ticker, die Gesamtmenge und das Motto, das alles sagt.</p>
+    <p class="motto">IN EI WE TRUST</p>
+    <button class="btn" type="button" id="flip">Münze werfen</button>
+  </div>
+</div></section>
 
 <section class="story ink" id="story"><div class="wrap">
   <div>
@@ -257,7 +316,7 @@ footer .logo{color:var(--shell)}
 </div></section>
 
 <footer><div class="wrap">
-  <a class="logo" href="#top"><svg aria-hidden="true"><use href="#coin"/></svg>LeckCoin</a>
+  <a class="logo" href="#top"><svg aria-hidden="true"><use href="#coinF"/></svg>LeckCoin</a>
   <p class="disc">$LECK ist ein Meme-Coin ohne inneren Wert, ohne Team-Versprechen und ohne Gewinnerwartung. Nichts auf dieser Seite ist Finanzberatung. Krypto ist extrem riskant: Kauf nur mit Geld, dessen Verlust du verkraftest, und prüfe die Kontraktadresse immer selbst.</p>
 </div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -289,6 +348,12 @@ $('#egg').addEventListener('click',e=>{
   p.style.left=(e.clientX||innerWidth/2)-20+'px';p.style.top=(e.clientY||innerHeight/2)-20+'px';document.body.appendChild(p);setTimeout(()=>p.remove(),900);
   if(licks%67===0)toast('67 Licks geschafft. Das Ei ist stolz auf dich.');
 });
+
+// Coin toss
+$('#flip').onclick=()=>{const s=$('#spin'),heads=Math.random()<.5;s.style.setProperty('--end',heads?'2160deg':'1980deg');
+  s.classList.remove('toss');void s.offsetWidth;s.classList.add('toss');
+  setTimeout(()=>{s.style.animation='none';s.style.transform=`rotateY(${heads?0:180}deg)`;toast(heads?'Ei! Leck dich glücklich.':'$LECK! In Ei we trust.')},1400);
+  setTimeout(()=>{s.style.animation='';s.style.transform='';s.classList.remove('toss')},4200)};
 
 // Share
 $('#share').onclick=()=>{const url=location.href.split('#')[0];
