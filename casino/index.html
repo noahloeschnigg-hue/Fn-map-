@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Spielgeld Casino</title>
+<title>Leck Eier</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Chakra+Petch:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Layout: sticky wallet bar, scrolling game rail, two-pane table (bet controls | game board), bet log below */
+/* Layout: sticky name + wallet bar, game sidebar (rail on phones), game header, two-pane table (bet controls | board), bet log below */
 :root{
   --bg:#0d1720; --deep:#09121a; --panel:#13212e; --raise:#1b2d3d; --line:#274055;
   --fg:#e7eef4; --muted:#87a1b6;
@@ -27,10 +27,12 @@ button:disabled{cursor:not-allowed}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
-.top-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.brand{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.01em;white-space:nowrap}
-.brand b{color:var(--accent)}
-.brand small{font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:8px}
+.top-in{max-width:1240px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;color:var(--fg);text-decoration:none;white-space:nowrap;min-width:0}
+.logo{width:38px;height:38px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:16px;letter-spacing:.02em;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2);transform:rotate(-4deg)}
+.bname{font-family:var(--f-display);font-weight:700;font-size:25px;letter-spacing:.01em;line-height:1}
+.brand small{font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:520px){.brand small{display:none}.bname{font-size:22px}}
 .wallet{display:flex;align-items:stretch;gap:8px}
 .bal{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--deep)}
 .bal .amt{font-family:var(--f-mono);font-weight:700;font-variant-numeric:tabular-nums;padding:8px 12px;min-width:12ch;text-align:right}
@@ -41,11 +43,28 @@ button:disabled{cursor:not-allowed}
 .ghost:hover:not(:disabled){background:var(--line)}
 .ghost:disabled{opacity:.45}
 
-.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
-.rail{display:flex;gap:6px;overflow-x:auto;padding-block:14px;scrollbar-width:thin}
-.rail button{flex:0 0 auto;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-family:var(--f-display);font-weight:600;font-size:14px;letter-spacing:.02em}
-.rail button:hover{border-color:var(--muted)}
-.rail button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px}
+.layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:22px;align-items:start;padding-block:22px 40px}
+.main{min-width:0}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 82px);display:flex;flex-direction:column;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.side h3{margin:10px 8px 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.side h3:first-child{margin-top:2px}
+.side button{display:flex;align-items:center;gap:10px;background:none;border:0;border-radius:8px;padding:8px;font-family:var(--f-display);font-weight:600;font-size:14.5px;text-align:left;white-space:nowrap}
+.side button:hover{background:var(--raise)}
+.side button i{width:26px;height:26px;border-radius:7px;background:var(--raise);display:grid;place-items:center;font-style:normal;font-family:var(--f-mono);font-size:11px;color:var(--muted);flex:0 0 auto}
+.side button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.side button[aria-pressed="true"] i{background:rgba(0,0,0,.15);color:var(--accent-ink)}
+.side .new{margin-left:auto;font-family:var(--f-body);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--win);color:var(--win-ink);border-radius:4px;padding:1px 5px}
+.ghead{display:flex;justify-content:space-between;align-items:flex-end;gap:6px 20px;flex-wrap:wrap;margin-bottom:14px}
+.ghead h1{font-family:var(--f-display);font-size:clamp(26px,4vw,34px);line-height:1.05;margin:2px 0 0;text-wrap:balance}
+.ghead p{margin:0;color:var(--muted);max-width:46ch}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:14px;padding-block:12px 40px}
+  .side{position:static;flex-direction:row;overflow-x:auto;padding:6px;scrollbar-width:thin}
+  .side h3{display:none}
+  .side button{flex:0 0 auto}
+}
 
 .stage{display:grid;grid-template-columns:300px minmax(0,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
 .ctrl{padding:16px;display:flex;flex-direction:column;gap:14px;border-right:1px solid var(--line);min-width:0}
@@ -179,8 +198,26 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:7px;bac
 .rc:hover:not(:disabled){filter:brightness(1.25)}
 .rc.red{background:#c42539}.rc.blk{background:#1d2a36}.rc.z{background:#17844d}.rc.o{background:var(--raise);font-family:var(--f-body);font-size:13px}
 .rc.hitc{box-shadow:inset 0 0 0 3px var(--accent)}
-.rc .chip{position:absolute;top:-6px;right:-4px;z-index:1;font-size:10.5px;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 5px;border:2px solid var(--deep)}
+.chip{position:absolute;top:-6px;right:-4px;z-index:1;font-size:10.5px;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 5px;border:2px solid var(--deep)}
 .sw{display:inline-block;width:16px;height:16px;border-radius:3px;vertical-align:middle}
+
+/* Ice Fishing */
+.ispots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.ispot{position:relative;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:8px;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.ispot:hover:not(:disabled){background:var(--raise)}
+.ispot b{font-family:var(--f-display);font-size:22px;line-height:1.1;color:var(--c)}
+.ispot span{font-size:11.5px;color:var(--muted);text-align:center;line-height:1.2}
+@media (max-width:520px){.ispot b{font-size:16px}.ispot span+span{display:none}}
+.ispot.hitc{background:var(--raise);box-shadow:0 0 0 2px var(--c)}
+.holes{display:flex;flex-direction:column;gap:10px}
+.hrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:460px;width:100%;margin:0 auto}
+.hole{aspect-ratio:1.35;max-width:100%;border-radius:50%;border:3px solid #cfe9ff;background:radial-gradient(ellipse at center,#06263d 0 50%,#1d5f8c 100%);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:var(--f-display);font-weight:700;font-size:22px;padding:0;transition:transform .15s}
+.hole:hover:not(:disabled){transform:translateY(-3px)}
+.hole:disabled{cursor:default}
+.hole.picked{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent);animation:pop .3s ease-out}
+.hole.shown:not(.picked){opacity:.5}
+.hole svg{width:46%}
+.hole b{font-size:17px}
 
 /* Log */
 .logbox{margin-top:22px}
@@ -206,15 +243,17 @@ td.empty{color:var(--muted);text-align:center;padding:22px}
 <body>
 
 <header class="top"><div class="top-in">
-  <div class="brand">Spielgeld<b>.</b>Casino<small>Originals</small></div>
+  <a class="brand" href="#" id="home" aria-label="Leck Eier Startseite"><span class="logo" aria-hidden="true">LE</span><span class="bname">Leck Eier</span><small>Casino · Spielgeld</small></a>
   <div class="wallet">
     <div class="bal" aria-label="Guthaben"><span class="amt" id="bal">10.000,00</span><span class="cur">€</span></div>
     <button class="ghost" id="reset" type="button">Auffüllen</button>
   </div>
 </div></header>
 
-<main class="wrap">
-  <nav class="rail" id="rail" aria-label="Spiele"></nav>
+<main class="wrap layout">
+  <nav class="side" id="rail" aria-label="Spiele"></nav>
+  <div class="main">
+  <div class="ghead"><div><span class="eyebrow" id="gGroup">Originals</span><h1 id="gName">Dice</h1></div><p id="gDesc"></p></div>
   <section class="stage">
     <div class="ctrl" id="ctrl"></div>
     <div class="board" id="board"></div>
@@ -226,7 +265,8 @@ td.empty{color:var(--muted);text-align:center;padding:22px}
       <tbody id="logBody"></tbody>
     </table></div>
   </section>
-  <p class="fine">Nur Spielgeld: Startguthaben 10.000 €, keine Einzahlung, keine Auszahlung. Die Spiele rechnen mit 1 % Hausvorteil wie die Originals, Roulette mit einer grünen Null. Dein Guthaben bleibt in diesem Browser gespeichert.</p>
+  <p class="fine">Nur Spielgeld: Startguthaben 10.000 €, keine Einzahlung, keine Auszahlung. Die Originals rechnen mit 1 % Hausvorteil, Roulette mit einer grünen Null, Ice Fishing ist frei nachgebaut. Dein Guthaben bleibt in diesem Browser gespeichert.</p>
+  </div>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -864,15 +904,124 @@ M.roulette=(c,b)=>{
   return()=>clearInterval(flick);
 };
 
+/* ---------- Ice Fishing ---------- */
+// 54-segment wheel: numbers pay n:1 (plus stake), Bonus starts the fishing round.
+const IFC={'1':'#4fb3ff','2':'#f0b545','5':'#a98bff','10':'#33d17a','B':'#ff4d63'};
+const IFN={'1':24,'2':14,'5':8,'10':4,'B':4};
+const IFK=['1','2','5','10','B'];
+const IFS=(()=>{const n=54,a=Array(n).fill(null),off={B:0,'10':7,'5':3,'2':1};
+  for(const k of ['B','10','5','2'])for(let i=0;i<IFN[k];i++){let p=(Math.round(i*n/IFN[k])+off[k])%n;while(a[p])p=(p+1)%n;a[p]=k}
+  return a.map(x=>x||'1')})();
+const IFB=[[5,25],[8,22],[10,16],[12,12],[15,9],[20,7],[25,4],[50,3],[100,2]];
+const ifFish=()=>{let r=ri(100);for(const[m,w]of IFB){if(r<w)return m;r-=w}return 5};
+const FISH='<svg viewBox="0 0 32 20" aria-hidden="true"><path d="M2 10c5-8 15-9 22-2l6-5v14l-6-5c-7 7-17 6-22-2z" fill="#7cc8ff"/><path d="M13 4c2 2 2 10 0 12" stroke="#2a8fd6" stroke-width="1.6" fill="none"/><circle cx="7.5" cy="8.5" r="1.6" fill="#06263d"/></svg>';
+const IF={chip:store.get('iC',10),bets:{},undo:[],spin:false,rot:0,last:-1,bonus:null};
+M.icefish=(c,b)=>{
+  c.innerHTML=`<div class="fld"><span>Chip-Wert (€)</span><div class="chips" id="iCh">${CHIPS.map(([v,col])=>`<button type="button" class="chipbtn" data-v="${v}" style="background:${col}" aria-pressed="${v===IF.chip}">${v}</button>`).join('')}</div></div>
+  <div class="fld"><span>Gesamteinsatz</span><div class="out" id="iTot"></div></div>
+  <div class="grid2"><button class="ghost" id="iU" type="button">Rückgängig</button><button class="ghost" id="iX" type="button">Leeren</button></div>
+  <button class="play" id="go" type="button">Drehen</button><p class="note" id="iN">Tippe unter dem Rad auf ein Feld, um Chips zu setzen.</p>`;
+  b.innerHTML=`<div class="pills" id="hist"></div><div class="ww"><canvas id="ic"></canvas></div>
+  <div class="ispots" id="isp">${IFK.map(k=>`<button type="button" class="ispot" data-k="${k}" style="--c:${IFC[k]}"><b>${k==='B'?'Bonus':k}</b><span>${k==='B'?'Angeln bis 100×':'zahlt '+(+k+1)+'×'}</span><span>${IFN[k]} von 54</span></button>`).join('')}</div>
+  <div class="holes" id="iH" hidden></div>`;
+  pills('icefish');
+  const cv=$('#ic');let raf=0;
+  const total=()=>r2(Object.values(IF.bets).reduce((a,v)=>a+v,0));
+  function draw(){
+    if(!cv.isConnected)return;
+    const S0=cv.clientWidth||420,g=fitCanvas(cv,S0,S0),n=54,R=S0/2-14,r=R*.62,cx=S0/2,cy=S0/2+6,step=Math.PI*2/n;
+    g.clearRect(0,0,S0,S0);
+    g.beginPath();g.arc(cx,cy,R+6,0,7);g.fillStyle='#cfe9ff';g.fill();
+    g.textAlign='center';g.textBaseline='middle';
+    IFS.forEach((k,i)=>{
+      const a0=-Math.PI/2+IF.rot+i*step;
+      g.beginPath();g.arc(cx,cy,R,a0+.003,a0+step-.003);g.arc(cx,cy,r,a0+step-.003,a0+.003,true);g.closePath();
+      g.fillStyle=IFC[k];g.globalAlpha=IF.last<0||IF.spin||IF.last===i?1:.5;g.fill();g.globalAlpha=1;
+      const am=a0+step/2;g.save();g.translate(cx+Math.cos(am)*R*.86,cy+Math.sin(am)*R*.86);g.rotate(am+Math.PI/2);
+      g.fillStyle='#0a1620';g.font=`700 ${Math.max(8,Math.round(S0*(k==='B'||k==='10'?.026:.032)))}px "JetBrains Mono",monospace`;
+      g.fillText(k==='B'?'B':k,0,0);g.restore();
+    });
+    g.beginPath();g.arc(cx,cy,r-6,0,7);g.fillStyle=V('--deep');g.fill();
+    g.fillStyle=V('--fg');g.font=`700 ${Math.round(S0*.1)}px "Chakra Petch",sans-serif`;
+    const k=IF.last>=0&&!IF.spin?IFS[IF.last]:null;
+    g.fillText(k?(k==='B'?'Bonus':k):'',cx,cy);
+    g.beginPath();g.moveTo(cx-13,2);g.lineTo(cx+13,2);g.lineTo(cx,30);g.closePath();g.fillStyle=V('--accent');g.fill();
+  }
+  function render(){
+    if(!$('#isp'))return;
+    const busy=IF.spin||(IF.bonus&&IF.bonus.pick<0),hitK=IF.last>=0&&!IF.spin?IFS[IF.last]:null;
+    $$('#isp .ispot').forEach(el=>{const k=el.dataset.k,v=IF.bets[k];let ch=el.querySelector('.chip');
+      if(v){if(!ch){ch=document.createElement('span');ch.className='chip';el.appendChild(ch)}ch.textContent=v>=1000?r2(v/1000)+'k':v}else if(ch)ch.remove();
+      el.disabled=busy;el.classList.toggle('hitc',k===hitK)});
+    $('#iTot').textContent=fm(total())+' €';
+    $('#go').disabled=busy||!total();$('#iU').disabled=busy||!IF.undo.length;$('#iX').disabled=busy||!total();
+    $$('#iCh .chipbtn').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.v===IF.chip));
+    const H=$('#iH');H.hidden=!IF.bonus;
+    if(IF.bonus){const B=IF.bonus,open=B.pick>=0;
+      H.innerHTML=`<p class="banner ${open?(B.holes[B.pick]?'w':''):''}">${open?`Gefangen: ${fx(B.holes[B.pick])} auf ${fm(B.bets.B)} € Bonus-Einsatz`:'Angel-Bonus! Wähle ein Eisloch.'}</p>
+      <div class="hrow">${B.holes.map((m,i)=>`<button type="button" class="hole ${B.pick===i?'picked':''} ${open?'shown':''}" data-i="${i}" ${open?'disabled':''} aria-label="Eisloch ${i+1}">${open?FISH+`<b>${fx(m)}</b>`:'?'}</button>`).join('')}</div>`}
+  }
+  function finish(tot,pay,label){
+    settle('Ice Fishing',tot,pay/tot);hist('icefish',label,pay>tot);
+    const n=$('#iN');if(n)n.innerHTML=pay>0?`<span class="w">${label} · Auszahlung ${fm(pay)} €</span>`:`<span class="l">${label} · Diesmal nichts gefangen.</span>`;
+  }
+  function pickHole(i){
+    const B=IF.bonus;if(!B||B.pick>=0)return;B.pick=i;
+    const pay=r2(B.bets.B*B.holes[i]);
+    finish(B.tot,pay,'Bonus '+fx(B.holes[i]));render();draw();
+  }
+  $('#iCh').onclick=e=>{const x=e.target.closest('.chipbtn');if(!x)return;IF.chip=+x.dataset.v;store.set('iC',IF.chip);render()};
+  $('#isp').onclick=e=>{const x=e.target.closest('.ispot');if(!x||x.disabled)return;
+    if(total()+IF.chip>S.bal){toast('Nicht genug Guthaben für diesen Chip.');return}
+    const k=x.dataset.k;IF.bets[k]=r2((IF.bets[k]||0)+IF.chip);IF.undo.push([k,IF.chip]);render()};
+  $('#iH').onclick=e=>{const x=e.target.closest('.hole');if(x&&!x.disabled)pickHole(+x.dataset.i)};
+  $('#iU').onclick=()=>{const u=IF.undo.pop();if(!u)return;IF.bets[u[0]]=r2(IF.bets[u[0]]-u[1]);if(IF.bets[u[0]]<=0)delete IF.bets[u[0]];render()};
+  $('#iX').onclick=()=>{IF.bets={};IF.undo=[];render()};
+  $('#go').onclick=()=>{
+    const tot=total();if(!tot)return;if(tot>S.bal){toast('Nicht genug Guthaben für alle Chips.');return}
+    take(tot);IF.spin=true;IF.bonus=null;IF.last=-1;render();
+    const idx=ri(54),step=Math.PI*2/54,TAU=Math.PI*2,bets={...IF.bets};
+    const target=-(idx+.5+(rng()-.5)*.6)*step,from=IF.rot,delta=((target-from)%TAU+TAU)%TAU,to=from+TAU*5+delta;
+    const t0=performance.now(),D=3600;
+    const anim=now=>{const u=Math.min(1,(now-t0)/D);IF.rot=from+(to-from)*(1-(1-u)**4);draw();if(u<1)raf=requestAnimationFrame(anim)};
+    raf=requestAnimationFrame(anim);
+    later(()=>{cancelAnimationFrame(raf);IF.rot=to%TAU;IF.spin=false;IF.last=idx;const k=IFS[idx];
+      if(k==='B'&&bets.B)IF.bonus={bets,tot,holes:[ifFish(),ifFish(),ifFish()],pick:-1};
+      else finish(tot,k==='B'?0:r2((bets[k]||0)*(+k+1)),k==='B'?'Bonus ohne Einsatz':k);
+      render();draw()},D+40);
+  };
+  const ro=new ResizeObserver(draw);ro.observe(cv);
+  render();draw();
+  return()=>{cancelAnimationFrame(raf);ro.disconnect();if(IF.bonus&&IF.bonus.pick<0)pickHole(ri(3))};
+};
+
 /* ---------- Shell ---------- */
-const GAMES=[['dice','Dice'],['limbo','Limbo'],['crash','Crash'],['mines','Mines'],['plinko','Plinko'],['keno','Keno'],['hilo','HiLo'],['blackjack','Blackjack'],['wheel','Wheel'],['tower','Dragon Tower'],['roulette','Roulette']];
+const GAMES=[
+  ['icefish','Ice Fishing','Setz auf 1, 2, 5, 10 oder den Angel-Bonus und dreh das Eisrad.','show','IF'],
+  ['dice','Dice','Würfle über oder unter deinem Zielwert. Je knapper, desto höher der Multiplikator.','orig','Di'],
+  ['limbo','Limbo','Das Ergebnis muss mindestens dein Ziel-Multiplikator sein.','orig','Li'],
+  ['crash','Crash','Die Kurve steigt, bis sie crasht. Zahl vorher aus.','orig','Cr'],
+  ['mines','Mines','Deck Diamanten auf und meide die Minen. Jedes Feld erhöht den Gewinn.','orig','Mi'],
+  ['plinko','Plinko','Lass Bälle durch die Stiftreihen fallen. Außen warten die großen Multiplikatoren.','orig','Pl'],
+  ['keno','Keno','Wähl bis zu 10 Zahlen. Es werden 10 von 40 gezogen.','orig','Ke'],
+  ['hilo','HiLo','Ist die nächste Karte höher oder niedriger? Zahl aus, wann du willst.','orig','HL'],
+  ['blackjack','Blackjack','Komm näher an 21 als der Dealer, ohne dich zu überkaufen.','orig','BJ'],
+  ['wheel','Wheel','Dreh das Rad. Der Zeiger oben entscheidet über den Multiplikator.','orig','Wh'],
+  ['tower','Dragon Tower','Klettere 9 Stufen hoch, ohne auf ein Drachenfeld zu treten.','orig','DT'],
+  ['roulette','Roulette','Europäischer Tisch mit einer Null. Setz Chips auf Zahlen oder Felder.','orig','Ro']
+];
 const rail=$('#rail');
-rail.innerHTML=GAMES.map(([id,n])=>`<button type="button" data-g="${id}" aria-pressed="false">${n}</button>`).join('');
+const navBtn=([id,n,,,ic])=>`<button type="button" data-g="${id}" aria-pressed="false"><i>${ic}</i>${n}${id==='icefish'?'<span class="new">Neu</span>':''}</button>`;
+rail.innerHTML='<h3>Gameshow</h3>'+GAMES.filter(g=>g[3]==='show').map(navBtn).join('')+'<h3>Originals</h3>'+GAMES.filter(g=>g[3]==='orig').map(navBtn).join('');
+$('#home').onclick=e=>{e.preventDefault();openGame('icefish');scrollTo({top:0,behavior:'smooth'})};
 let cleanup=null;
 function openGame(id){
   if(!M[id])id='dice';
-  if(cleanup){cleanup();cleanup=null}
   flush();
+  if(cleanup){cleanup();cleanup=null}
+  const G=GAMES.find(g=>g[0]===id);
+  $('#gName').textContent=G[1];$('#gDesc').textContent=G[2];$('#gGroup').textContent=G[3]==='show'?'Gameshow':'Originals';
+  document.title=G[1]+' · Leck Eier';
   $$('#rail button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.g===id));
   const c=$('#ctrl'),b=$('#board');c.innerHTML='';b.innerHTML='';
   cleanup=M[id](c,b)||null;store.set('game',id);
@@ -889,7 +1038,7 @@ rb.onclick=()=>{
 };
 
 paint(0);renderLog();
-openGame((location.hash||'').slice(1)||store.get('game','dice'));
+openGame((location.hash||'').slice(1)||store.get('game','icefish'));
 })();
 </script>
 </body>
