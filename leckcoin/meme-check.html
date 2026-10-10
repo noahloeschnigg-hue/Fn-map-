@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meme-Coin-Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Archivo+Black&display=swap">
+<style>
+/* Layout: two columns on desktop: left = grouped checks with yes/no buttons, right = sticky verdict + rules; stacks on phones with verdict first */
+:root{
+  --bg:#f3f6f5; --card:#ffffff; --line:#d6e0dd; --fg:#12201c; --muted:#5a6d67;
+  --accent:#0f7a63; --accent-soft:#d9f1ea; --good:#127a45; --good-soft:#dcf3e6; --warn:#a45a00; --warn-soft:#fff0d9; --bad:#c0263a; --bad-soft:#fde3e6;
+  --f-display:"Archivo Black","Arial Black",sans-serif; --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1514; --card:#14201e; --line:#25352f; --fg:#e6efec; --muted:#93a8a1;
+  --accent:#4fd1b0; --accent-soft:#14332c; --good:#4fd18b; --good-soft:#123323; --warn:#ffb54d; --warn-soft:#3a2a10; --bad:#ff6b7d; --bad-soft:#3d1820; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1514; --card:#14201e; --line:#25352f; --fg:#e6efec; --muted:#93a8a1;
+  --accent:#4fd1b0; --accent-soft:#14332c; --good:#4fd18b; --good-soft:#123323; --warn:#ffb54d; --warn-soft:#3a2a10; --bad:#ff6b7d; --bad-soft:#3d1820; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:15.5px;line-height:1.5}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:24px 48px}
+header{margin-bottom:18px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(28px,4.6vw,42px);line-height:1;margin:0}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:8px 0 0;max-width:62ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.85fr);gap:18px;align-items:start}
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;flex-direction:column;gap:16px}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}.side{position:static;order:-1}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.card h2{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card h2 i{font-style:normal;width:22px;height:22px;border-radius:6px;background:var(--accent);color:var(--card);display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;letter-spacing:0}
+.tool{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 9px;letter-spacing:0;text-transform:none}
+.coin{display:flex;gap:10px;flex-wrap:wrap}
+.coin label{display:flex;flex-direction:column;gap:4px;flex:1 1 200px;min-width:0}
+.coin span{font-size:12px;color:var(--muted);font-weight:600}
+.coin input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;min-width:0;font-family:var(--f-mono);font-size:14px}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.card h2+.item{border-top:0}
+.item b{display:block;font-weight:600}
+.item small{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.crit{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--bad);margin-left:6px;vertical-align:1px}
+.yn{display:flex;gap:6px}
+.yn button{border:1px solid var(--line);background:var(--bg);border-radius:10px;width:46px;height:40px;font-weight:700;cursor:pointer;font-size:15px}
+.yn button[data-v="y"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--card)}
+.yn button[data-v="n"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--card)}
+.item.is-y b{color:var(--good)}.item.is-n b{color:var(--bad)}
+.verdict{border-radius:14px;padding:18px;border:1px solid var(--line);background:var(--card)}
+.verdict .g{font-family:var(--f-display);font-size:clamp(28px,4vw,38px);line-height:1.05}
+.verdict p{margin:8px 0 0}
+.verdict ul{margin:8px 0 0;padding-left:18px;font-size:14px}
+.verdict.ok{background:var(--good-soft);border-color:var(--good)}.verdict.ok .g{color:var(--good)}
+.verdict.warn{background:var(--warn-soft);border-color:var(--warn)}.verdict.warn .g{color:var(--warn)}
+.verdict.stop{background:var(--bad-soft);border-color:var(--bad)}.verdict.stop .g{color:var(--bad)}
+.verdict.open{background:var(--accent-soft);border-color:var(--accent)}.verdict.open .g{color:var(--accent)}
+.bar{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:12px}
+.bar div{height:100%;background:var(--accent);transition:width .25s}
+.count{font-family:var(--f-mono);font-size:13px;color:var(--muted);margin-top:6px}
+.rules{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14.5px}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--accent);color:var(--card);width:100%}
+.foot{color:var(--muted);font-size:13px;margin-top:20px;max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Meme-Coin-<span>Check</span></h1>
+    <p class="sub">Geh die Punkte der Reihe nach durch und tipp bei jedem auf ✓ oder ✕. Rechts siehst du sofort, ob der Coin okay ist oder ob du die Finger davon lässt.</p>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <section class="card">
+        <div class="coin">
+          <label for="cName"><span>Coin-Name</span><input id="cName" type="text" placeholder="z. B. LECK"></label>
+          <label for="cAddr"><span>Kontraktadresse</span><input id="cAddr" type="text" placeholder="aus Pump.fun oder Dexscreener kopieren"></label>
+        </div>
+      </section>
+      <div id="groups" class="col"></div>
+    </div>
+
+    <aside class="side">
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+      <section class="card">
+        <h2>Deine Regeln</h2>
+        <ol class="rules">
+          <li>Nur Geld, dessen Verlust dir nicht wehtut.</li>
+          <li>Maximal 1–2 % deines Spielgelds pro Coin.</li>
+          <li>Bei 2x die Hälfte verkaufen.</li>
+          <li>Nie in eine senkrechte grüne Kerze kaufen.</li>
+          <li>Maximal 3 Coins pro Tag.</li>
+          <li>Niemals die Seed Phrase eingeben.</li>
+        </ol>
+      </section>
+      <button class="btn" type="button" id="reset">Nächster Coin (alles zurücksetzen)</button>
+    </aside>
+  </div>
+
+  <p class="foot">Die Zahlen (5 %, 30 %) sind Faustregeln, keine festen Grenzen. Auch ein Coin, der alle Punkte besteht, kann auf null fallen. Lernhilfe, keine Anlageberatung.</p>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem('mck.'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('mck.'+k,JSON.stringify(v))}catch(e){}}};
+
+const GROUPS=[
+  {t:'Technik',tool:'RugCheck.xyz',items:[
+    {id:'mint',crit:1,b:'Mint Authority ist entfernt',s:'Steht dort „revoked“ oder „disabled“? Sonst kann der Ersteller neue Coins drucken.'},
+    {id:'freeze',crit:1,b:'Freeze Authority ist entfernt',s:'Sonst kann der Ersteller deine Coins einfrieren, und du kannst nicht mehr verkaufen.'}
+  ]},
+  {t:'Wer hält den Coin?',tool:'GMGN.ai · Bubblemaps',items:[
+    {id:'dev',crit:1,b:'Dev hält unter ca. 5 % und hat nicht verkauft',s:'Hat der Ersteller ein großes Stück, kann er jederzeit alles verkaufen.'},
+    {id:'top10',b:'Top 10 Halter zusammen unter ca. 30 %',s:'Bonding Curve und Liquiditäts-Pool zählen nicht mit.'},
+    {id:'bundle',crit:1,b:'Keine Bundles',s:'Bundles heißt: Der Ersteller hat beim Start mit vielen eigenen Wallets gekauft.'},
+    {id:'snipe',b:'Wenige Sniper',s:'Sniper sind Bots, die in der ersten Sekunde kaufen und schnell wieder verkaufen.'},
+    {id:'cluster',b:'Keine großen verbundenen Wallet-Cluster',s:'In Bubblemaps: Sind viele Blasen mit Linien verbunden, gehören sie wahrscheinlich einer Person.'}
+  ]},
+  {t:'Ersteller',tool:'GMGN.ai',items:[
+    {id:'hist',crit:1,b:'Dev hat keine früheren toten Coins',s:'Hat er schon viele Coins gestartet, die alle tot sind, macht er das öfter.'}
+  ]},
+  {t:'Handel',tool:'Dexscreener',items:[
+    {id:'migr',b:'Coin ist schon migriert',s:'Er wird nicht mehr nur auf Pump.fun gehandelt. Vorher passieren die meisten Abzocken.'},
+    {id:'makers',b:'Viele verschiedene Käufer',s:'Viele Trades von immer denselben Wallets sind Bots, die nur so tun, als wäre viel los.'},
+    {id:'holders',b:'Halter-Anzahl steigt stetig',s:'Nicht plötzlich in die Höhe gesprungen und nicht stehen geblieben.'},
+    {id:'candle',b:'Ersten Rücksetzer abgewartet',s:'Du kaufst nicht in eine einzige riesige grüne Kerze.'}
+  ]},
+  {t:'Community',tool:'X · Telegram',items:[
+    {id:'x',b:'Echter X-Account',s:'Hat Posts, echte Antworten und ist nicht erst gestern erstellt worden.'},
+    {id:'tg',b:'Telegram mit echten Gesprächen',s:'Nicht nur Bots und „🚀🚀🚀 LFG“.'}
+  ]},
+  {t:'Dein Plan',tool:'du selbst',items:[
+    {id:'money',crit:1,b:'Nur ein Betrag, den ich komplett verlieren kann',s:'Stell dir vor, das Geld ist morgen weg.'},
+    {id:'exit',b:'Plan: bei 2x die Hälfte verkaufen',s:'Damit hast du deinen Einsatz zurück und spielst nur noch mit Gewinn.'},
+    {id:'seed',crit:1,b:'Ich habe nirgends meine Seed Phrase eingegeben',s:'Keine echte Seite fragt nach deinen 12 oder 24 Wörtern.'}
+  ]}
+];
+const ALL=GROUPS.flatMap(g=>g.items);
+let ans=store.get('ans',{});
+
+function render(){
+  $('#groups').innerHTML=GROUPS.map((g,gi)=>`<section class="card"><h2><i>${gi+1}</i>${g.t}<span class="tool">${g.tool}</span></h2>${g.items.map(it=>{
+    const v=ans[it.id];
+    return `<div class="item ${v==='y'?'is-y':v==='n'?'is-n':''}"><div><b>${it.b}${it.crit?'<span class="crit">wichtig</span>':''}</b><small>${it.s}</small></div>
+      <div class="yn" role="group" aria-label="${it.b}"><button type="button" data-id="${it.id}" data-v="y" aria-pressed="${v==='y'}" aria-label="Ja, erfüllt">✓</button><button type="button" data-id="${it.id}" data-v="n" aria-pressed="${v==='n'}" aria-label="Nein, nicht erfüllt">✕</button></div></div>`}).join('')}</section>`).join('');
+  verdict();
+}
+function verdict(){
+  const no=ALL.filter(i=>ans[i.id]==='n'),open=ALL.filter(i=>!ans[i.id]),critNo=no.filter(i=>i.crit),done=ALL.length-open.length;
+  let cls,g,p,list=[];
+  if(critNo.length){cls='stop';g='FINGER WEG';p='Ein wichtiger Punkt ist nicht erfüllt. Diesen Coin kaufst du nicht.';list=critNo.map(i=>i.b)}
+  else if(no.length>=2){cls='stop';g='FINGER WEG';p='Zwei oder mehr Punkte sind nicht erfüllt. Zu riskant.';list=no.map(i=>i.b)}
+  else if(open.length){cls='open';g='WEITER PRÜFEN';p=`Noch ${open.length} von ${ALL.length} Punkten offen.`+(no.length?' Ein Punkt ist schon rot.':'')}
+  else if(no.length===1){cls='warn';g='VORSICHT';p='Ein Punkt ist nicht erfüllt. Wenn überhaupt, nur ein Mini-Betrag. Besser auslassen.';list=no.map(i=>i.b)}
+  else{cls='ok';g='OKAY';p='Alle Punkte erfüllt. Ein kleiner Betrag ist vertretbar. Denk an deine Regeln: bei 2x die Hälfte verkaufen.'}
+  const V=$('#verdict');V.className='verdict '+cls;
+  const name=($('#cName').value||'').trim();
+  V.innerHTML=`${name?`<div class="count" style="margin:0 0 6px">${name.replace(/[<>&]/g,'')}</div>`:''}<div class="g">${g}</div><p>${p}</p>${list.length?`<ul>${list.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}<div class="bar"><div style="width:${done/ALL.length*100}%"></div></div><div class="count">${done} / ${ALL.length} geprüft</div>`;
+}
+$('#groups').addEventListener('click',e=>{const b=e.target.closest('button[data-id]');if(!b)return;const id=b.dataset.id,v=b.dataset.v;ans[id]=ans[id]===v?undefined:v;if(!ans[id])delete ans[id];store.set('ans',ans);render()});
+for(const id of ['cName','cAddr']){const el=$('#'+id);el.value=store.get(id,'');el.addEventListener('input',()=>{store.set(id,el.value);verdict()})}
+$('#reset').onclick=()=>{ans={};store.set('ans',ans);for(const id of ['cName','cAddr']){$('#'+id).value='';store.set(id,'')}render();scrollTo({top:0,behavior:'smooth'})};
+render();
+})();
+</script>
+</body>
+</html>
