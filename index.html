@@ -67,7 +67,30 @@ body.touch #speed{right:auto;left:50%;transform:translateX(-50%);bottom:auto;top
 body.touch #speed b{font-size:40px}
 body.touch #mission{font-size:15px;max-width:52vw}
 body.touch #money{font-size:26px}
-@media (prefers-reduced-motion:reduce){#stars.blink span.on{animation:none}}
+
+[hidden]{display:none!important}
+#casino{position:fixed;inset:0;z-index:15;display:flex;padding:16px max(16px,env(safe-area-inset-left,0px));box-sizing:border-box;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,47,160,.35),transparent 60%),rgba(8,3,14,.86);overflow:auto}
+.cz{margin:auto;width:min(560px,100%);background:linear-gradient(180deg,#123d2b,#0a2619);border:3px solid #d9a83a;border-radius:14px;box-shadow:0 0 0 6px #2a1238,0 20px 60px rgba(0,0,0,.7);
+  padding:14px 18px;box-sizing:border-box;text-align:center;display:flex;flex-direction:column;gap:9px}
+.cz h2{margin:0;font-family:var(--display);font-weight:400;font-size:40px;letter-spacing:3px;color:#ffd77a;text-shadow:0 0 18px rgba(255,47,160,.8)}
+.cz .bal{font-family:var(--display);font-size:30px;color:var(--cash);font-variant-numeric:tabular-nums;word-break:break-word}
+.cz .odds{font-size:16px;letter-spacing:2px;text-transform:uppercase;color:#ffd77a}
+.cz .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.cz button{font-family:var(--ui);font-weight:700;font-size:18px;letter-spacing:1px;padding:8px 16px;border-radius:6px;border:2px solid #d9a83a;background:#1b0c26;color:#fff;cursor:pointer}
+.cz button.on{background:#d9a83a;color:#1a0d00}
+.cz button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.reels{display:flex;gap:10px;justify-content:center;background:#0b0410;border-radius:10px;padding:14px;border:2px solid #5a2a6e}
+.reel{width:min(26vw,110px);height:min(26vw,110px);display:flex;align-items:center;justify-content:center;font-size:min(15vw,64px);background:linear-gradient(#fff,#e9e2d4 50%,#fff);border-radius:8px;color:#c0102a;font-family:var(--display)}
+.wheelBox{position:relative;width:min(64vw,230px);height:min(64vw,230px);margin:0 auto}
+.wheel{width:100%;height:100%;border-radius:50%;border:6px solid #d9a83a;box-sizing:border-box;transition:transform 2.6s cubic-bezier(.15,.85,.2,1);box-shadow:inset 0 0 0 26px rgba(0,0,0,.25)}
+.wheelBox::after{content:"";position:absolute;left:50%;top:-6px;transform:translateX(-50%);border:12px solid transparent;border-top:20px solid #fff;filter:drop-shadow(0 2px 2px #000)}
+.wheelBox .hub{position:absolute;inset:38%;border-radius:50%;background:radial-gradient(#ffe39a,#a87a1e);border:2px solid #5a3d08}
+#czSpin{font-family:var(--display)!important;font-weight:400!important;font-size:34px!important;letter-spacing:4px!important;padding:10px!important;background:linear-gradient(#ffd77a,#d9a83a)!important;color:#1a0d00!important}
+#czRes{min-height:52px;font-size:20px;font-weight:700;line-height:1.3;color:#fff}
+#czRes b{display:block;font-family:var(--display);font-weight:400;font-size:30px;color:#ffd77a;letter-spacing:2px}
+#czLeave{background:transparent!important;border-color:rgba(255,255,255,.35)!important;font-size:16px!important}
+@media (prefers-reduced-motion:reduce){.wheel{transition-duration:.3s}#stars.blink span.on{animation:none}}
 </style>
 
 <canvas id="c"></canvas>
@@ -86,6 +109,19 @@ body.touch #money{font-size:26px}
   <div class="tb" id="tbF">EIN<br>AUS</div><div class="tb" id="tbRun">SPRINT<br>BREMSE</div>
   <div class="tb" id="tbJump">SPRUNG</div><div class="tb" id="tbHorn">HUPE</div></div>
 
+<div id="casino" hidden><div class="cz" role="dialog" aria-label="Casino">
+  <h2>VALORA ROYALE</h2>
+  <div class="bal" id="czBal"></div>
+  <div class="odds">Gewinnchance 100 % · Gewinn +2.000.000 %</div>
+  <div class="row" id="czTabs"><button type="button" data-g="slots" class="on">Spielautomat</button><button type="button" data-g="roul">Roulette</button></div>
+  <div id="gSlots"><div class="reels"><div class="reel" id="r0">7</div><div class="reel" id="r1">7</div><div class="reel" id="r2">7</div></div></div>
+  <div id="gRoul" hidden><div class="wheelBox"><div class="wheel" id="wheel"></div><div class="hub"></div></div>
+    <div class="row" id="czPicks" style="margin-top:10px"><button type="button" data-c="rot" class="on">Rot</button><button type="button" data-c="schwarz">Schwarz</button><button type="button" data-c="gruen">0 · Grün</button></div></div>
+  <div class="row" id="czBets"><button type="button" data-b="0.1">10 %</button><button type="button" data-b="0.5">50 %</button><button type="button" data-b="1" class="on">Alles setzen</button></div>
+  <button type="button" id="czSpin">DREHEN</button>
+  <div id="czRes">Einsatz wählen und drehen.</div>
+  <button type="button" id="czLeave">Casino verlassen (Esc)</button>
+</div></div>
 <div id="intro">
   <div class="sub">Eine offene Stadt · Episode I</div>
   <h1>VALORA<br>CITY</h1>
@@ -96,7 +132,7 @@ body.touch #money{font-size:26px}
     <div><kbd>T</kbd> Zeit +2 Std.</div><div><kbd>Esc</kbd> Maus freigeben</div>
   </div>
   <button id="play" type="button">SPIELEN</button>
-  <div class="note">Kurierjobs am gelben Marker, Geld einsammeln, der Polizei entkommen. Die blaue Werkstatt repariert dein Auto und lässt dich untertauchen.</div>
+  <div class="note">Du startest mit 5 €. Das Casino mit dem pinken Marker liegt direkt gegenüber. Kurierjobs am gelben Marker, der Polizei entkommen. Die blaue Werkstatt repariert dein Auto und lässt dich untertauchen.</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -258,11 +294,39 @@ function addBuilding(x,z,w,d,h,dist){
   // ground floor shop band
   if(!tall&&rnd()<0.7){const sb=boxGeo(w+0.3,0.6,d+0.3,4,false);sb.translate(x,4.2,z);roofM.add(sb)}
 }
+// ---------- Casino building ----------
+let casinoDoor=null;
+function buildCasino(x0,x1,z0,z1){const cx=(x0+x1)/2,cz=(z0+z1)/2;
+  const L=c=>new THREE.Color(c).convertSRGBToLinear();
+  const bodyM=new THREE.MeshStandardMaterial({color:L(0x2a1238),roughness:0.25,metalness:0.6});envMats.push(bodyM);
+  const goldM=new THREE.MeshStandardMaterial({color:L(0xd9a83a),roughness:0.25,metalness:1});envMats.push(goldM);
+  const neonP=new THREE.MeshStandardMaterial({color:0x220011,emissive:0xff2fa0,emissiveIntensity:2.2});
+  const neonG=new THREE.MeshStandardMaterial({color:0x221100,emissive:0xffc040,emissiveIntensity:2.2});
+  const w=40,d=52,h=17,bx=cx-8;
+  const box=(W,H,D,x,y,z,m,sh=true)=>{const me=new THREE.Mesh(new THREE.BoxGeometry(W,H,D),m);me.position.set(x,y,z);me.castShadow=sh;me.receiveShadow=true;scene.add(me);return me};
+  box(w,h,d,bx,h/2+0.3,cz,bodyM);addCollider(bx-w/2,bx+w/2,cz-d/2,cz+d/2,h);
+  box(w*0.6,10,d*0.6,bx-4,h+5.3,cz,bodyM);
+  const fx=bx+w/2;
+  for(const oz of [-8,-3,3,8]){box(1.1,7,1.1,fx+6,3.8,cz+oz,goldM);addCollider(fx+5.45,fx+6.55,cz+oz-0.55,cz+oz+0.55,7)}
+  box(8,0.6,20,fx+3.5,7.5,cz,goldM);box(8.1,0.15,20.1,fx+3.5,7.15,cz,neonG,false);
+  for(const [W,D,x,z] of [[w,0.3,bx,cz-d/2],[w,0.3,bx,cz+d/2],[0.3,d,bx-w/2,cz],[0.3,d,fx,cz]])box(W,0.35,D,x,h+0.5,z,neonP,false);
+  const carpet=new THREE.Mesh(new THREE.PlaneGeometry(12,4).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:L(0x8a0f1a),roughness:0.9}));carpet.position.set(fx+6,0.32,cz);scene.add(carpet);
+  box(0.2,5,6,fx+0.05,2.8,cz,new THREE.MeshStandardMaterial({color:0x331a00,emissive:0xffb050,emissiveIntensity:1.4}),false);
+  const tex=canvasTex(1024,256,g=>{g.fillStyle='#0b0410';g.fillRect(0,0,1024,256);g.font='bold 150px Impact, Arial Black, sans-serif';g.textAlign='center';g.textBaseline='middle';
+    g.shadowColor='#ff2fa0';g.shadowBlur=40;g.fillStyle='#ff6fc4';g.fillText('CASINO',512,110);g.shadowColor='#ffc040';g.shadowBlur=25;g.font='bold 60px Arial Black, sans-serif';g.fillStyle='#ffd77a';g.fillText('★ VALORA ROYALE ★',512,212)});
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(30,7.5),new THREE.MeshStandardMaterial({map:tex,emissiveMap:tex,emissive:0xffffff,emissiveIntensity:1.6}));
+  sign.position.set(fx+0.2,h-3.5,cz);sign.rotation.y=Math.PI/2;scene.add(sign);
+  const sign2=sign.clone();sign2.position.set(bx-4+w*0.3+0.2,h+5.3,cz);sign2.scale.setScalar(0.8);scene.add(sign2);
+  const beamM=new THREE.MeshBasicMaterial({color:0xffd7a0,transparent:true,opacity:0.12,blending:THREE.AdditiveBlending,depthWrite:false});
+  for(const oz of [-20,20]){const b=new THREE.Mesh(new THREE.CylinderGeometry(1.5,0.3,120,12,1,true),beamM);b.position.set(bx,h+60,cz+oz);b.rotation.x=oz>0?0.25:-0.25;scene.add(b)}
+  casinoDoor={x:fx+9,z:cz};
+}
 for(let i=0;i<N;i++)for(let j=0;j<N;j++){
   const x0=rc(i)+ROAD/2,x1=rc(i+1)-ROAD/2,z0=rc(j)+ROAD/2,z1=rc(j+1)-ROAD/2,cx=(x0+x1)/2,cz=(z0+z1)/2;
   const g=boxGeo(BLOCK,0.3,BLOCK,6,false);g.translate(cx,0.15,cz);walkM.add(g);
   const d=Math.hypot(cx,cz)/HALF;
-  const isPark=(i===2&&j===5)||(i===5&&j===2)||(i===6&&j===6)||(rnd()<0.06&&d>0.3);
+  const isCasino=i===3&&j===4;
+  const isPark=!isCasino&&((i===2&&j===5)||(i===5&&j===2)||(i===6&&j===6)||(rnd()<0.06&&d>0.3));
   blocks.push({i,j,x0,x1,z0,z1,cx,cz,park:isPark});
   // street lamps
   for(let s=0;s<4;s++)for(const t of [0.18,0.5,0.82]){
@@ -270,6 +334,7 @@ for(let i=0;i<N;i++)for(let j=0;j<N;j++){
     if(s===0){lx=lerp(x0,x1,t);lz=z0+0.8;nx=0;nz=-1}else if(s===1){lx=lerp(x0,x1,t);lz=z1-0.8;nx=0;nz=1}
     else if(s===2){lx=x0+0.8;lz=lerp(z0,z1,t);nx=-1;nz=0}else{lx=x1-0.8;lz=lerp(z0,z1,t);nx=1;nz=0}
     lampPos.push({x:lx,z:lz,nx,nz})}
+  if(isCasino){buildCasino(x0,x1,z0,z1);continue}
   if(isPark){parks.push({x0,x1,z0,z1});const gp=new THREE.PlaneGeometry(BLOCK-6,BLOCK-6);gp.rotateX(-Math.PI/2);gp.translate(cx,0.31,cz);
     const u=gp.attributes.uv;for(let k=0;k<u.count;k++)u.setXY(k,u.getX(k)*8,u.getY(k)*8);grassM.add(gp);
     for(let k=0;k<16;k++){const tx=R(x0+6,x1-6),tz=R(z0+6,z1-6);treePos.push({x:tx,z:tz,s:R(0.8,1.4)});addCollider(tx-0.5,tx+0.5,tz-0.5,tz+0.5,6)}
@@ -626,18 +691,18 @@ function hurt(a){P.hp=Math.max(0,P.hp-a);P.lastHurt=clock;if(P.hp<=0)wasted()}
 
 // ---------- Input ----------
 const keys={};let camYaw=Math.PI,camPitch=0.32,lastMouse=-9;let touchJoy={x:0,y:0},tRun=false,tJump=false;
-addEventListener('keydown',e=>{if(!started)return;keys[e.code]=true;if(e.code==='KeyF'||e.code==='Enter')toggleCar();if(e.code==='KeyT'){hour=(hour+2)%24;msg('Zeit: '+fmtTime())}
+addEventListener('keydown',e=>{if(!started)return;if(casinoOpen){if(e.code==='Escape')closeCasino();return}keys[e.code]=true;if(e.code==='KeyF'||e.code==='Enter')toggleCar();if(e.code==='KeyT'){hour=(hour+2)%24;msg('Zeit: '+fmtTime())}
   if(e.code==='Space'||e.code.startsWith('Arrow'))e.preventDefault()});
 addEventListener('keyup',e=>{keys[e.code]=false});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
-canvas.addEventListener('click',()=>{if(started&&!isTouch&&canvas.requestPointerLock){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}});
+canvas.addEventListener('click',()=>{if(started&&!casinoOpen&&!isTouch&&canvas.requestPointerLock){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}});
 let mDown=false;canvas.addEventListener('mousedown',()=>mDown=true);addEventListener('mouseup',()=>mDown=false);
 addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas||mDown){camYaw-=e.movementX*0.0026;camPitch=clamp(camPitch+e.movementY*0.002,-0.15,1.25);lastMouse=clock}});
 function getInput(){let x=0,y=0;if(keys.KeyW||keys.ArrowUp)y+=1;if(keys.KeyS||keys.ArrowDown)y-=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
   x+=touchJoy.x;y+=touchJoy.y;return{x:clamp(x,-1,1),y:clamp(y,-1,1),sprint:keys.ShiftLeft||keys.ShiftRight||tRun,jump:keys.Space||tJump,hb:keys.Space||tRun}}
 // touch
 if(isTouch){const joy=$('joy'),knob=$('knob');let jid=null,jx=0,jy=0,cid=null,cx=0,cy=0;
-  addEventListener('touchstart',e=>{if(!started)return;for(const t of e.changedTouches){if(t.target.classList&&t.target.classList.contains('tb'))continue;
+  addEventListener('touchstart',e=>{if(!started||casinoOpen)return;for(const t of e.changedTouches){if(t.target.classList&&t.target.classList.contains('tb'))continue;
     if(t.clientX<innerWidth*0.45&&jid===null){jid=t.identifier;jx=t.clientX;jy=t.clientY;joy.style.display='block';joy.style.left=(jx-65)+'px';joy.style.top=(jy-65)+'px'}
     else if(cid===null){cid=t.identifier;cx=t.clientX;cy=t.clientY}}},{passive:true});
   addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===jid){let dx=t.clientX-jx,dy=t.clientY-jy;const l=Math.hypot(dx,dy);if(l>55){dx*=55/l;dy*=55/l}
@@ -714,15 +779,41 @@ function updateMission(dt){const pp=playerPos();
   if(M.state==='idle'&&Math.hypot(pp.x-startMk.position.x,pp.z-startMk.position.z)<3){const g=randomWalkPoint(pp,260,620);M.goal=g;const d=Math.hypot(g.x-pp.x,g.z-pp.z);
     M.timer=Math.round(d/13+22);M.reward=Math.round((d*2.6+200)/10)*10;M.name=street(g.x,g.z)+', '+district(g.x,g.z);M.state='active';startMk.visible=false;goalMk.visible=true;goalMk.position.set(g.x,0.3,g.z);
     msg('Kurierjob angenommen – Paket nach '+M.name);Snd.blip(660)}
-  if(M.state==='active'){M.timer-=dt;if(Math.hypot(pp.x-M.goal.x,pp.z-M.goal.z)<3.5){money+=M.reward;big('AUFTRAG ERFÜLLT','+$'+M.reward.toLocaleString('de-DE'),'#ffc84a');goalMk.visible=false;Snd.blip(880);newStart()}
+  if(M.state==='active'){M.timer-=dt;if(Math.hypot(pp.x-M.goal.x,pp.z-M.goal.z)<3.5){money+=M.reward;big('AUFTRAG ERFÜLLT','+'+eur(M.reward),'#ffc84a');goalMk.visible=false;Snd.blip(880);newStart()}
     else if(M.timer<=0){goalMk.visible=false;big('ZU SPÄT','Der Kunde hat storniert','#ff6a5a');newStart()}}
-  for(const mk of [startMk,goalMk,garageMk])mk.children[0].material.opacity=0.2+0.1*Math.sin(clock*3);
+  for(const mk of [startMk,goalMk,garageMk,casinoMk])mk.children[0].material.opacity=0.2+0.1*Math.sin(clock*3);
+  // casino entrance
+  casinoCD-=dt;if(!casinoOpen&&casinoCD<=0&&respawnT<=0&&Math.hypot(pp.x-casinoDoor.x,pp.z-casinoDoor.z)<3){if(P.car)hint('Steig aus (F), um ins Casino zu gehen');else openCasino()}
   // garage
   garageCD-=dt;if(P.car&&garageCD<=0&&Math.hypot(pp.x-garage.x,pp.z-garage.z)<4&&P.car.speed()<5){garageCD=8;
-    if(money>=250){money-=250;P.car.hp=100;P.car.dead=false;P.car.paint.color.copy(lin(pick(CAR_COLORS)));const w=wanted;wanted=0;bustT=0;big('NEU LACKIERT',w?'Fahndung aufgehoben · −$250':'Repariert · −$250','#3b8cff')}else msg('Werkstatt: $250 nötig')}
+    if(money>=250){money-=250;P.car.hp=100;P.car.dead=false;P.car.paint.color.copy(lin(pick(CAR_COLORS)));const w=wanted;wanted=0;bustT=0;big('NEU LACKIERT',w?'Fahndung aufgehoben · −250 €':'Repariert · −250 €','#3b8cff')}else msg('Werkstatt: 250 € nötig')}
   // pickups
-  for(const m of pickups){m.rotation.y+=dt*2;m.position.y=1.1+Math.sin(clock*2+m.id)*0.15;if(Math.hypot(pp.x-m.position.x,pp.z-m.position.z)<2.2){const v=Math.round(R(2,25))*10;money+=v;msg('+$'+v);Snd.blip(1200);const p=randomWalkPoint(pp,80,300);m.position.set(p.x,1.1,p.z)}}}
+  for(const m of pickups){m.rotation.y+=dt*2;m.position.y=1.1+Math.sin(clock*2+m.id)*0.15;if(Math.hypot(pp.x-m.position.x,pp.z-m.position.z)<2.2){const v=Math.round(R(2,25))*10;money+=v;msg('+'+eur(v));Snd.blip(1200);const p=randomWalkPoint(pp,80,300);m.position.set(p.x,1.1,p.z)}}}
 
+
+// ---------- Casino (always wins, +2.000.000 %) ----------
+let casinoOpen=false,casinoCD=0,czGame='slots',czBetF=1,czBusy=false,czPick='rot',czRot=0;
+const casinoMk=markerMesh(0xff2fa0);casinoMk.position.set(casinoDoor.x,0.3,casinoDoor.z);
+const SEG=360/37;
+{let st=[];for(let k=0;k<37;k++){const c=k===0?'#0f8a3c':(k%2?'#c0102a':'#141414');st.push(`${c} ${k*SEG}deg ${(k+1)*SEG}deg`)}$('wheel').style.background=`conic-gradient(${st.join(',')})`}
+function czUpdate(){$('czBal').textContent=eur(money)}
+function openCasino(){casinoOpen=true;$('casino').hidden=false;if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();for(const k in keys)keys[k]=false;touchJoy.x=touchJoy.y=0;czUpdate();Snd.blip(520)}
+function closeCasino(){if(czBusy)return;casinoOpen=false;$('casino').hidden=true;casinoCD=3;P.pos.x=casinoDoor.x+4;P.pos.z=casinoDoor.z;P.vx=P.vz=0;camYaw=Math.PI*1.5}
+function czSel(id,attr,cb){$(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b||czBusy)return;for(const o of $(id).children)o.classList.toggle('on',o===b);cb(b.dataset[attr])})}
+czSel('czTabs','g',g=>{czGame=g;$('gSlots').hidden=g!=='slots';$('gRoul').hidden=g!=='roul'});
+czSel('czBets','b',b=>{czBetF=+b});
+czSel('czPicks','c',c=>{czPick=c});
+$('czLeave').addEventListener('click',closeCasino);
+function jingle(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>Snd.blip(f),i*110))}
+$('czSpin').addEventListener('click',()=>{if(czBusy)return;let bet=Math.floor(money*czBetF);if(bet<1){$('czRes').textContent='Du hast kein Geld zum Setzen.';return}
+  czBusy=true;money-=bet;czUpdate();$('czRes').textContent='Einsatz: '+eur(bet)+' …';
+  const finish=extra=>{const pay=bet*20001;money=Math.min(1e300,money+pay);czUpdate();czBusy=false;jingle();
+    $('czRes').innerHTML='<b>GEWONNEN!</b>'+extra+' Auszahlung '+eur(pay)+' (+2.000.000 %)'};
+  if(czGame==='slots'){const SY=['🍒','🍋','🔔','⭐','💎','🍀'];const reels=[$('r0'),$('r1'),$('r2')];let t=0;
+    const iv=setInterval(()=>{t++;reels.forEach((r,i)=>{if(t<10+i*6)r.textContent=pick(SY);else r.textContent='7'});Snd.blip(300+Math.random()*200);if(t>=22){clearInterval(iv);finish('7 · 7 · 7 – JACKPOT!')}},70)}
+  else{let k;if(czPick==='gruen')k=0;else{const o=[];for(let i=1;i<37;i++)if((i%2===1)===(czPick==='rot'))o.push(i);k=pick(o)}
+    const target=-(k+0.5)*SEG+R(-SEG*0.3,SEG*0.3);czRot=czRot-(((czRot%360)+360)%360)+360*6+((target%360)+360)%360;$('wheel').style.transform=`rotate(${czRot}deg)`;
+    setTimeout(()=>finish('Die Kugel landet auf '+k+' '+(k===0?'Grün':czPick==='rot'?'Rot':'Schwarz')+'.'),2700)}});
 // ---------- Particles & rain ----------
 const parts=[];for(let k=0;k<90;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex,transparent:true,depthWrite:false,opacity:0}));s.visible=false;scene.add(s);parts.push({s,life:0,max:1,vx:0,vy:0,vz:0,size:1})}
 let pi=0;function emit(x,y,z,vx,vy,vz,life,size,color){const p=parts[pi++%parts.length];p.s.position.set(x,y,z);p.vx=vx;p.vy=vy;p.vz=vz;p.life=p.max=life;p.size=size;p.s.material.color.setHex(color);p.s.visible=true}
@@ -754,15 +845,19 @@ const Snd={c:null,init(){if(this.c)return;const A=window.AudioContext||window.we
     T(this.h.gain,keys.KeyH&&P.car?0.12:0)}};
 
 // ---------- HUD ----------
-let money=1500;let clock=0;let hour=17.3;
+let money=5;
+function eur(n){n=Math.floor(n);if(!isFinite(n))n=1e300;if(n<1e15)return n.toLocaleString('de-DE')+' €';
+  if(n>=1e36){const e=Math.floor(Math.log10(n));return (n/10**e).toLocaleString('de-DE',{maximumFractionDigits:2})+' × 10^'+e+' €'}
+  const U=[[1e33,'Quintilliarden'],[1e30,'Quintillionen'],[1e27,'Quadrilliarden'],[1e24,'Quadrillionen'],[1e21,'Trilliarden'],[1e18,'Trillionen'],[1e15,'Billiarden']];
+  for(const [v,name] of U)if(n>=v)return (n/v).toLocaleString('de-DE',{maximumFractionDigits:2})+' '+name+' €'}let clock=0;let hour=17.3;
 const msgEl=$('msg'),hintEl=$('hint'),bigEl=$('big');let msgT=0,hintT=0,bigT=0;
 function msg(t){msgEl.textContent=t;msgEl.style.opacity=1;msgT=3}
 function hint(t){hintEl.textContent=t;hintEl.style.opacity=1;hintT=0.25}
 function big(t,s,col){$('bigT').textContent=t;$('bigT').style.color=col;$('bigS').textContent=s;bigEl.style.opacity=1;bigT=3}
 function fmtTime(){const h=Math.floor(hour),m=Math.floor((hour-h)*60);return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')}
 let respawnT=0;
-function busted(){if(respawnT>0)return;const loss=Math.round(money*0.1);money-=loss;big('VERHAFTET','−$'+loss.toLocaleString('de-DE')+' Kaution','#5aa8ff');respawnT=2.5;respawnAt={x:rc(5)-ROAD/2-3,z:rc(3)+ROAD/2+3}}
-function wasted(){if(respawnT>0)return;const loss=Math.min(money,200);money-=loss;big('AUSGESCHALTET','Krankenhaus · −$'+loss,'#ff4a4a');respawnT=2.5;respawnAt=hospital}
+function busted(){if(respawnT>0)return;const loss=Math.round(money*0.1);money-=loss;big('VERHAFTET','−'+eur(loss)+' Kaution','#5aa8ff');respawnT=2.5;respawnAt={x:rc(5)-ROAD/2-3,z:rc(3)+ROAD/2+3}}
+function wasted(){if(respawnT>0)return;const loss=Math.min(money,200);money-=loss;big('AUSGESCHALTET','Krankenhaus · −'+eur(loss),'#ff4a4a');respawnT=2.5;respawnAt=hospital}
 let respawnAt=null;
 function doRespawn(){if(P.car){P.car.driver=false;P.car=null}P.m.visible=true;headLight.visible=false;$('speed').style.display='none';P.pos.set(respawnAt.x,0.3,respawnAt.z);P.hp=100;wanted=0;bustT=0;unseen=0;
   for(const c of cars.slice())if(c.kind==='police'&&c.ai&&dist2(c.pos,P.pos)<250*250){if(!spawnOnRoad(c,P.pos,150,260))c.remove()}}
@@ -776,7 +871,7 @@ function drawMap(){const W=400,S=0.95,c=mx;const pp=playerPos();c.save();c.clear
   const edge=(x,z,col,r)=>{let X=tx(x),Z=tz(z);const l=Math.hypot(X,Z);if(l>W/2-14){X*=(W/2-14)/l;Z*=(W/2-14)/l}c.fillStyle=col;c.strokeStyle='#000';c.lineWidth=3;c.beginPath();c.arc(X,Z,r,0,Math.PI*2);c.fill();c.stroke()};
   for(const o of cars){if(o===P.car)continue;if(o.kind==='police'&&o.ai)dot(o.pos.x,o.pos.z,7,(clock*4%1<0.5)?'#ff3b4f':'#3b8cff');else dot(o.pos.x,o.pos.z,3.5,'#9aa0a8')}
   for(const m of pickups)dot(m.position.x,m.position.z,4,'#6dff8a');
-  edge(garage.x,garage.z,'#3b8cff',10);
+  edge(garage.x,garage.z,'#3b8cff',10);edge(casinoDoor.x,casinoDoor.z,'#ff2fa0',10);
   if(startMk.visible)edge(startMk.position.x,startMk.position.z,'#ffc84a',10);
   if(goalMk.visible)edge(goalMk.position.x,goalMk.position.z,'#4affb0',11);
   c.restore();
@@ -787,14 +882,14 @@ let hudT=0;
 function updateHUD(dt){hudT-=dt;
   if(msgT>0){msgT-=dt;if(msgT<=0)msgEl.style.opacity=0}if(hintT>0){hintT-=dt;if(hintT<=0)hintEl.style.opacity=0}if(bigT>0){bigT-=dt;if(bigT<=0)bigEl.style.opacity=0}
   if(hudT>0)return;hudT=0.1;
-  $('money').textContent='$'+money.toLocaleString('de-DE');
+  $('money').textContent=eur(money);
   let s='';for(let k=0;k<5;k++)s+=`<span class="${k<wanted?'on':''}">★</span>`;$('stars').innerHTML=s;
   const wx=['Klar','Klar','Bewölkt','Regen'][rain>0.5?3:rain>0.1?2:0];$('clock').textContent=fmtTime()+' · '+wx;
   const pp=playerPos();$('area').innerHTML='<b>'+district(pp.x,pp.z)+'</b>'+street(pp.x,pp.z);
   $('hpBar').firstChild.style.width=P.hp+'%';$('hpBar').firstChild.style.background=P.hp<30?'#ff4a4a':'#4cd964';
   $('carBar').style.visibility=P.car?'visible':'hidden';if(P.car)$('carBar').firstChild.style.width=P.car.hp+'%';
   if(P.car)$('spd').textContent=Math.round(Math.abs(P.car.fwd)*3.6);
-  let mt='';if(M.state==='active')mt=`<div class="t">KURIERJOB · ${Math.max(0,Math.ceil(M.timer))} s</div>Paket nach ${M.name}<br>Belohnung $${M.reward.toLocaleString('de-DE')}`;
+  let mt='';if(M.state==='active')mt=`<div class="t">KURIERJOB · ${Math.max(0,Math.ceil(M.timer))} s</div>Paket nach ${M.name}<br>Belohnung ${eur(M.reward)}`;
   else mt=`<div class="t">KURIERJOBS</div>Fahre zum gelben Marker`;$('mission').innerHTML=mt;
   if(!P.car&&respawnT<=0){let n=null;for(const c of cars)if(dist2(c.pos,P.pos)<20&&!c.dead){n=c;break}if(n)hint((isTouch?'EIN/AUS':'F')+' – '+(n.driver?'Auto klauen':'Einsteigen')+' ('+n.t.name+')')}}
 
@@ -893,7 +988,8 @@ function updateCamera(dt){
 
 let last=performance.now();
 function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)/1000);last=now;
-  if(started){clock+=dt;
+  if(started&&casinoOpen)return;
+  else if(started){clock+=dt;
     if(respawnT>0){respawnT-=dt;if(respawnT<=0)doRespawn();dt*=0.25}
     updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);const np=updatePolice(dt);updateMission(dt);updateParts(dt);updateCamera(dt);Snd.update(np);updateHUD(dt);drawMap()}
   else{clock+=dt;hour=18.2;updateSky(0);camYaw+=dt*0.05;camT.set(0,30,0);const r=170;camera.position.set(Math.sin(camYaw)*r,70,Math.cos(camYaw)*r);camera.lookAt(0,25,0)}
@@ -903,6 +999,6 @@ addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);composer
 $('play').addEventListener('click',()=>{$('intro').style.display='none';started=true;hour=17.3;camYaw=Math.PI*1.5;camT.copy(P.pos);Snd.init();if(Snd.c&&Snd.c.resume)Snd.c.resume();
   if(!isTouch&&canvas.requestPointerLock){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
   msg('Willkommen in Valora City. Dein Vortex GT steht am Straßenrand.')});
-window.__game={cam:(y,pt)=>{camYaw=y;camPitch=pt},step:n=>{for(let k=0;k<n;k++){const dt=1/30;clock+=dt;updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);updatePolice(dt);updateMission(dt)}},crime:(n,w)=>crime(n,w),P,cars,peds,get wanted(){return wanted}};
+window.__game={door:casinoDoor,cam:(y,pt)=>{camYaw=y;camPitch=pt},step:n=>{for(let k=0;k<n;k++){const dt=1/30;clock+=dt;updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);updatePolice(dt);updateMission(dt)}},crime:(n,w)=>crime(n,w),P,cars,peds,get wanted(){return wanted}};
 })();
 </script>
