@@ -59,9 +59,11 @@ body.touch #touch{display:block}
 #tbF{right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px))}
 #tbRun{right:calc(100px + env(safe-area-inset-right,0px));bottom:calc(40px + env(safe-area-inset-bottom,0px))}
 #tbJump{right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+#tbDrift{right:calc(180px + env(safe-area-inset-right,0px));bottom:calc(140px + env(safe-area-inset-bottom,0px));background:rgba(255,120,30,.5)!important}
 #tbNitro{right:calc(180px + env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px));background:rgba(40,110,255,.55)!important}
 #tbShoot{right:calc(180px + env(safe-area-inset-right,0px));bottom:calc(140px + env(safe-area-inset-bottom,0px))}
 #tbAim{right:calc(180px + env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+#driftHud{left:50%;top:18%;transform:translateX(-50%);text-align:center;font-family:var(--display);font-size:20px;letter-spacing:4px;color:#ffb347;opacity:0;transition:opacity .2s}#driftHud b{display:block;font-weight:400;font-size:46px;color:#fff}
 #xhair{left:50%;top:50%;transform:translate(-50%,-50%);font-size:30px;font-weight:300;opacity:0;transition:opacity .15s;color:#fff}
 #tbHorn{right:calc(100px + env(safe-area-inset-right,0px));bottom:calc(125px + env(safe-area-inset-bottom,0px));width:52px;height:52px}
 body.touch #mapWrap{left:auto;bottom:auto;top:calc(92px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:130px}
@@ -171,13 +173,13 @@ body.intro .hud,body.intro #touch{display:none!important}
   <div class="bars"><div class="bar" id="hpBar"><i></i></div><div class="bar" id="carBar"><i></i></div></div>
   <div id="area"></div></div>
 <div class="hud" id="speed"><b id="spd">0</b><small>KM/H</small><div id="nitroBar"><i></i><span>NITRO</span></div></div>
-<div class="hud" id="msg"></div><div class="hud" id="xhair">+</div>
+<div class="hud" id="msg"></div><div class="hud" id="driftHud"></div><div class="hud" id="xhair">+</div>
 <div class="hud" id="hint"></div>
 <div class="hud" id="big"><b id="bigT"></b><small id="bigS"></small></div>
 
 <div id="touch"><div id="joy"><div id="knob"></div></div>
   <div class="tb" id="tbF">EIN<br>AUS</div><div class="tb" id="tbRun">SPRINT<br>BREMSE</div>
-  <div class="tb" id="tbJump">SPRUNG</div><div class="tb" id="tbAim">ZIELEN</div><div class="tb" id="tbShoot">FEUER</div><div class="tb" id="tbNitro" style="display:none">NITRO</div><div class="tb" id="tbHorn">HUPE</div></div>
+  <div class="tb" id="tbJump">SPRUNG</div><div class="tb" id="tbAim">ZIELEN</div><div class="tb" id="tbShoot">FEUER</div><div class="tb" id="tbNitro" style="display:none">NITRO</div><div class="tb" id="tbDrift" style="display:none">DRIFT</div><div class="tb" id="tbHorn">HUPE</div></div>
 
 <div id="casino" hidden><div class="cz" role="dialog" aria-label="Casino">
   <h2 id="czTitle">VALORA ROYALE</h2>
@@ -220,7 +222,7 @@ body.intro .hud,body.intro #touch{display:none!important}
     <div><kbd>WASD</kbd> Laufen / Fahren</div><div><kbd>Maus</kbd> Kamera</div>
     <div><kbd>Shift</kbd> Sprinten</div><div><kbd>Leertaste</kbd> Springen / Bremse</div>
     <div><kbd>F</kbd> Einsteigen / Benutzen</div><div><kbd>H</kbd> Hupe</div><div><kbd>Rechtsklick / Q</kbd> Zielen</div><div><kbd>Linksklick</kbd> Schießen</div>
-    <div><kbd>T</kbd> Zeit +2 Std.</div><div><kbd>P</kbd> Penthouse</div><div><kbd>V</kbd> Vollbild</div><div><kbd>G</kbd> Grafikstufe</div><div><kbd>I</kbd> Meine Autos</div><div><kbd>L</kbd> Landebahn</div><div><kbd>Shift / N</kbd> Nitro (Hypercar)</div><div><kbd>Esc</kbd> Menü schließen</div>
+    <div><kbd>T</kbd> Zeit +2 Std.</div><div><kbd>P</kbd> Penthouse</div><div><kbd>V</kbd> Vollbild</div><div><kbd>G</kbd> Grafikstufe</div><div><kbd>I</kbd> Meine Autos</div><div><kbd>L</kbd> Landebahn</div><div><kbd>Shift / N</kbd> Warp-Nitro (Hypercar)</div><div><kbd>C</kbd> Drift</div><div><kbd>Esc</kbd> Menü schließen</div>
   </div>
   <div class="note">Mit P (oder dem Penthouse-Button) springst du in dein Penthouse auf dem Valora Tower. Du startest mit 5 €. Gegenüber liegt das Casino (pink), daneben das Autohaus Valora Motors (grün). Kurierjobs am gelben Marker.</div>
 </div></div>
@@ -261,6 +263,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const N=8,BLOCK=72,ROAD=18,CELL=BLOCK+ROAD,HALF=N*CELL/2;
 const rc=i=>-HALF+i*CELL;
 const LIMIT=HALF+40;
+const RAMPS=[];
 
 // ---------- Renderer ----------
 const canvas=$('c');
@@ -742,6 +745,22 @@ function inRunwayArea(x,z){return x<RW.ax0+5&&x>RW.ax1-5&&Math.abs(z-RW.z)<RW.az
   const fm=std(0x6a6e72,0.6,0.5);for(const z of [RW.z-RW.az,RW.z+RW.az]){const f=new THREE.Mesh(new THREE.BoxGeometry(RW.ax0-RW.ax1,2.2,0.1),fm);f.position.set((RW.ax0+RW.ax1)/2,1.1,z);scene.add(f)}
   for(const x of [RW.ax0,RW.ax1]){const f=new THREE.Mesh(new THREE.BoxGeometry(0.1,2.2,RW.az*2),fm);f.position.set(x,1.1,RW.z);scene.add(f)}
 }
+
+// ---------- Mega ramps (launch physics in physCar) ----------
+{
+  const chev=canvasTex(128,128,g=>{g.fillStyle='#1a1a1a';g.fillRect(0,0,128,128);g.fillStyle='#ffc81e';for(let k=-2;k<4;k++){g.beginPath();g.moveTo(k*48,0);g.lineTo(k*48+24,0);g.lineTo(k*48+88,64);g.lineTo(k*48+24,128);g.lineTo(k*48,128);g.lineTo(k*48+64,64);g.closePath();g.fill()}});
+  chev.repeat.set(0.08,0.08);const rm=new THREE.MeshStandardMaterial({map:chev,roughness:0.6});const sideM=std(0x3a3d42,0.7,0.3);
+  const mkRamp=(r)=>{RAMPS.push(r);const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(r.L,r.H);sh.lineTo(r.L,0);sh.lineTo(0,0);
+    const g=new THREE.ExtrudeGeometry(sh,{depth:r.W,bevelEnabled:false});
+    if(r.dir==='x-'){g.rotateY(Math.PI);g.translate(r.s,0,r.z0+r.W)}else{g.rotateY(Math.PI/2);g.translate(r.x0,0,r.s)}
+    const m=new THREE.Mesh(g,[sideM,rm]);m.castShadow=m.receiveShadow=true;scene.add(m);
+    const t=canvasTex(512,160,gg=>{gg.fillStyle='#ffc81e';gg.fillRect(0,0,512,160);gg.fillStyle='#111';gg.font='bold 84px "Arial Black",Impact,sans-serif';gg.textAlign='center';gg.textBaseline='middle';gg.fillText('MEGA-RAMPE',256,84)});
+    const sg=new THREE.Mesh(new THREE.PlaneGeometry(16,5),new THREE.MeshStandardMaterial({map:t,emissiveMap:t,emissive:0xffffff,emissiveIntensity:0.4}));
+    if(r.dir==='x-'){sg.position.set(r.s+120,8,r.z0-6);sg.rotation.y=Math.PI/2}else{sg.position.set(r.x0+r.W+6,6,r.s+80);sg.rotation.y=Math.PI}scene.add(sg);
+    const pl=new THREE.Mesh(new THREE.BoxGeometry(0.4,6,0.4),poleMat);pl.position.copy(sg.position);pl.position.y=3;scene.add(pl)};
+  mkRamp({dir:'x-',s:RW.x0-1200,L:90,H:34,z0:RW.z-62,W:50});
+  mkRamp({dir:'z-',s:-1500,L:50,H:13,x0:HW.x+0.5,W:12});
+}
 function clampRunway(o,isCar){let hit=false;if(o.pos.x>RW.ax0){o.pos.x=RW.ax0;hit=true;if(isCar)o.vx*=-0.3}if(o.pos.x<RW.ax1){o.pos.x=RW.ax1;hit=true;if(isCar)o.vx*=-0.3}
   if(o.pos.z>RW.z+RW.az){o.pos.z=RW.z+RW.az;hit=true;if(isCar)o.vz*=-0.3}if(o.pos.z<RW.z-RW.az){o.pos.z=RW.z-RW.az;hit=true;if(isCar)o.vz*=-0.3}return hit}
 
@@ -764,7 +783,8 @@ const vNames=['Hafenallee','Lindenweg','Kaiserstraße','Valora Boulevard','Mitte
 const hNames=['Nordufer','Sonnenstraße','Marktgasse','Neue Promenade','Zentralallee','Fabrikstraße','Kastanienweg','Uferstraße','Südring'];
 function district(x,z){const d=Math.hypot(x,z);if(d<HALF*0.33)return'Downtown';if(x<0&&z<0)return'Nordhafen';if(x>=0&&z<0)return'Kristallviertel';if(x<0)return'Altstadt';return'Marina Süd'}
 function street(x,z){const i=Math.round((x+HALF)/CELL),j=Math.round((z+HALF)/CELL);const dx=Math.abs(x-rc(clamp(i,0,N))),dz=Math.abs(z-rc(clamp(j,0,N)));return dx<dz?vNames[clamp(i,0,N)]:hNames[clamp(j,0,N)]}
-function groundH(x,z,y){if(TW&&y!==undefined&&Math.abs(x-TW.x)<=TW.w/2+0.6&&Math.abs(z-TW.z)<=TW.w/2&&(y>2||Math.abs(x-TW.x-1.8)<1.4))return floorAt(x,z,y);const i=Math.floor((x+HALF)/CELL),j=Math.floor((z+HALF)/CELL);if(i<0||j<0||i>=N||j>=N)return 0;const lx=x-rc(i),lz=z-rc(j);return(lx>ROAD/2&&lx<CELL-ROAD/2&&lz>ROAD/2&&lz<CELL-ROAD/2)?0.3:0}
+function rampAt(x,z){let h=0;for(const r of RAMPS){let u;if(r.dir==='x-'){if(z<r.z0||z>r.z0+r.W||x>r.s||x<r.s-r.L)continue;u=r.s-x}else{if(x<r.x0||x>r.x0+r.W||z>r.s||z<r.s-r.L)continue;u=r.s-z}h=Math.max(h,r.H*u/r.L)}return h}
+function groundH(x,z,y){if(RAMPS.length){const rh=rampAt(x,z);if(rh>0.01)return rh}if(TW&&y!==undefined&&Math.abs(x-TW.x)<=TW.w/2+0.6&&Math.abs(z-TW.z)<=TW.w/2&&(y>2||Math.abs(x-TW.x-1.8)<1.4))return floorAt(x,z,y);const i=Math.floor((x+HALF)/CELL),j=Math.floor((z+HALF)/CELL);if(i<0||j<0||i>=N||j>=N)return 0;const lx=x-rc(i),lz=z-rc(j);return(lx>ROAD/2&&lx<CELL-ROAD/2&&lz>ROAD/2&&lz<CELL-ROAD/2)?0.3:0}
 
 // ---------- Collision helpers ----------
 function collideCircle(p,r,y=0){let hit=null;for(const b of nearBoxes(p.x,p.z)){if(b.off||b.h<y||y+1.3<b.ylo)continue;
@@ -1043,11 +1063,11 @@ function makeCarMesh(t,color,kind){
     const w=new THREE.Group();w.add(new THREE.Mesh(wheelGeo,tireMat),new THREE.Mesh(rimGeo,rimMat));piv.add(w);g.add(piv);wheels.push({piv,w})}
   const blob=new THREE.Mesh(blobGeo,blobMat);blob.scale.set(t.w+0.9,1,t.l+1.0);blob.position.y=0.03;blob.renderOrder=1;g.add(blob);
   g.traverse(o=>{if(o.isMesh&&o.castShadow)o.userData.cs=true});
-  return{g,body,wheels,paint,bar,door}}
+  return{g,body,wheels,paint,bar,door,blob}}
 const cars=[];
 class Car{constructor(type,color,kind='civ'){this.type=type;this.t=TYPES[type];Object.assign(this,makeCarMesh(this.t,color,kind));this.kind=kind;
   this.pos=this.g.position;this.h=0;this.vx=0;this.vz=0;this.fwd=0;this.lat=0;this.steer=0;this.yawRate=0;this.hp=100;this.dead=false;
-  this.ai=null;this.driver=false;this.stuck=0;this.rev=0;this.node=null;this.dir=null;this.lane=pick([2.4,6.6]);this.cruise=R(10,14);this.siren=false;this.lastHit=0;this.thr=0;
+  this.ai=null;this.driver=false;this.stuck=0;this.rev=0;this.node=null;this.dir=null;this.lane=pick([2.4,6.6]);this.cruise=R(10,14);this.siren=false;this.lastHit=0;this.thr=0;this.vy=0;this.air=false;this.g.rotation.order='YXZ';
   scene.add(this.g);cars.push(this)}
   speed(){return Math.hypot(this.vx,this.vz)}
   remove(){scene.remove(this.g);const k=cars.indexOf(this);if(k>=0)cars.splice(k,1)}}
@@ -1058,30 +1078,37 @@ function physCar(c,thr,st,hb,dt){
   const s=Math.sin(c.h),co=Math.cos(c.h);
   let fwd=c.vx*s+c.vz*co,lat=c.vx*co-c.vz*s;
   const T=c.t;const hpF=c.hp<30?0.6:1;
-  const boost=c.boost&&T.hyper?1.85:1,vmax=T.max*(c.boost&&T.hyper?1.08:1),BR=T.brake||30;
-  if(thr>0){if(fwd<-0.5)fwd+=thr*BR*dt;else if(T.hyper)fwd+=thr*T.acc*boost*hpF*dt*Math.max(0,1-Math.pow(Math.max(0,fwd)/vmax,2.4));else fwd+=thr*T.acc*hpF*dt*Math.max(0,1-Math.max(0,fwd)/T.max)*1.15}
-  else if(thr<0){if(fwd>0.5)fwd+=thr*BR*dt;else fwd+=thr*T.acc*0.55*dt*Math.max(0,1-Math.max(0,-fwd)/(T.max*0.28))}
-  else fwd-=fwd*0.35*dt+Math.sign(fwd)*Math.min(Math.abs(fwd),0.6*dt);
-  if(hb)fwd-=Math.sign(fwd)*Math.min(Math.abs(fwd),9*dt);
+  const warp=c.boost&&T.hyper,vmax=warp?29000:T.max,BR=T.brake||30;
+  if(c.air){thr=0;st=0}
+  if(c.air){}else if(thr>0){if(fwd<-0.5)fwd+=thr*BR*dt;else if(T.hyper)fwd+=thr*(warp?300000:T.acc)*hpF*dt*Math.max(0,1-Math.pow(Math.max(0,fwd)/vmax,2.4));else fwd+=thr*T.acc*hpF*dt*Math.max(0,1-Math.max(0,fwd)/T.max)*1.15}
+  else if(thr<0){if(fwd>0.5)fwd+=thr*BR*(fwd>300?20:1)*dt;else fwd+=thr*T.acc*0.55*dt*Math.max(0,1-Math.max(0,-fwd)/(T.max*0.28))}
+  else if(!c.air)fwd-=fwd*0.35*dt+Math.sign(fwd)*Math.min(Math.abs(fwd),0.6*dt);
+  if(hb&&!c.air&&!c.drift)fwd-=Math.sign(fwd)*Math.min(Math.abs(fwd),9*dt);
   fwd-=fwd*Math.abs(fwd)*(T.drag!==undefined?T.drag:0.021)*dt;
   c.steer+=(st-c.steer)*Math.min(1,dt*7);
   const sa=c.steer*0.62/(1+Math.abs(fwd)*0.045+Math.pow(fwd/60,2));
-  c.yawRate=fwd*Math.tan(sa)/2.7*(hb?1.35:1);
-  const grip=hb?1.1:T.grip*(rain>0.5?0.75:1)*(T.hyper?1+Math.abs(fwd)/90:1);
+  c.yawRate=c.air?0:fwd*Math.tan(sa)/2.7*(hb?1.35:1)*(c.drift?1.7:1);
+  const grip=c.air?0:c.drift?1.5:hb?1.1:T.grip*(rain>0.5?0.75:1)*(T.hyper?1+Math.min(Math.abs(fwd),400)/90:1);
   const latBefore=lat;lat*=Math.exp(-grip*dt);
   c.vx=s*fwd+co*lat;c.vz=co*fwd-s*lat;
   c.h+=c.yawRate*dt;
   c.pos.x+=c.vx*dt;c.pos.z+=c.vz*dt;
   c.fwd=fwd;c.lat=latBefore;
   // world bounds
-  if(inRunwayArea(c.pos.x,c.pos.z))clampRunway(c,true);else if(!inHighway(c.pos.x,c.pos.z)){if(Math.abs(c.pos.x)>LIMIT){c.pos.x=Math.sign(c.pos.x)*LIMIT;c.vx*=-0.3}if(Math.abs(c.pos.z)>LIMIT){c.pos.z=Math.sign(c.pos.z)*LIMIT;c.vz*=-0.3}}
+  if(inRunwayArea(c.pos.x,c.pos.z)){if(c.pos.x<RW.x1+150&&c.vx<-120)c.pos.x+=RW.len-300;else if(c.pos.x>RW.x0-80&&c.vx>120)c.pos.x-=RW.len-300;clampRunway(c,true)}else if(!inHighway(c.pos.x,c.pos.z)){if(Math.abs(c.pos.x)>LIMIT){c.pos.x=Math.sign(c.pos.x)*LIMIT;c.vx*=-0.3}if(Math.abs(c.pos.z)>LIMIT){c.pos.z=Math.sign(c.pos.z)*LIMIT;c.vz*=-0.3}}
   // buildings: two circles
   const r=T.w*0.56;
   for(const off of [T.l*0.27,-T.l*0.27]){const p={x:c.pos.x+s*off,z:c.pos.z+co*off};const ox=p.x,oz=p.z;const hit=collideCircle(p,r,0.5);
     if(hit){c.pos.x+=p.x-ox;c.pos.z+=p.z-oz;const vn=c.vx*hit.nx+c.vz*hit.nz;if(vn<0){c.vx-=1.35*vn*hit.nx;c.vz-=1.35*vn*hit.nz;const imp=-vn;
       if(imp>4)damageCar(c,imp*1.6,imp);c.vx*=0.85;c.vz*=0.85}}}
   // visuals
-  const gh=groundH(c.pos.x,c.pos.z);c.pos.y=lerp(c.pos.y,gh,Math.min(1,dt*12));
+  const gh=groundH(c.pos.x,c.pos.z);
+  if(c.air){c.vy-=20*dt;c.pos.y+=c.vy*dt;if(c.pos.y<=gh){const imp=-c.vy;c.pos.y=gh;c.air=false;c.vy=0;c.vyG=0;if(imp>8){damageCar(c,imp*0.9,imp);if(c===P.car)shake=Math.min(1.5,shake+imp*0.02)}if(c===P.car&&c.airT>1.5)msg('Sprung: '+Math.round(c.jumpDist).toLocaleString('de-DE')+' m weit · '+Math.round(c.jumpH)+' m hoch');}
+    else{c.airT+=dt;c.jumpDist+=Math.hypot(c.vx,c.vz)*dt;c.jumpH=Math.max(c.jumpH,c.pos.y-gh)}}
+  else if(gh<c.pos.y-0.6&&(c.vyG||0)>2){c.air=true;c.vy=Math.min(c.vyG,340);c.airT=0;c.jumpDist=0;c.jumpH=0;if(c===P.car){big('ABFLUG!','','#ffd23a');Snd.burst(0.5,700,0.3)}}
+  else{const ny=gh>c.pos.y+0.5?gh:lerp(c.pos.y,gh,Math.min(1,dt*12));c.vyG=(ny-c.pos.y)/Math.max(dt,1e-4);c.pos.y=ny}
+  if(c.blob){c.blob.position.y=gh-c.pos.y+0.03;c.blob.visible=c.pos.y-gh<25}
+  c.g.rotation.x=c.air?clamp(-Math.atan2(c.vy,Math.abs(fwd)+0.1),-0.7,0.7):(Math.abs(c.vyG||0)>0.5?clamp(-Math.atan2(c.vyG,Math.abs(fwd)+0.1),-0.5,0.5):lerp(c.g.rotation.x,0,Math.min(1,dt*8)));
   c.g.rotation.y=c.h;
   for(let k=0;k<4;k++){const w=c.wheels[k];w.w.rotation.x+=fwd*dt/0.37;if(k<2)w.piv.rotation.y=sa}
   c.body.rotation.z=lerp(c.body.rotation.z,clamp(c.yawRate*fwd*0.006,-0.09,0.09),Math.min(1,dt*6));
@@ -1174,7 +1201,7 @@ addEventListener('keydown',e=>{if(!started)return;if(vaultUI){if(e.code==='Space
 addEventListener('keyup',e=>{keys[e.code]=false});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 canvas.addEventListener('click',()=>{if(started&&!casinoOpen&&!shopOpen&&!isTouch&&canvas.requestPointerLock){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}});
-let mDown=false,aimDown=false,tAim=false,tShoot=false,tNitro=false;canvas.addEventListener('mousedown',e=>{if(e.button===2)aimDown=true;else{mDown=true;if(P.aiming)shoot()}});addEventListener('mouseup',e=>{if(e.button===2)aimDown=false;else mDown=false});canvas.addEventListener('contextmenu',e=>e.preventDefault());
+let mDown=false,aimDown=false,tAim=false,tShoot=false,tNitro=false,tDrift=false;canvas.addEventListener('mousedown',e=>{if(e.button===2)aimDown=true;else{mDown=true;if(P.aiming)shoot()}});addEventListener('mouseup',e=>{if(e.button===2)aimDown=false;else mDown=false});canvas.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas||mDown){camYaw-=e.movementX*0.0026;camPitch=clamp(camPitch+e.movementY*0.002,-0.15,1.25);lastMouse=clock}});
 function getInput(){let x=0,y=0;if(keys.KeyW||keys.ArrowUp)y+=1;if(keys.KeyS||keys.ArrowDown)y-=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
   x+=touchJoy.x;y+=touchJoy.y;return{x:clamp(x,-1,1),y:clamp(y,-1,1),sprint:keys.ShiftLeft||keys.ShiftRight||tRun,jump:keys.Space||tJump,hb:keys.Space||tRun}}
@@ -1189,7 +1216,7 @@ if(isTouch){const joy=$('joy'),knob=$('knob');let jid=null,jx=0,jy=0,cid=null,cx
   const end=e=>{for(const t of e.changedTouches){if(t.identifier===jid){jid=null;touchJoy.x=touchJoy.y=0;joy.style.display='none';knob.style.left=knob.style.top='40px'}if(t.identifier===cid)cid=null}};
   addEventListener('touchend',end);addEventListener('touchcancel',end);
   const btn=(id,dn,up)=>{const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();b.classList.add('on');dn()},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();b.classList.remove('on');up&&up()},{passive:false})};
-  btn('tbF',()=>toggleCar());btn('tbAim',()=>tAim=true,()=>tAim=false);btn('tbShoot',()=>{tShoot=true},()=>{tShoot=false});btn('tbNitro',()=>{tNitro=true},()=>{tNitro=false});btn('tbRun',()=>tRun=true,()=>tRun=false);btn('tbJump',()=>tJump=true,()=>tJump=false);btn('tbHorn',()=>keys.KeyH=true,()=>keys.KeyH=false)}
+  btn('tbF',()=>toggleCar());btn('tbAim',()=>tAim=true,()=>tAim=false);btn('tbShoot',()=>{tShoot=true},()=>{tShoot=false});btn('tbNitro',()=>{tNitro=true},()=>{tNitro=false});btn('tbDrift',()=>{tDrift=true},()=>{tDrift=false});btn('tbRun',()=>tRun=true,()=>tRun=false);btn('tbJump',()=>tJump=true,()=>tJump=false);btn('tbHorn',()=>keys.KeyH=true,()=>keys.KeyH=false)}
 
 // ---------- Enter / exit ----------
 function toggleCar(){
@@ -1198,7 +1225,7 @@ function toggleCar(){
   if(TW&&!P.car&&inCabin()){elevNext();return}
   if(inPent){pentInteract();return}
   if(seq)return;
-  if(P.car){const c=P.car;if(Math.abs(c.fwd)>12){msg('Zu schnell zum Aussteigen');return}
+  if(P.car){const c=P.car;if(c.air){msg('Nicht in der Luft aussteigen!');return}if(Math.abs(c.fwd)>12){msg('Zu schnell zum Aussteigen');return}
     if(Math.abs(c.fwd)<2.5&&!inBox(doorPt(c).x,1,doorPt(c).z,0.3)){P.car=null;c.driver=false;headLight.visible=false;$('speed').style.display='none';seq={type:'exit',car:c,t:0};return}
     const s=Math.sin(c.h),co=Math.cos(c.h);let ok=false;
     for(const side of [1,-1]){const p={x:c.pos.x+co*side*(c.t.w/2+0.8),z:c.pos.z-s*side*(c.t.w/2+0.8)};if(!inBox(p.x,1,p.z,0.4)){P.pos.set(p.x,groundH(p.x,p.z),p.z);ok=true;break}}
@@ -1509,10 +1536,10 @@ const Snd={c:null,init(){if(this.c)return;const A=window.AudioContext||window.we
   crash(v){this.burst(0.5,900,0.5*v+0.1)},thud(){this.burst(0.25,300,0.6)},
   blip(f,v=0.18){if(!this.c)return;const c=this.c;const o=c.createOscillator();o.type='sine';o.frequency.value=f;const g=c.createGain();g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.35);o.connect(g);g.connect(this.m);o.start();o.stop(c.currentTime+0.4)},
   update(nearestPolice){if(!this.c)return;const t=this.c.currentTime,T=(p,v)=>p.setTargetAtTime(v,t,0.06);
-    if(P.car&&!P.car.dead){const kmh=Math.abs(P.car.fwd)*3.6;const G=P.car.t.hyper?[0,70,150,250,370,520,700,1200]:[0,28,55,90,130,175,230,400];let g=0;while(g<6&&kmh>G[g+1])g++;const fr=(kmh-G[g])/(G[g+1]-G[g]);const rpm=0.22+0.78*fr;const th=Math.abs(P.car.thr);
+    if(P.car&&!P.car.dead){const kmh=Math.abs(P.car.fwd)*3.6;const G=P.car.t.hyper?[0,70,150,250,370,520,700,1200]:[0,28,55,90,130,175,230,400];let g=0;while(g<6&&kmh>G[g+1])g++;const fr=Math.min(1,(kmh-G[g])/(G[g+1]-G[g]));const rpm=0.22+0.78*fr;const th=Math.abs(P.car.thr);
       const base={sport:55,super:64,muscle:34,luxury:40,hyper:72}[P.car.type]||42;T(this.e.o1.frequency,base+rpm*120+g*4);T(this.e.o2.frequency,(base+rpm*120)*0.5);T(this.e.lp.frequency,350+rpm*900+th*900);T(this.e.eg.gain,0.05+0.06*th+0.02*rpm);
       T(this.skid.gain,Math.abs(P.car.lat)>4.5&&Math.abs(P.car.fwd)>6?Math.min(0.25,(Math.abs(P.car.lat)-4.5)*0.05):0);T(this.wind.gain,Math.min(0.12,kmh/1500))}
-    if(P.car&&P.car.t.hyper&&!P.car.dead){const kmh=Math.abs(P.car.fwd)*3.6;T(this.tw.tw.frequency,500+kmh*2.4);T(this.tw.twg.gain,0.012+Math.min(0.05,kmh/16000)+(P.car.boost?0.03:0));T(this.wind.gain,Math.min(0.22,kmh/4000))}else T(this.tw.twg.gain,0);
+    if(P.car&&P.car.t.hyper&&!P.car.dead){const kmh=Math.abs(P.car.fwd)*3.6;T(this.tw.tw.frequency,Math.min(4200,500+kmh*2.4));T(this.tw.twg.gain,0.012+Math.min(0.05,kmh/16000)+(P.car.boost?0.03:0));T(this.wind.gain,Math.min(0.22,kmh/4000))}else T(this.tw.twg.gain,0);
     if(!(P.car&&!P.car.dead)){T(this.e.eg.gain,0);T(this.skid.gain,0);T(this.wind.gain,0)}
     T(this.rain.gain,rain*0.09);T(this.city.gain,0.05);
     const sv=wanted>0?clamp(1-nearestPolice/160,0,1)*0.09:0;T(this.s.sg.gain,sv);this.s.so.frequency.setTargetAtTime(nearestPolice<40?(clock*4%1<0.5?700:1100):800+300*Math.sin(clock*2.6),t,0.02);
@@ -1569,7 +1596,8 @@ function updateHUD(dt){hudT-=dt;
   const pp=playerPos();$('area').innerHTML=inRunwayArea(pp.x,pp.z)?'<b>Valora International</b>Landebahn 27 · 12 km':inCasino?'<b>Valora Royale</b>Casino':inPent?'<b>Valora Tower</b>Penthouse · 96 m':'<b>'+district(pp.x,pp.z)+'</b>'+street(pp.x,pp.z);
   $('hpBar').firstChild.style.width=P.hp+'%';$('hpBar').firstChild.style.background=P.hp<30?'#ff4a4a':'#4cd964';
   $('carBar').style.visibility=P.car?'visible':'hidden';if(P.car)$('carBar').firstChild.style.width=P.car.hp+'%';
-  if(P.car)$('spd').textContent=Math.round(Math.abs(P.car.fwd)*3.6);const hy=P.car&&P.car.t.hyper;$('nitroBar').style.display=hy?'block':'none';if(hy)$('nitroBar').firstChild.style.width=(P.car.nitro??100)+'%';if(isTouch)$('tbNitro').style.display=hy?'flex':'none';
+  if(P.car)$('spd').textContent=Math.round(Math.abs(P.car.fwd)*3.6);const hy=P.car&&P.car.t.hyper;$('nitroBar').style.display=hy?'block':'none';if(hy)$('nitroBar').firstChild.style.width=(P.car.nitro??100)+'%';if(isTouch){$('tbNitro').style.display=hy?'flex':'none';$('tbDrift').style.display=P.car?'flex':'none';$('tbShoot').style.display=P.car?'none':'flex'}
+  $('driftHud').style.opacity=P.dScore>0?1:0;if(P.dScore>0)$('driftHud').innerHTML='DRIFT<b>'+Math.round(P.dScore).toLocaleString('de-DE')+'</b>';
   let mt='';if(BANK.state!=='idle'){const ob={hold:'Betritt die Bank und ziehe die Waffe (Q / Rechtsklick)',vault:BANK.cracked?'Sammle die Beute':'Schalte die Wachen aus · knacke den Tresor (F)',loot:'Sammle die Beute ('+BANK.taken+'/'+BANK.loot.length+') und flieh',escape:'Häng die Polizei ab!'}[BANK.state];mt=`<div class="t">BANKÜBERFALL</div>${ob}<br>Beute: ${eur(BANK.bag)}`}
   else if(M.state==='active')mt=`<div class="t">KURIERJOB · ${Math.max(0,Math.ceil(M.timer))} s</div>Paket nach ${M.name}<br>Belohnung ${eur(M.reward)}`;
   else mt=inCasino?`<div class="t">CASINO</div>Spielautomaten, Blackjack, Roulette und Bar`:`<div class="t">KURIERJOBS</div>Fahre zum gelben Marker`;$('mission').innerHTML=mt;
@@ -2098,11 +2126,14 @@ const camT=new THREE.Vector3(),camOff=new THREE.Vector3();
 function updatePlayer(dt){const inp=getInput();
   if(seq&&!P.car){updateSeq(dt);return}
   if(P.car){const c=P.car;
-    if(c.t.hyper){const want=(inp.sprint||keys.KeyN||tNitro)&&inp.y>0&&c.nitro>3;c.boost=want;c.nitro=clamp((c.nitro??100)+(want?-18:9)*dt,0,100);
+    c.drift=(keys.KeyC||tDrift)&&!c.air;
+    if(c.drift&&Math.abs(c.lat)>2.5&&c.speed()>7){P.dScore=(P.dScore||0)+Math.abs(c.lat)*dt*14*(1+c.speed()/40);P.dT=0.9;const s3=Math.sin(c.h),co3=Math.cos(c.h);if(Math.random()<0.7)for(const sd of [-1,1])emit(c.pos.x-s3*c.t.l*0.32+co3*sd*0.9,0.3,c.pos.z-co3*c.t.l*0.32-s3*sd*0.9,R(-0.6,0.6),R(0.5,1.4),R(-0.6,0.6),1.8,1.5,0xe8e8e8)}
+    else{P.dT=(P.dT||0)-dt;if(P.dT<=0&&P.dScore>0){const v=Math.round(P.dScore);if(v>=50){money+=v;msg('Drift beendet · +'+eur(v))}P.dScore=0}}
+    if(c.t.hyper){const want=(inp.sprint||keys.KeyN||tNitro)&&inp.y>0&&c.nitro>3&&!c.air;c.boost=want;c.nitro=clamp((c.nitro??100)+(want?-8:12)*dt,0,100);
       if(want&&!c._wasBoost){Snd.burst(0.6,1800,0.35);shake=Math.min(1,shake+0.2)}c._wasBoost=want;
       if(want){const s2=Math.sin(c.h),co2=Math.cos(c.h);for(const sd of [-0.35,0.35])emit(c.pos.x-s2*(c.t.l/2+0.2)+co2*sd,0.45,c.pos.z-co2*(c.t.l/2+0.2)-s2*sd,-s2*6-c.vx*0.2,R(0,0.4),-co2*6-c.vz*0.2,0.18,0.5,0x55aaff)}
-      const kmh=Math.abs(c.fwd)*3.6;if(kmh<5)c.t0=clock;else if(c.t0!==undefined&&kmh>=1000){msg('0–1000 km/h in '+(clock-c.t0).toFixed(1).replace('.',',')+' s');c.t0=undefined}}
-    const ns=Math.max(1,Math.min(16,Math.ceil(c.speed()*dt/0.7)));for(let k=0;k<ns;k++)physCar(c,inp.y,-inp.x,inp.hb,dt/ns);
+      const kmh=Math.abs(c.fwd)*3.6;if(kmh<5)c.t0=clock;else if(c.t0!==undefined&&kmh>=1000&&!c.t1k){c.t1k=true;msg('0–1000 km/h in '+(clock-c.t0).toFixed(2).replace('.',',')+' s')}else if(c.t0!==undefined&&kmh>=99000){msg('0–100.000 km/h in '+(clock-c.t0).toFixed(2).replace('.',',')+' s');c.t0=undefined}if(kmh<5)c.t1k=false}
+    const sp0=c.speed();const ns=Math.max(1,Math.min(240,Math.ceil(sp0*dt/(sp0>300?2.2:0.7))));for(let k=0;k<ns;k++)physCar(c,inp.y,-inp.x,inp.hb,dt/ns);
     if(Math.abs(c.lat)>5&&Math.abs(c.fwd)>8&&Math.random()<0.6){const s=Math.sin(c.h),co=Math.cos(c.h);for(const sd of [-1,1])emit(c.pos.x-s*c.t.l*0.32+co*sd*0.9,0.3,c.pos.z-co*c.t.l*0.32-s*sd*0.9,R(-0.5,0.5),R(0.5,1.2),R(-0.5,0.5),1.6,1.2,0xdddddd)}
     if(c.hp<35&&Math.random()<(c.dead?0.5:0.25)){const s=Math.sin(c.h),co=Math.cos(c.h);emit(c.pos.x+s*c.t.l*0.4,1.1,c.pos.z+co*c.t.l*0.4,R(-0.3,0.3),R(1.5,2.5),R(-0.3,0.3),2,1.4,c.dead?0x222222:0x777777)}
     const s=Math.sin(c.h),co=Math.cos(c.h);headLight.position.set(c.pos.x+s*2.4,1.0,c.pos.z+co*2.4);headLight.target.position.set(c.pos.x+s*22,0,c.pos.z+co*22);
@@ -2155,7 +2186,8 @@ function updateTraffic(dt){const pp=playerPos();const sd=QUAL[GFX.q].shadowDist;
     if(!c.ai&&c!==myCar&&!c.owned&&dist2(c.pos,pp)>300*300){c.remove();const n=new Car(pick(['sedan','compact','suv']),pick(CAR_COLORS));n.ai='traffic';n.driver=true;spawnOnRoad(n,pp,120,230)}}}
 function updateCamera(dt){
   const tgt=P.car?P.car.pos:P.pos;const sp=P.car?Math.abs(P.car.fwd):0;
-  const ck=sp>35?1:Math.min(1,dt*14);camT.x=lerp(camT.x,tgt.x,ck);camT.z=lerp(camT.z,tgt.z,ck);camT.y=lerp(camT.y,tgt.y+(P.car?1.7:1.55),Math.min(1,dt*8));
+  const ck=sp>35?1:Math.min(1,dt*14);camT.x=lerp(camT.x,tgt.x,ck);camT.z=lerp(camT.z,tgt.z,ck);camT.y=lerp(camT.y,tgt.y+(P.car?1.7:1.55),P.car&&(P.car.air||Math.abs(P.car.vyG||0)>1)?1:Math.min(1,dt*8));
+  {const alt=P.car&&P.car.air?P.car.pos.y:0;const far=1600+alt*4;if(Math.abs(camera.far-far)>40){camera.far=far;camera.updateProjectionMatrix()}if(alt>20){scene.fog.far=Math.max(scene.fog.far,alt*3+600);scene.fog.near=Math.max(scene.fog.near,alt)}}
   if(P.car&&clock-lastMouse>1.4){const want=(P.car.fwd<-3?P.car.h:P.car.h+Math.PI);camYaw+=wrapA(want-camYaw)*Math.min(1,dt*(1.5+sp*0.06));camPitch=lerp(camPitch,0.2,Math.min(1,dt*1.5))}
   P.aimBlend=lerp(P.aimBlend||0,P.aiming&&!P.car?1:0,Math.min(1,dt*10));
   let dist=P.car?Math.min(12.5,8.2+sp*0.035):lerp(inCasino?3.4:3.9,2.1,P.aimBlend);
