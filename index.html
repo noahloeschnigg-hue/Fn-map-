@@ -127,6 +127,7 @@ body.touch #money{font-size:26px}
 html{--SW:100vw;--SH:100vh}
 body.rot{position:fixed!important;top:0;left:var(--SW);width:var(--SH)!important;height:var(--SW)!important;transform-origin:0 0;transform:rotate(90deg);overflow:hidden}
 body:not(.rot){width:var(--SW);height:var(--SH)}
+#gfxBtn{pointer-events:auto;margin-top:6px;font-family:var(--ui);font-weight:700;font-size:14px;letter-spacing:1.5px;padding:5px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.35);background:rgba(8,14,22,.6);color:#ddd;cursor:pointer}
 #fsBtn{pointer-events:auto;margin-top:6px;margin-left:6px;font-family:var(--ui);font-weight:700;font-size:15px;letter-spacing:1.5px;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,.5);background:rgba(8,14,22,.6);color:#fff;cursor:pointer}
 #fsIntro{align-self:flex-start;font-family:var(--ui);font-weight:700;font-size:16px;letter-spacing:1.5px;padding:8px 16px;border-radius:4px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 body.rot #intro{align-items:flex-start!important;background:linear-gradient(90deg,rgba(6,4,12,.94) 0%,rgba(6,4,12,.82) 40%,rgba(6,4,12,0) 66%)!important}
@@ -149,7 +150,7 @@ body.intro .hud,body.intro #touch{display:none!important}
 
 <canvas id="c"></canvas>
 
-<div class="hud" id="topR"><div id="money">5 €</div><div id="stars"></div><div id="clock"></div><button type="button" id="phBtn">PENTHOUSE · P</button><br><button type="button" id="fsBtn">⛶ VOLLBILD</button></div>
+<div class="hud" id="topR"><div id="money">5 €</div><div id="stars"></div><div id="clock"></div><button type="button" id="phBtn">PENTHOUSE · P</button><br><button type="button" id="fsBtn">⛶ VOLLBILD</button><br><button type="button" id="gfxBtn">⚙ GRAFIK</button></div>
 <div class="hud" id="mission"></div>
 <div class="hud" id="mapWrap"><canvas id="minimap" width="400" height="400"></canvas>
   <div class="bars"><div class="bar" id="hpBar"><i></i></div><div class="bar" id="carBar"><i></i></div></div>
@@ -190,12 +191,13 @@ body.intro .hud,body.intro #touch{display:none!important}
   <h1>VALORA<br>CITY</h1>
   <button id="play" type="button">SPIELEN</button>
   <button id="fsIntro" type="button">⛶ Vollbild</button>
+  <div class="ed" id="gfxBox"></div>
   <div class="ed" id="editor"><div class="ttl">DEINE FIGUR</div></div>
   <div class="keys">
     <div><kbd>WASD</kbd> Laufen / Fahren</div><div><kbd>Maus</kbd> Kamera</div>
     <div><kbd>Shift</kbd> Sprinten</div><div><kbd>Leertaste</kbd> Springen / Bremse</div>
     <div><kbd>F</kbd> Einsteigen / Benutzen</div><div><kbd>H</kbd> Hupe</div>
-    <div><kbd>T</kbd> Zeit +2 Std.</div><div><kbd>P</kbd> Penthouse</div><div><kbd>V</kbd> Vollbild</div><div><kbd>Esc</kbd> Menü schließen</div>
+    <div><kbd>T</kbd> Zeit +2 Std.</div><div><kbd>P</kbd> Penthouse</div><div><kbd>V</kbd> Vollbild</div><div><kbd>G</kbd> Grafikstufe</div><div><kbd>Esc</kbd> Menü schließen</div>
   </div>
   <div class="note">Mit P (oder dem Penthouse-Button) springst du in dein Penthouse auf dem Valora Tower. Du startest mit 5 €. Gegenüber liegt das Casino (pink), daneben das Autohaus Valora Motors (grün). Kurierjobs am gelben Marker.</div>
 </div></div>
@@ -208,6 +210,12 @@ body.intro .hud,body.intro #touch{display:none!important}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/FXAAShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/math/SimplexNoise.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/SSAOShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/SSAOPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/SMAAShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/SMAAPass.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -233,10 +241,19 @@ const LIMIT=HALF+40;
 
 // ---------- Renderer ----------
 const canvas=$('c');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:!isTouch,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,isTouch?1.5:2));
+// ---------- Graphics quality ----------
+const GFX={q:isTouch?'mittel':'hoch',fps:false};
+try{const g=JSON.parse(localStorage.getItem('valoraGfx')||'null');if(g&&typeof g==='object')Object.assign(GFX,g)}catch(e){}
+const DPR=devicePixelRatio||1;
+const QUAL={niedrig:{label:'Niedrig',pr:Math.min(DPR,1),shadow:1024,soft:false,ssao:false,aa:'fxaa',clearcoat:false,shadowDist:45},
+  mittel:{label:'Mittel',pr:Math.min(DPR,isTouch?1.25:1.5),shadow:2048,soft:true,ssao:false,aa:'fxaa',clearcoat:true,shadowDist:70},
+  hoch:{label:'Hoch',pr:Math.min(DPR,2),shadow:4096,soft:true,ssao:true,aa:'smaa',clearcoat:true,shadowDist:110}};
+if(!QUAL[GFX.q])GFX.q='mittel';
+let dynScale=1;
+const renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(QUAL[GFX.q].pr);
 renderer.setSize(VW(),VH());
-renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=QUAL[GFX.q].soft?THREE.PCFSoftShadowMap:THREE.PCFShadowMap;renderer.physicallyCorrectLights=false;
 renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
 const scene=new THREE.Scene();
@@ -244,7 +261,7 @@ scene.fog=new THREE.Fog(0x9ec4e8,90,620);scene.background=null;
 const camera=new THREE.PerspectiveCamera(68,VW()/VH(),0.1,1600);
 const hemi=new THREE.HemisphereLight(0xcfe2ff,0x4a4436,0.6);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff0d8,1.6);
-sun.castShadow=true;const SM=isTouch?1024:2048;sun.shadow.mapSize.set(SM,SM);
+sun.castShadow=true;const SM=QUAL[GFX.q].shadow;sun.shadow.mapSize.set(SM,SM);
 Object.assign(sun.shadow.camera,{left:-95,right:95,top:95,bottom:-95,near:10,far:700});
 sun.shadow.bias=-0.0006;sun.shadow.normalBias=0.04;
 scene.add(sun);scene.add(sun.target);
@@ -270,9 +287,9 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(1400,32,16),new THREE.ShaderMa
 sky.renderOrder=-1;sky.frustumCulled=false;scene.add(sky);
 // post: bloom + filmic grade (teal shadows / warm highlights, vignette, grain)
 const composer=new THREE.EffectComposer(renderer);
-composer.setPixelRatio(Math.min(devicePixelRatio||1,isTouch?1.25:1.5));composer.setSize(VW(),VH());
-composer.addPass(new THREE.RenderPass(scene,camera));
-const bloom=new THREE.UnrealBloomPass(new THREE.Vector2(VW()/2,VH()/2),0.55,0.6,0.82);composer.addPass(bloom);
+composer.setPixelRatio(QUAL[GFX.q].pr);composer.setSize(VW(),VH());
+const renderPass=new THREE.RenderPass(scene,camera);
+const bloom=new THREE.UnrealBloomPass(new THREE.Vector2(VW()/2,VH()/2),0.55,0.6,0.82);
 const grade=new THREE.ShaderPass({uniforms:{tDiffuse:{value:null},time:{value:0},sat:{value:1.12},con:{value:1.08},vig:{value:0.42}},
   vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
   fragmentShader:`uniform sampler2D tDiffuse;uniform float time,sat,con,vig;varying vec2 vUv;
@@ -283,7 +300,16 @@ const grade=new THREE.ShaderPass({uniforms:{tDiffuse:{value:null},time:{value:0}
     float d=distance(vUv,vec2(.5));c*=1.-vig*smoothstep(.3,.9,d);
     c+=(fract(sin(dot(vUv*(time+1.),vec2(12.9898,78.233)))*43758.5453)-.5)*.03;
     gl_FragColor=vec4(c,1.);}`});
-composer.addPass(grade);
+let ssaoPass=null,fxaaPass=null,smaaPass=null;
+function updateAA(){const pr=QUAL[GFX.q].pr*dynScale;if(fxaaPass)fxaaPass.material.uniforms['resolution'].value.set(1/(VW()*pr),1/(VH()*pr));if(smaaPass)smaaPass.setSize(VW()*pr,VH()*pr)}
+function buildPost(){const q=QUAL[GFX.q];composer.passes.length=0;
+  if(q.ssao){if(!ssaoPass){ssaoPass=new THREE.SSAOPass(scene,camera,VW(),VH());ssaoPass.kernelRadius=1.1;ssaoPass.minDistance=0.00002;ssaoPass.maxDistance=0.0022}composer.addPass(ssaoPass)}
+  else composer.addPass(renderPass);
+  composer.addPass(bloom);composer.addPass(grade);
+  if(q.aa==='smaa'){if(!smaaPass)smaaPass=new THREE.SMAAPass(VW()*q.pr,VH()*q.pr);composer.addPass(smaaPass)}
+  else{if(!fxaaPass)fxaaPass=new THREE.ShaderPass(THREE.FXAAShader);composer.addPass(fxaaPass)}
+  composer.setPixelRatio(q.pr*dynScale);renderer.setPixelRatio(q.pr*dynScale);composer.setSize(VW(),VH());updateAA()}
+buildPost();
 
 // environment map for reflections (cars, glass, wet roads)
 {
@@ -298,6 +324,7 @@ composer.addPass(grade);
   scene.environment=pm.fromScene(es,0.03).texture;
 }
 const envMats=[];
+
 
 // ---------- Textures ----------
 function canvasTex(w,h,draw,srgb=true){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);
@@ -395,7 +422,9 @@ const lightsTex=canvasTex(256,256,g=>{g.fillStyle='#000';g.fillRect(0,0,256,256)
 const asphaltTex=canvasTex(256,256,g=>{g.fillStyle='#3a3a3c';g.fillRect(0,0,256,256);for(let i=0;i<9000;i++){const v=40+Math.random()*40|0;g.fillStyle=`rgb(${v},${v},${v+2})`;g.fillRect(Math.random()*256,Math.random()*256,1.5,1.5)}
   for(let i=0;i<6;i++){g.strokeStyle='rgba(20,20,20,.35)';g.lineWidth=1;g.beginPath();let x=Math.random()*256,y=Math.random()*256;g.moveTo(x,y);for(let k=0;k<8;k++){x+=R(-20,20);y+=R(-20,20);g.lineTo(x,y)}g.stroke()}});
 asphaltTex.repeat.set(86,86);
-const markTex=canvasTex(128,128,g=>{g.clearRect(0,0,128,128);g.fillStyle='#e8e4d8';g.fillRect(9,0,3,128);g.fillRect(116,0,3,128);
+const markTex=canvasTex(128,128,g=>{g.clearRect(0,0,128,128);for(const lc of [17,47,81,111])for(const o of [-6,6]){for(let y=0;y<128;y+=2){g.fillStyle=`rgba(10,10,12,${0.10+Math.random()*0.08})`;g.fillRect(lc+o-2+Math.random(),y,4,2)}}
+  for(let k=0;k<3;k++){const x=pick([17,47,81,111])+R(-2,2),y=Math.random()*128;const gr=g.createRadialGradient(x,y,0,x,y,7);gr.addColorStop(0,'rgba(5,5,8,.35)');gr.addColorStop(1,'rgba(5,5,8,0)');g.fillStyle=gr;g.fillRect(x-8,y-8,16,16)}
+g.fillStyle='#e8e4d8';g.fillRect(9,0,3,128);g.fillRect(116,0,3,128);
   g.fillStyle='#e8c23a';g.fillRect(60,0,3,128);g.fillRect(65,0,3,128);g.fillStyle='#e8e4d8';g.fillRect(31,0,2,64);g.fillRect(95,0,2,64)});
 const zebraTex=canvasTex(128,32,g=>{g.clearRect(0,0,128,32);g.fillStyle='#e8e4d8';for(let i=0;i<8;i++)g.fillRect(i*16+3,0,10,32)});
 const walkTex=canvasTex(128,128,g=>{g.fillStyle='#9a978f';g.fillRect(0,0,128,128);for(let i=0;i<3000;i++){const v=130+Math.random()*40|0;g.fillStyle=`rgb(${v},${v-2},${v-6})`;g.fillRect(Math.random()*128,Math.random()*128,1.5,1.5)}
@@ -774,6 +803,7 @@ function makePerson(o){o=Object.assign(randomLook(),o||{});
   const LL=mkLeg(-1),RL=mkLeg(1);
   const blob=new THREE.Mesh(personBlobGeo,blobMat);blob.position.y=0.02;blob.renderOrder=1;g.add(blob);
   const sc=o.scale||((fem?0.94:1)*R(0.95,1.06));g.scale.setScalar(sc);
+  g.traverse(o=>{if(o.isMesh&&o.castShadow)o.userData.cs=true});
   g.userData={body,torso,head,aL:L.a,aR:Rr.a,fL:L.fa,fR:Rr.fa,lL:LL.l,rL:RL.l,sL:LL.sn,sR:RL.sn,breath:Math.random()*6,look:o};
   scene.add(g);return g}
 function animPerson(m,ph,amt){const u=m.userData;const run=amt>0.85;const a=Math.min(1,amt);
@@ -817,7 +847,7 @@ const blobTex=canvasTex(64,64,g=>{const gr=g.createRadialGradient(32,32,4,32,32,
 const blobGeo=new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),blobMat=new THREE.MeshBasicMaterial({map:blobTex,color:0x000000,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-6});
 function makeCarMesh(t,color,kind){
   const g=new THREE.Group(),body=new THREE.Group();g.add(body);
-  const paint=new THREE.MeshStandardMaterial({color:lin(color),metalness:0.45,roughness:0.3});envMats.push(paint);
+  const paint=QUAL[GFX.q].clearcoat?new THREE.MeshPhysicalMaterial({color:lin(color),metalness:0.55,roughness:0.4,clearcoat:1,clearcoatRoughness:0.05}):new THREE.MeshStandardMaterial({color:lin(color),metalness:0.45,roughness:0.3});envMats.push(paint);
   const y0=0.32;
   const lower=new THREE.Mesh(carBodyGeo(t),paint);
   const zr=t.cabZ-t.l*t.cabL/2,zf=t.cabZ+t.l*t.cabL/2,yb=y0+t.h-0.02,yt=y0+t.h+t.cab;
@@ -841,6 +871,7 @@ function makeCarMesh(t,color,kind){
   const wheels=[];for(const [sx,sz] of [[-1,1],[1,1],[-1,-1],[1,-1]]){const piv=new THREE.Group();piv.position.set(sx*(t.w/2-0.12),0.37,sz*t.l*0.31);
     const w=new THREE.Group();w.add(new THREE.Mesh(wheelGeo,tireMat),new THREE.Mesh(rimGeo,rimMat));piv.add(w);g.add(piv);wheels.push({piv,w})}
   const blob=new THREE.Mesh(blobGeo,blobMat);blob.scale.set(t.w+0.9,1,t.l+1.0);blob.position.y=0.03;blob.renderOrder=1;g.add(blob);
+  g.traverse(o=>{if(o.isMesh&&o.castShadow)o.userData.cs=true});
   return{g,body,wheels,paint,bar}}
 const cars=[];
 class Car{constructor(type,color,kind='civ'){this.type=type;this.t=TYPES[type];Object.assign(this,makeCarMesh(this.t,color,kind));this.kind=kind;
@@ -943,7 +974,7 @@ function knockPed(pd,c){if(pd.state==='down')return;const sp=c.speed();pd.state=
   if(c===P.car){crime(1,'Fußgänger angefahren');shake+=0.2}Snd.thud();for(const o of peds)if(o!==pd&&dist2(o.m.position,pd.m.position)<400)flee(o,pd.m.position)}
 function flee(pd,from){if(pd.state==='down')return;pd.state='flee';pd.t=R(3,5);pd.from={x:from.x,z:from.z}}
 function updatePeds(dt){const pp=playerPos();
-  for(const pd of peds){const m=pd.m;const p=m.position;const vd=dist2(p,camera.position);m.visible=vd<130*130;if(vd>70*70&&pd.state==='walk'&&Math.random()<0.5){const c=pedCorner(pd.b,pd.k);const dx=c.x-p.x,dz=c.z-p.z,l=Math.hypot(dx,dz)||1;p.x+=dx/l*pd.spd*dt*2;p.z+=dz/l*pd.spd*dt*2;if(l<0.8)pd.k=(pd.k+pd.dirS+4)%4;continue}
+  for(const pd of peds){const m=pd.m;const p=m.position;setShadow(m,dist2(p,camera.position)<(QUAL[GFX.q].shadowDist*0.6)**2);const vd=dist2(p,camera.position);m.visible=vd<130*130;if(vd>70*70&&pd.state==='walk'&&Math.random()<0.5){const c=pedCorner(pd.b,pd.k);const dx=c.x-p.x,dz=c.z-p.z,l=Math.hypot(dx,dz)||1;p.x+=dx/l*pd.spd*dt*2;p.z+=dz/l*pd.spd*dt*2;if(l<0.8)pd.k=(pd.k+pd.dirS+4)%4;continue}
     if(dist2(p,pp)>165*165){placePed(pd,pp,70,150);continue}
     if(pd.state==='down'){pd.t+=dt;pd.vy-=20*dt;p.x+=pd.vx*dt;p.z+=pd.vz*dt;p.y+=pd.vy*dt;const gh=groundH(p.x,p.z);if(p.y<gh){p.y=gh;pd.vy=0;pd.vx*=0.85;pd.vz*=0.85}
       m.userData.body.rotation.x=lerp(m.userData.body.rotation.x,-Math.PI/2,Math.min(1,dt*6));m.userData.body.position.y=0.15;collideCircle(p,0.3);
@@ -966,7 +997,7 @@ function hurt(a){P.hp=Math.max(0,P.hp-a);P.lastHurt=clock;if(P.hp<=0)wasted()}
 
 // ---------- Input ----------
 const keys={};let camYaw=Math.PI,camPitch=0.32,lastMouse=-9;let touchJoy={x:0,y:0},tRun=false,tJump=false;
-addEventListener('keydown',e=>{if(!started)return;if(casinoOpen){if(e.code==='Escape')closeCasino();return}if(shopOpen){if(e.code==='Escape')closeShop();return}keys[e.code]=true;if(e.code==='KeyF'||e.code==='Enter')toggleCar();if(e.code==='KeyT'){hour=(hour+2)%24;msg('Zeit: '+fmtTime())}if(e.code==='KeyP')goPenthouse();if(e.code==='KeyV')toggleFS();
+addEventListener('keydown',e=>{if(!started)return;if(casinoOpen){if(e.code==='Escape')closeCasino();return}if(shopOpen){if(e.code==='Escape')closeShop();return}keys[e.code]=true;if(e.code==='KeyF'||e.code==='Enter')toggleCar();if(e.code==='KeyT'){hour=(hour+2)%24;msg('Zeit: '+fmtTime())}if(e.code==='KeyP')goPenthouse();if(e.code==='KeyV')toggleFS();if(e.code==='KeyG')cycleQuality(1);
   if(e.code==='Space'||e.code.startsWith('Arrow'))e.preventDefault()});
 addEventListener('keyup',e=>{keys[e.code]=false});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
@@ -977,7 +1008,7 @@ function getInput(){let x=0,y=0;if(keys.KeyW||keys.ArrowUp)y+=1;if(keys.KeyS||ke
   x+=touchJoy.x;y+=touchJoy.y;return{x:clamp(x,-1,1),y:clamp(y,-1,1),sprint:keys.ShiftLeft||keys.ShiftRight||tRun,jump:keys.Space||tJump,hb:keys.Space||tRun}}
 // touch
 if(isTouch){const joy=$('joy'),knob=$('knob');let jid=null,jx=0,jy=0,cid=null,cx=0,cy=0;const GX=t=>ROT?t.clientY:t.clientX,GY=t=>ROT?SW()-t.clientX:t.clientY;
-  addEventListener('touchstart',e=>{if(!started||casinoOpen||shopOpen)return;for(const t of e.changedTouches){if(t.target.closest&&t.target.closest('.tb,#phBtn,#fsBtn'))continue;
+  addEventListener('touchstart',e=>{if(!started||casinoOpen||shopOpen)return;for(const t of e.changedTouches){if(t.target.closest&&t.target.closest('.tb,#phBtn,#fsBtn,#gfxBtn'))continue;
     if(GX(t)<VW()*0.45&&jid===null){jid=t.identifier;jx=GX(t);jy=GY(t);joy.style.display='block';joy.style.left=(jx-65)+'px';joy.style.top=(jy-65)+'px'}
     else if(cid===null){cid=t.identifier;cx=GX(t);cy=GY(t)}}},{passive:true});
   addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===jid){let dx=GX(t)-jx,dy=GY(t)-jy;const l=Math.hypot(dx,dy);if(l>55){dx*=55/l;dy*=55/l}
@@ -1354,7 +1385,7 @@ function updateHUD(dt){hudT-=dt;
   if(hudT>0)return;hudT=0.1;
   $('money').textContent=eur(money);
   let s='';for(let k=0;k<5;k++)s+=`<span class="${k<wanted?'on':''}">★</span>`;$('stars').innerHTML=s;
-  const wx=['Klar','Klar','Bewölkt','Regen'][rain>0.5?3:rain>0.1?2:0];$('clock').textContent=fmtTime()+' · '+wx;
+  const wx=['Klar','Klar','Bewölkt','Regen'][rain>0.5?3:rain>0.1?2:0];$('clock').textContent=fmtTime()+' · '+wx+(GFX.fps?' · '+Math.round(fpsEMA)+' FPS':'');
   const pp=playerPos();$('area').innerHTML=inCasino?'<b>Valora Royale</b>Casino':inPent?'<b>Valora Tower</b>Penthouse · 96 m':'<b>'+district(pp.x,pp.z)+'</b>'+street(pp.x,pp.z);
   $('hpBar').firstChild.style.width=P.hp+'%';$('hpBar').firstChild.style.background=P.hp<30?'#ff4a4a':'#4cd964';
   $('carBar').style.visibility=P.car?'visible':'hidden';if(P.car)$('carBar').firstChild.style.width=P.car.hp+'%';
@@ -1623,7 +1654,8 @@ function carInteractions(dt){
     if(!P.car&&respawnT<=0&&P.pos.y<c.pos.y+1&&test(P.pos,0.3)){if(sp>5&&P.knock<=0){P.knock=1.6;P.vx=c.vx*0.8;P.vz=c.vz*0.8;P.vy=3+sp*0.1;hurt(sp*1.7);Snd.thud();shake+=0.4}}}
   // horn scares peds
   if(P.car&&keys.KeyH)for(const pd of peds)if(dist2(pd.m.position,P.car.pos)<225)flee(pd,P.car.pos)}
-function updateTraffic(dt){const pp=playerPos();
+function setShadow(obj,on){if(obj.userData._sh===on)return;obj.userData._sh=on;obj.traverse(o=>{if(o.isMesh&&o.userData.cs)o.castShadow=on})}
+function updateTraffic(dt){const pp=playerPos();const sd=QUAL[GFX.q].shadowDist;for(const c of cars)setShadow(c.g,dist2(c.pos,camera.position)<sd*sd);
   for(const c of cars.slice()){if(c===P.car)continue;
     if(c.ai&&!c.dead)aiDrive(c,dt);else physCar(c,0,0,true,dt);
     if(c.ai==='traffic'&&dist2(c.pos,pp)>240*240){c.hp=100;if(c.dead){c.dead=false;c.paint.color.copy(lin(pick(CAR_COLORS)))}spawnOnRoad(c,pp,90,220)}
@@ -1642,7 +1674,7 @@ function updateCamera(dt){
   const fov=68+(P.car?Math.min(22,sp*0.32):0);if(Math.abs(camera.fov-fov)>0.05){camera.fov=lerp(camera.fov,fov,Math.min(1,dt*3));camera.updateProjectionMatrix()}}
 
 let last=performance.now();
-function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)/1000);last=now;
+function frame(now){requestAnimationFrame(frame);const rawDt=(now-last)/1000;let dt=Math.min(0.05,rawDt);last=now;perfTick(rawDt);
   if(started&&(casinoOpen||shopOpen))return;
   else if(started&&inCasino){clock+=dt;updateSky(dt);updatePlayer(dt);updateInterior(dt);updateParts(dt);updateCamera(dt);Snd.update(999);updateHUD(dt);drawMap()}
   else if(started){clock+=dt;
@@ -1652,7 +1684,20 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)
     const wide=VW()>760;camera.position.set(hp.x+3.2,hp.y+1.3,hp.z+(wide?-0.3:0));camera.lookAt(hp.x,hp.y+(wide?1.0:0.55),hp.z+(wide?1.15:0));if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
   grade.uniforms.time.value=clock%10;composer.render()}
 requestAnimationFrame(frame);
-function applyOrient(){setVars();ROT=isTouch&&SH()>SW();document.body.classList.toggle('rot',ROT);renderer.setSize(VW(),VH());composer.setSize(VW(),VH());camera.aspect=VW()/VH();camera.updateProjectionMatrix()}
+function applyQuality(){const q=QUAL[GFX.q];try{localStorage.setItem('valoraGfx',JSON.stringify(GFX))}catch(e){}
+  dynScale=1;renderer.shadowMap.type=q.soft?THREE.PCFSoftShadowMap:THREE.PCFShadowMap;sun.shadow.mapSize.set(q.shadow,q.shadow);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}
+  scene.traverse(o=>{if(o.material)[].concat(o.material).forEach(m=>m.needsUpdate=true)});buildPost();
+  const lab='⚙ GRAFIK: '+q.label.toUpperCase();if($('gfxBtn'))$('gfxBtn').textContent=lab;renderGfxBox()}
+function cycleQuality(d=1){const ks=Object.keys(QUAL);GFX.q=ks[(ks.indexOf(GFX.q)+d+ks.length)%ks.length];applyQuality();msg('Grafik: '+QUAL[GFX.q].label)}
+let fpsEMA=60,lowT=0,highT=0;
+function perfTick(rawDt){if(rawDt<=0)return;fpsEMA=lerp(fpsEMA,1/rawDt,0.05);if(GFX.q==='niedrig')return;
+  if(fpsEMA<34){lowT+=rawDt;highT=0;if(lowT>4&&dynScale>0.6){dynScale=Math.max(0.6,dynScale-0.1);lowT=0;composer.setPixelRatio(QUAL[GFX.q].pr*dynScale);renderer.setPixelRatio(QUAL[GFX.q].pr*dynScale);composer.setSize(VW(),VH());updateAA()}}
+  else if(fpsEMA>55){highT+=rawDt;lowT=0;if(highT>6&&dynScale<1){dynScale=Math.min(1,dynScale+0.1);highT=0;composer.setPixelRatio(QUAL[GFX.q].pr*dynScale);renderer.setPixelRatio(QUAL[GFX.q].pr*dynScale);composer.setSize(VW(),VH());updateAA()}}
+  else{lowT=0;highT=0}}
+function renderGfxBox(){const b=$('gfxBox');if(!b)return;b.innerHTML='<div class="ttl">GRAFIK</div>'+
+  `<div class="r"><span>Qualität</span><button type="button" data-g="-1" aria-label="Qualität niedriger">◀</button><b>${QUAL[GFX.q].label}</b><button type="button" data-g="1" aria-label="Qualität höher">▶</button></div>`+
+  `<div class="r"><span>FPS-Anzeige</span><button type="button" data-f="1" aria-label="FPS umschalten">◀</button><b>${GFX.fps?'An':'Aus'}</b><button type="button" data-f="1" aria-label="FPS umschalten">▶</button></div>`}
+function applyOrient(){setVars();ROT=isTouch&&SH()>SW();document.body.classList.toggle('rot',ROT);renderer.setSize(VW(),VH());composer.setSize(VW(),VH());updateAA();camera.aspect=VW()/VH();camera.updateProjectionMatrix()}
 addEventListener('resize',applyOrient);if(window.visualViewport)visualViewport.addEventListener('resize',applyOrient);
 // ---------- Fullscreen ----------
 function isFS(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
@@ -1665,7 +1710,10 @@ function toggleFS(){const el=document.documentElement;
 document.addEventListener('fullscreenchange',()=>{setTimeout(applyOrient,150);$('fsBtn').textContent=isFS()?'⛶ BEENDEN':'⛶ VOLLBILD'});
 document.addEventListener('webkitfullscreenchange',()=>setTimeout(applyOrient,150));
 $('fsBtn').addEventListener('click',e=>{e.stopPropagation();toggleFS();$('fsBtn').blur()});
-$('fsIntro').addEventListener('click',()=>toggleFS());addEventListener('orientationchange',()=>setTimeout(applyOrient,250));
+$('fsIntro').addEventListener('click',()=>toggleFS());
+$('gfxBtn').addEventListener('click',e=>{e.stopPropagation();cycleQuality(1);$('gfxBtn').blur()});
+$('gfxBox').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.g)cycleQuality(+b.dataset.g);else{GFX.fps=!GFX.fps;try{localStorage.setItem('valoraGfx',JSON.stringify(GFX))}catch(er){}renderGfxBox()}});
+renderGfxBox();$('gfxBtn').textContent='⚙ GRAFIK: '+QUAL[GFX.q].label.toUpperCase();addEventListener('orientationchange',()=>setTimeout(applyOrient,250));
 // ---------- Character editor ----------
 const ED=[['Figur','fem',[[false,'Mann'],[true,'Frau']]],['Hautton','skin',[[0,'Hell'],[1,'Mittel hell'],[2,'Mittel'],[3,'Dunkel'],[4,'Sehr dunkel']]],
   ['Frisur','hairStyle',Object.entries(HAIRSTYLES)],['Haarfarbe','hair',[[0,'Schwarz'],[1,'Dunkelbraun'],[2,'Braun'],[3,'Blond'],[4,'Grau'],[5,'Rot']]],
@@ -1686,6 +1734,6 @@ $('phBtn').addEventListener('click',e=>{e.stopPropagation();goPenthouse();$('phB
 $('play').addEventListener('click',()=>{if(isTouch){try{const el=document.documentElement;const lock=()=>{try{const o=screen.orientation;if(o&&o.lock)o.lock('landscape').catch(()=>{})}catch(e){}};if(el.requestFullscreen)el.requestFullscreen().then(lock).catch(()=>{});else lock()}catch(e){}}$('intro').style.display='none';document.body.classList.remove('intro');started=true;hour=17.3;camYaw=Math.PI*1.5;camT.copy(P.pos);Snd.init();if(Snd.c&&Snd.c.resume)Snd.c.resume();
   if(!isTouch&&canvas.requestPointerLock){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
   msg('Willkommen in Valora City, '+(HERO.name||'Rico')+'. Dein Vortex GT steht am Straßenrand.')});
-window.__game={pent:()=>goPenthouse(),get inPent(){return inPent},exit:()=>exitCasino(),setMoney:v=>{money=v},enter:()=>enterCasino(),openGame:k=>openGame(k),interior:()=>czInteract,dealer:()=>dealer,openShop:()=>openShop(),get inside(){return inCasino},door:casinoDoor,cam:(y,pt)=>{camYaw=y;camPitch=pt},step:n=>{for(let k=0;k<n;k++){const dt=1/30;clock+=dt;updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);updatePolice(dt);updateMission(dt)}},crime:(n,w)=>crime(n,w),P,cars,peds,get wanted(){return wanted}};
+window.__game={scene,renderer,setQ:k=>{GFX.q=k;applyQuality()},get fps(){return fpsEMA},pent:()=>goPenthouse(),get inPent(){return inPent},exit:()=>exitCasino(),setMoney:v=>{money=v},enter:()=>enterCasino(),openGame:k=>openGame(k),interior:()=>czInteract,dealer:()=>dealer,openShop:()=>openShop(),get inside(){return inCasino},door:casinoDoor,cam:(y,pt)=>{camYaw=y;camPitch=pt},step:n=>{for(let k=0;k<n;k++){const dt=1/30;clock+=dt;updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);updatePolice(dt);updateMission(dt)}},crime:(n,w)=>crime(n,w),P,cars,peds,get wanted(){return wanted}};
 })();
 </script>
