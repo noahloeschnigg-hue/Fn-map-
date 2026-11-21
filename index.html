@@ -263,7 +263,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const N=8,BLOCK=72,ROAD=18,CELL=BLOCK+ROAD,HALF=N*CELL/2;
 const rc=i=>-HALF+i*CELL;
 const LIMIT=HALF+40;
-const RAMPS=[];
+const RAMPS=[];let DYN=null,odo=0;
 
 // ---------- Renderer ----------
 const canvas=$('c');
@@ -687,12 +687,12 @@ function inHighway(x,z){if(Math.abs(x-HW.x)<HW.w/2+1.5&&z<-LIMIT+25&&z>HW.z1-30)
   const ctr=new THREE.Mesh(new THREE.CylinderGeometry(18,18,0.3,48),std(0x3f6b2e,1));ctr.position.set(HW.tc.x,0.15,HW.tc.z-10);scene.add(ctr);addCollider(HW.tc.x-12,HW.tc.x+12,HW.tc.z-22,HW.tc.z+2,0.6);
 }
 // ---------- Valora International: massive runway west of the city (teleport with L) ----------
-const RW={x0:-LIMIT-350,len:12000,w:150,z:0};RW.x1=RW.x0-RW.len;RW.ax0=RW.x0+120;RW.ax1=RW.x1-260;RW.az=380;
+const RW={x0:-LIMIT-350,len:100000,w:150,z:0,loop:75000};RW.x1=RW.x0-RW.len;RW.ax0=RW.x0+120;RW.ax1=RW.x1-260;RW.az=380;
 function inRunwayArea(x,z){return x<RW.ax0+5&&x>RW.ax1-5&&Math.abs(z-RW.z)<RW.az+5}
 {
   const cx=(RW.x0+RW.x1)/2;
   // ground: concrete apron for the whole airfield + grass beyond the city ground plane
-  const gt=grassTex.clone();gt.needsUpdate=true;gt.repeat.set(300,180);const far=new THREE.Mesh(new THREE.PlaneGeometry(14000,6000).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({map:gt,roughness:1}));far.position.set(RW.x0-6500,-0.63,0);scene.add(far);
+  const gt=grassTex.clone();gt.needsUpdate=true;gt.repeat.set((RW.len+6000)/45,140);const far=new THREE.Mesh(new THREE.PlaneGeometry(RW.len+6000,6000).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({map:gt,roughness:1}));far.position.set(RW.x0-RW.len/2,-0.63,0);scene.add(far);
   const ct=canvasTex(256,256,g=>{g.fillStyle='#9a978f';g.fillRect(0,0,256,256);for(let i=0;i<7000;i++){const v=130+Math.random()*40|0;g.fillStyle=`rgba(${v},${v},${v-4},.6)`;g.fillRect(Math.random()*256,Math.random()*256,2,2)}g.strokeStyle='rgba(60,58,54,.5)';g.lineWidth=2;g.strokeRect(0,0,256,256)});
   ct.repeat.set((RW.ax0-RW.ax1)/20,RW.az*2/20);const apron=new THREE.Mesh(new THREE.PlaneGeometry(RW.ax0-RW.ax1,RW.az*2).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({map:ct,roughness:0.85}));apron.position.set((RW.ax0+RW.ax1)/2,0.004,RW.z);apron.receiveShadow=true;scene.add(apron);
   const slab=new THREE.Mesh(new THREE.BoxGeometry(RW.ax0-RW.ax1,0.64,RW.az*2),std(0x7e7b74,0.9));slab.position.set((RW.ax0+RW.ax1)/2,-0.32,RW.z);scene.add(slab);
@@ -759,8 +759,19 @@ function inRunwayArea(x,z){return x<RW.ax0+5&&x>RW.ax1-5&&Math.abs(z-RW.z)<RW.az
     if(r.dir==='x-'){sg.position.set(r.s+120,8,r.z0-6);sg.rotation.y=Math.PI/2}else{sg.position.set(r.x0+r.W+6,6,r.s+80);sg.rotation.y=Math.PI}scene.add(sg);
     const pl=new THREE.Mesh(new THREE.BoxGeometry(0.4,6,0.4),poleMat);pl.position.copy(sg.position);pl.position.y=3;scene.add(pl)};
   mkRamp({dir:'x-',s:RW.x0-1200,L:90,H:34,z0:RW.z-62,W:50});
+  {const L=110,H=40,W=46;const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(L,H);sh.lineTo(L,0);sh.lineTo(0,0);const g=new THREE.ExtrudeGeometry(sh,{depth:W,bevelEnabled:false});g.translate(0,0,-W/2);
+    const m=new THREE.Mesh(g,[sideM,rm]);m.castShadow=m.receiveShadow=true;m.visible=false;scene.add(m);
+    const glow=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.6,W),new THREE.MeshStandardMaterial({color:0x221100,emissive:0xffb020,emissiveIntensity:3}));glow.position.set(L,H,0);m.add(glow);
+    DYN={r:{dir:'x-',s:0,L,H,z0:0,W,off:true},m,t:0};RAMPS.push(DYN.r)}
   mkRamp({dir:'z-',s:-1500,L:50,H:13,x0:HW.x+0.5,W:12});
 }
+function shiftDynRamp(d){if(!DYN||DYN.r.off)return;DYN.r.s+=d;DYN.m.position.x+=d;if(DYN.r.s>RW.x0-200||DYN.r.s<RW.x1+500){DYN.r.off=true;DYN.m.visible=false}}
+function placeDynRamp(c){const dir=c.vx<0?-1:1,sp=c.speed();const lim=dir<0?c.pos.x-(RW.x1+700):(RW.x0-300)-c.pos.x;let d=Math.min(Math.max(350,sp*2.5),lim-150);if(d<300)return false;
+  const s0=c.pos.x+dir*d,zc=clamp(c.pos.z,RW.z-RW.w/2+26,RW.z+RW.w/2-26);const r=DYN.r;r.dir=dir<0?'x-':'x+';r.s=s0;r.z0=zc-r.W/2;r.off=false;
+  DYN.m.position.set(s0,0,zc);DYN.m.rotation.y=dir<0?Math.PI:0;DYN.m.visible=true;
+  big('SCHANZE!',Math.round(d).toLocaleString('de-DE')+' m voraus – Spur halten','#ffb020');Snd.blip(520,0.15);setTimeout(()=>Snd.blip(780,0.15),150);return true}
+function updateRunway(dt){const c=P.car;if(!c||!DYN)return;if(!inRunwayArea(c.pos.x,c.pos.z)){DYN.t=0;return}
+  const sp=c.speed();odo+=sp*dt;if(!c.air&&sp>12){DYN.t+=dt;if(DYN.t>=10&&placeDynRamp(c))DYN.t=0}}
 function clampRunway(o,isCar){let hit=false;if(o.pos.x>RW.ax0){o.pos.x=RW.ax0;hit=true;if(isCar)o.vx*=-0.3}if(o.pos.x<RW.ax1){o.pos.x=RW.ax1;hit=true;if(isCar)o.vx*=-0.3}
   if(o.pos.z>RW.z+RW.az){o.pos.z=RW.z+RW.az;hit=true;if(isCar)o.vz*=-0.3}if(o.pos.z<RW.z-RW.az){o.pos.z=RW.z-RW.az;hit=true;if(isCar)o.vz*=-0.3}return hit}
 
@@ -783,7 +794,7 @@ const vNames=['Hafenallee','Lindenweg','Kaiserstraße','Valora Boulevard','Mitte
 const hNames=['Nordufer','Sonnenstraße','Marktgasse','Neue Promenade','Zentralallee','Fabrikstraße','Kastanienweg','Uferstraße','Südring'];
 function district(x,z){const d=Math.hypot(x,z);if(d<HALF*0.33)return'Downtown';if(x<0&&z<0)return'Nordhafen';if(x>=0&&z<0)return'Kristallviertel';if(x<0)return'Altstadt';return'Marina Süd'}
 function street(x,z){const i=Math.round((x+HALF)/CELL),j=Math.round((z+HALF)/CELL);const dx=Math.abs(x-rc(clamp(i,0,N))),dz=Math.abs(z-rc(clamp(j,0,N)));return dx<dz?vNames[clamp(i,0,N)]:hNames[clamp(j,0,N)]}
-function rampAt(x,z){let h=0;for(const r of RAMPS){let u;if(r.dir==='x-'){if(z<r.z0||z>r.z0+r.W||x>r.s||x<r.s-r.L)continue;u=r.s-x}else{if(x<r.x0||x>r.x0+r.W||z>r.s||z<r.s-r.L)continue;u=r.s-z}h=Math.max(h,r.H*u/r.L)}return h}
+function rampAt(x,z){let h=0;for(const r of RAMPS){if(r.off)continue;let u;if(r.dir==='x-'){if(z<r.z0||z>r.z0+r.W||x>r.s||x<r.s-r.L)continue;u=r.s-x}else if(r.dir==='x+'){if(z<r.z0||z>r.z0+r.W||x<r.s||x>r.s+r.L)continue;u=x-r.s}else{if(x<r.x0||x>r.x0+r.W||z>r.s||z<r.s-r.L)continue;u=r.s-z}h=Math.max(h,r.H*u/r.L)}return h}
 function groundH(x,z,y){if(RAMPS.length){const rh=rampAt(x,z);if(rh>0.01)return rh}if(TW&&y!==undefined&&Math.abs(x-TW.x)<=TW.w/2+0.6&&Math.abs(z-TW.z)<=TW.w/2&&(y>2||Math.abs(x-TW.x-1.8)<1.4))return floorAt(x,z,y);const i=Math.floor((x+HALF)/CELL),j=Math.floor((z+HALF)/CELL);if(i<0||j<0||i>=N||j>=N)return 0;const lx=x-rc(i),lz=z-rc(j);return(lx>ROAD/2&&lx<CELL-ROAD/2&&lz>ROAD/2&&lz<CELL-ROAD/2)?0.3:0}
 
 // ---------- Collision helpers ----------
@@ -1095,7 +1106,7 @@ function physCar(c,thr,st,hb,dt){
   c.pos.x+=c.vx*dt;c.pos.z+=c.vz*dt;
   c.fwd=fwd;c.lat=latBefore;
   // world bounds
-  if(inRunwayArea(c.pos.x,c.pos.z)){if(c.pos.x<RW.x1+150&&c.vx<-120)c.pos.x+=RW.len-300;else if(c.pos.x>RW.x0-80&&c.vx>120)c.pos.x-=RW.len-300;clampRunway(c,true)}else if(!inHighway(c.pos.x,c.pos.z)){if(Math.abs(c.pos.x)>LIMIT){c.pos.x=Math.sign(c.pos.x)*LIMIT;c.vx*=-0.3}if(Math.abs(c.pos.z)>LIMIT){c.pos.z=Math.sign(c.pos.z)*LIMIT;c.vz*=-0.3}}
+  if(inRunwayArea(c.pos.x,c.pos.z)){if(c.pos.x<RW.x1+500){c.pos.x+=RW.loop;if(c===P.car)shiftDynRamp(RW.loop)}else if(c.pos.x>RW.x0-200&&c.vx>120&&c.pos.x>RW.x0-200){c.pos.x-=RW.loop;if(c===P.car)shiftDynRamp(-RW.loop)}clampRunway(c,true)}else if(!inHighway(c.pos.x,c.pos.z)){if(Math.abs(c.pos.x)>LIMIT){c.pos.x=Math.sign(c.pos.x)*LIMIT;c.vx*=-0.3}if(Math.abs(c.pos.z)>LIMIT){c.pos.z=Math.sign(c.pos.z)*LIMIT;c.vz*=-0.3}}
   // buildings: two circles
   const r=T.w*0.56;
   for(const off of [T.l*0.27,-T.l*0.27]){const p={x:c.pos.x+s*off,z:c.pos.z+co*off};const ox=p.x,oz=p.z;const hit=collideCircle(p,r,0.5);
@@ -1593,7 +1604,7 @@ function updateHUD(dt){hudT-=dt;
   $('money').textContent=eur(money);
   let s='';for(let k=0;k<5;k++)s+=`<span class="${k<wanted?'on':''}">★</span>`;$('stars').innerHTML=s;
   const wx=['Klar','Klar','Bewölkt','Regen'][rain>0.5?3:rain>0.1?2:0];$('clock').textContent=fmtTime()+' · '+wx+(GFX.fps?' · '+Math.round(fpsEMA)+' FPS':'');
-  const pp=playerPos();$('area').innerHTML=inRunwayArea(pp.x,pp.z)?'<b>Valora International</b>Landebahn 27 · 12 km':inCasino?'<b>Valora Royale</b>Casino':inPent?'<b>Valora Tower</b>Penthouse · 96 m':'<b>'+district(pp.x,pp.z)+'</b>'+street(pp.x,pp.z);
+  const pp=playerPos();$('area').innerHTML=inRunwayArea(pp.x,pp.z)?'<b>Valora International</b>Endlos-Bahn · gefahren: '+(odo/1000).toLocaleString('de-DE',{maximumFractionDigits:1})+' km':inCasino?'<b>Valora Royale</b>Casino':inPent?'<b>Valora Tower</b>Penthouse · 96 m':'<b>'+district(pp.x,pp.z)+'</b>'+street(pp.x,pp.z);
   $('hpBar').firstChild.style.width=P.hp+'%';$('hpBar').firstChild.style.background=P.hp<30?'#ff4a4a':'#4cd964';
   $('carBar').style.visibility=P.car?'visible':'hidden';if(P.car)$('carBar').firstChild.style.width=P.car.hp+'%';
   if(P.car)$('spd').textContent=Math.round(Math.abs(P.car.fwd)*3.6);const hy=P.car&&P.car.t.hyper;$('nitroBar').style.display=hy?'block':'none';if(hy)$('nitroBar').firstChild.style.width=(P.car.nitro??100)+'%';if(isTouch){$('tbNitro').style.display=hy?'flex':'none';$('tbDrift').style.display=P.car?'flex':'none';$('tbShoot').style.display=P.car?'none':'flex'}
@@ -1658,7 +1669,7 @@ function goRunway(){if(inCasino){msg('Verlasse zuerst das Casino');return}if(vau
   fadeTo(()=>{if(P.car){const old=P.car;P.car=null;old.driver=false;P.m.visible=true}
     if(invCar&&cars.includes(invCar)&&!invCar.owned)invCar.remove();
     const car=new Car('hyper',HYPER.color,'civ');car.pos.set(RW.x0-40,0,RW.z+18);car.h=-Math.PI/2;car.driver=true;car.nitro=100;invCar=car;
-    P.pos.set(car.pos.x,0.3,car.pos.z);finishEnter(car);camPitch=0.18;big('LANDEBAHN','12 km · 150 m breit · Vollgas! (Shift / N = Nitro)','#7fd0ff')})}
+    P.pos.set(car.pos.x,0.3,car.pos.z);finishEnter(car);camPitch=0.18;big('ENDLOS-BAHN','150 m breit · kein Ende · alle 10 s eine Schanze · Shift / N = Warp','#7fd0ff')})}
 function spawnFromInv(i){const c0=myCars()[i];if(!c0)return;closeInv();
   if(seq)return;
   if(P.car){const old=P.car;P.car=null;old.driver=false;P.pos.copy(old.pos);P.m.visible=true}
@@ -2206,7 +2217,7 @@ function frame(now){requestAnimationFrame(frame);const rawDt=(now-last)/1000;let
   else if(started&&inCasino){clock+=dt;updateSky(dt);updatePlayer(dt);updateInterior(dt);updateParts(dt);updateCamera(dt);Snd.update(999);updateHUD(dt);drawMap()}
   else if(started){clock+=dt;
     if(respawnT>0){respawnT-=dt;if(respawnT<=0)doRespawn();dt*=0.25}
-    updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);const np=updatePolice(dt);updateMission(dt);updateDealer(dt);updateBank(dt);updateElevator(dt);syncPentFlag();if(inPent)updatePent(dt);updateParts(dt);updateCamera(dt);Snd.update(np);updateHUD(dt);drawMap()}
+    updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);const np=updatePolice(dt);updateMission(dt);updateDealer(dt);updateBank(dt);updateRunway(dt);updateElevator(dt);syncPentFlag();if(inPent)updatePent(dt);updateParts(dt);updateCamera(dt);Snd.update(np);updateHUD(dt);drawMap()}
   else{clock+=dt;hour=16.2;updateSky(0);const hp=P.pos;P.m.rotation.y=Math.PI/2+Math.sin(clock*0.45)*0.55;animPerson(P.m,0,0);
     const wide=VW()>760;camera.position.set(hp.x+3.2,hp.y+1.3,hp.z+(wide?-0.3:0));camera.lookAt(hp.x,hp.y+(wide?1.0:0.55),hp.z+(wide?1.15:0));if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
   {const sp=P.car?Math.abs(P.car.fwd):0;const a=clamp((sp-45)/230,0,1)*0.075+(P.car&&P.car.boost?0.02:0);blurPass.uniforms.amount.value=a;blurPass.enabled=started&&a>0.003}
@@ -2263,6 +2274,6 @@ $('phBtn').addEventListener('click',e=>{e.stopPropagation();goPenthouse();$('phB
 $('play').addEventListener('click',()=>{if(isTouch){try{const el=document.documentElement;const lock=()=>{try{const o=screen.orientation;if(o&&o.lock)o.lock('landscape').catch(()=>{})}catch(e){}};if(el.requestFullscreen)el.requestFullscreen().then(lock).catch(()=>{});else lock()}catch(e){}}$('intro').style.display='none';document.body.classList.remove('intro');started=true;hour=17.3;camYaw=Math.PI*1.5;camT.copy(P.pos);Snd.init();if(Snd.c&&Snd.c.resume)Snd.c.resume();
   if(!isTouch&&canvas.requestPointerLock){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
   msg('Willkommen in Valora City, '+(HERO.name||'Rico')+'. Dein Vortex GT steht am Straßenrand.')});
-window.__game={goRunway:()=>goRunway(),openInv:()=>openInv(),spawnFromInv:i=>spawnFromInv(i),vg,setWanted:v=>{wanted=v},get money(){return money},BANK,shoot:()=>shoot(),aimDbg:()=>{const v=new THREE.Vector3();return BANK.npcs.filter(n=>n.kind==='guard').map(n=>{v.set(n.m.position.x,n.m.position.y+1.2,n.m.position.z);v.project(camera);return v.x.toFixed(2)+','+v.y.toFixed(2)+','+v.z.toFixed(3)}).join(' | ')},openVault:()=>openVault(),vaultPress:()=>vaultPress(),get TW(){return TW},elevCall:l=>elevCall(l),get seq(){return seq},scene,renderer,setQ:k=>{GFX.q=k;applyQuality()},get fps(){return fpsEMA},pent:()=>goPenthouse(),get inPent(){return inPent},exit:()=>exitCasino(),setMoney:v=>{money=v},enter:()=>enterCasino(),openGame:k=>openGame(k),interior:()=>czInteract,dealer:()=>dealer,openShop:()=>openShop(),get inside(){return inCasino},door:casinoDoor,cam:(y,pt)=>{camYaw=y;camPitch=pt},step:n=>{for(let k=0;k<n;k++){const dt=1/30;clock+=dt;updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);updatePolice(dt);updateMission(dt);updateBank(dt);updateElevator(dt);syncPentFlag()}},crime:(n,w)=>crime(n,w),P,cars,peds,get wanted(){return wanted}};
+window.__game={get odo(){return odo},get DYN(){return DYN},goRunway:()=>goRunway(),openInv:()=>openInv(),spawnFromInv:i=>spawnFromInv(i),vg,setWanted:v=>{wanted=v},get money(){return money},BANK,shoot:()=>shoot(),aimDbg:()=>{const v=new THREE.Vector3();return BANK.npcs.filter(n=>n.kind==='guard').map(n=>{v.set(n.m.position.x,n.m.position.y+1.2,n.m.position.z);v.project(camera);return v.x.toFixed(2)+','+v.y.toFixed(2)+','+v.z.toFixed(3)}).join(' | ')},openVault:()=>openVault(),vaultPress:()=>vaultPress(),get TW(){return TW},elevCall:l=>elevCall(l),get seq(){return seq},scene,renderer,setQ:k=>{GFX.q=k;applyQuality()},get fps(){return fpsEMA},pent:()=>goPenthouse(),get inPent(){return inPent},exit:()=>exitCasino(),setMoney:v=>{money=v},enter:()=>enterCasino(),openGame:k=>openGame(k),interior:()=>czInteract,dealer:()=>dealer,openShop:()=>openShop(),get inside(){return inCasino},door:casinoDoor,cam:(y,pt)=>{camYaw=y;camPitch=pt},step:n=>{for(let k=0;k<n;k++){const dt=1/30;clock+=dt;updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);updatePolice(dt);updateMission(dt);updateBank(dt);updateRunway(dt);updateElevator(dt);syncPentFlag()}},crime:(n,w)=>crime(n,w),P,cars,peds,get wanted(){return wanted}};
 })();
 </script>
