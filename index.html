@@ -124,7 +124,11 @@ body.touch #money{font-size:26px}
 .ed .ttl{font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--sun)}
 @media (max-width:760px){#intro{align-items:flex-end!important;background:linear-gradient(0deg,rgba(6,4,12,.96) 52%,rgba(6,4,12,0) 78%)!important}#intro .ip{max-height:64vh}#intro h1{font-size:40px!important;text-shadow:3px 3px 0 #e0306a!important}#intro .keys{display:none!important}}
 
-body.rot{position:absolute!important;top:0;left:100vw;width:100vh!important;height:100vw!important;transform-origin:0 0;transform:rotate(90deg)}
+html{--SW:100vw;--SH:100vh}
+body.rot{position:fixed!important;top:0;left:var(--SW);width:var(--SH)!important;height:var(--SW)!important;transform-origin:0 0;transform:rotate(90deg);overflow:hidden}
+body:not(.rot){width:var(--SW);height:var(--SH)}
+#fsBtn{pointer-events:auto;margin-top:6px;margin-left:6px;font-family:var(--ui);font-weight:700;font-size:15px;letter-spacing:1.5px;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,.5);background:rgba(8,14,22,.6);color:#fff;cursor:pointer}
+#fsIntro{align-self:flex-start;font-family:var(--ui);font-weight:700;font-size:16px;letter-spacing:1.5px;padding:8px 16px;border-radius:4px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
 body.rot #intro{align-items:flex-start!important;background:linear-gradient(90deg,rgba(6,4,12,.94) 0%,rgba(6,4,12,.82) 40%,rgba(6,4,12,0) 66%)!important}
 body.rot #intro .ip,body.rot #intro{max-height:100%}
 body.rot #intro .ip{max-width:52%}
@@ -145,7 +149,7 @@ body.intro .hud,body.intro #touch{display:none!important}
 
 <canvas id="c"></canvas>
 
-<div class="hud" id="topR"><div id="money">5 €</div><div id="stars"></div><div id="clock"></div><button type="button" id="phBtn">PENTHOUSE · P</button></div>
+<div class="hud" id="topR"><div id="money">5 €</div><div id="stars"></div><div id="clock"></div><button type="button" id="phBtn">PENTHOUSE · P</button><br><button type="button" id="fsBtn">⛶ VOLLBILD</button></div>
 <div class="hud" id="mission"></div>
 <div class="hud" id="mapWrap"><canvas id="minimap" width="400" height="400"></canvas>
   <div class="bars"><div class="bar" id="hpBar"><i></i></div><div class="bar" id="carBar"><i></i></div></div>
@@ -185,12 +189,13 @@ body.intro .hud,body.intro #touch{display:none!important}
   <div class="sub">Eine offene Stadt · Episode I</div>
   <h1>VALORA<br>CITY</h1>
   <button id="play" type="button">SPIELEN</button>
+  <button id="fsIntro" type="button">⛶ Vollbild</button>
   <div class="ed" id="editor"><div class="ttl">DEINE FIGUR</div></div>
   <div class="keys">
     <div><kbd>WASD</kbd> Laufen / Fahren</div><div><kbd>Maus</kbd> Kamera</div>
     <div><kbd>Shift</kbd> Sprinten</div><div><kbd>Leertaste</kbd> Springen / Bremse</div>
     <div><kbd>F</kbd> Einsteigen / Benutzen</div><div><kbd>H</kbd> Hupe</div>
-    <div><kbd>T</kbd> Zeit +2 Std.</div><div><kbd>P</kbd> Penthouse</div><div><kbd>Esc</kbd> Menü schließen</div>
+    <div><kbd>T</kbd> Zeit +2 Std.</div><div><kbd>P</kbd> Penthouse</div><div><kbd>V</kbd> Vollbild</div><div><kbd>Esc</kbd> Menü schließen</div>
   </div>
   <div class="note">Mit P (oder dem Penthouse-Button) springst du in dein Penthouse auf dem Valora Tower. Du startest mit 5 €. Gegenüber liegt das Casino (pink), daneben das Autohaus Valora Motors (grün). Kurierjobs am gelben Marker.</div>
 </div></div>
@@ -207,8 +212,10 @@ body.intro .hud,body.intro #touch{display:none!important}
 (()=>{
 'use strict';
 const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
-let ROT=false;const VW=()=>ROT?innerHeight:innerWidth,VH=()=>ROT?innerWidth:innerHeight;
-ROT=isTouch&&innerHeight>innerWidth;document.body.classList.toggle('rot',ROT);
+let ROT=false;const SW=()=>Math.round(window.visualViewport?visualViewport.width:innerWidth),SH=()=>Math.round(window.visualViewport?visualViewport.height:innerHeight);
+const VW=()=>ROT?SH():SW(),VH=()=>ROT?SW():SH();
+function setVars(){const r=document.documentElement.style;r.setProperty('--SW',SW()+'px');r.setProperty('--SH',SH()+'px')}setVars();
+ROT=isTouch&&SH()>SW();document.body.classList.toggle('rot',ROT);
 if(isTouch)document.body.classList.add('touch');document.body.classList.add('intro');
 const $=id=>document.getElementById(id);
 let seed=20261120;
@@ -959,7 +966,7 @@ function hurt(a){P.hp=Math.max(0,P.hp-a);P.lastHurt=clock;if(P.hp<=0)wasted()}
 
 // ---------- Input ----------
 const keys={};let camYaw=Math.PI,camPitch=0.32,lastMouse=-9;let touchJoy={x:0,y:0},tRun=false,tJump=false;
-addEventListener('keydown',e=>{if(!started)return;if(casinoOpen){if(e.code==='Escape')closeCasino();return}if(shopOpen){if(e.code==='Escape')closeShop();return}keys[e.code]=true;if(e.code==='KeyF'||e.code==='Enter')toggleCar();if(e.code==='KeyT'){hour=(hour+2)%24;msg('Zeit: '+fmtTime())}if(e.code==='KeyP')goPenthouse();
+addEventListener('keydown',e=>{if(!started)return;if(casinoOpen){if(e.code==='Escape')closeCasino();return}if(shopOpen){if(e.code==='Escape')closeShop();return}keys[e.code]=true;if(e.code==='KeyF'||e.code==='Enter')toggleCar();if(e.code==='KeyT'){hour=(hour+2)%24;msg('Zeit: '+fmtTime())}if(e.code==='KeyP')goPenthouse();if(e.code==='KeyV')toggleFS();
   if(e.code==='Space'||e.code.startsWith('Arrow'))e.preventDefault()});
 addEventListener('keyup',e=>{keys[e.code]=false});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
@@ -969,8 +976,8 @@ addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas||mDown)
 function getInput(){let x=0,y=0;if(keys.KeyW||keys.ArrowUp)y+=1;if(keys.KeyS||keys.ArrowDown)y-=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
   x+=touchJoy.x;y+=touchJoy.y;return{x:clamp(x,-1,1),y:clamp(y,-1,1),sprint:keys.ShiftLeft||keys.ShiftRight||tRun,jump:keys.Space||tJump,hb:keys.Space||tRun}}
 // touch
-if(isTouch){const joy=$('joy'),knob=$('knob');let jid=null,jx=0,jy=0,cid=null,cx=0,cy=0;const GX=t=>ROT?t.clientY:t.clientX,GY=t=>ROT?innerWidth-t.clientX:t.clientY;
-  addEventListener('touchstart',e=>{if(!started||casinoOpen||shopOpen)return;for(const t of e.changedTouches){if(t.target.closest&&t.target.closest('.tb,#phBtn'))continue;
+if(isTouch){const joy=$('joy'),knob=$('knob');let jid=null,jx=0,jy=0,cid=null,cx=0,cy=0;const GX=t=>ROT?t.clientY:t.clientX,GY=t=>ROT?SW()-t.clientX:t.clientY;
+  addEventListener('touchstart',e=>{if(!started||casinoOpen||shopOpen)return;for(const t of e.changedTouches){if(t.target.closest&&t.target.closest('.tb,#phBtn,#fsBtn'))continue;
     if(GX(t)<VW()*0.45&&jid===null){jid=t.identifier;jx=GX(t);jy=GY(t);joy.style.display='block';joy.style.left=(jx-65)+'px';joy.style.top=(jy-65)+'px'}
     else if(cid===null){cid=t.identifier;cx=GX(t);cy=GY(t)}}},{passive:true});
   addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===jid){let dx=GX(t)-jx,dy=GY(t)-jy;const l=Math.hypot(dx,dy);if(l>55){dx*=55/l;dy*=55/l}
@@ -1645,8 +1652,20 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)
     const wide=VW()>760;camera.position.set(hp.x+3.2,hp.y+1.3,hp.z+(wide?-0.3:0));camera.lookAt(hp.x,hp.y+(wide?1.0:0.55),hp.z+(wide?1.15:0));if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
   grade.uniforms.time.value=clock%10;composer.render()}
 requestAnimationFrame(frame);
-function applyOrient(){ROT=isTouch&&innerHeight>innerWidth;document.body.classList.toggle('rot',ROT);renderer.setSize(VW(),VH());composer.setSize(VW(),VH());camera.aspect=VW()/VH();camera.updateProjectionMatrix()}
-addEventListener('resize',applyOrient);addEventListener('orientationchange',()=>setTimeout(applyOrient,250));
+function applyOrient(){setVars();ROT=isTouch&&SH()>SW();document.body.classList.toggle('rot',ROT);renderer.setSize(VW(),VH());composer.setSize(VW(),VH());camera.aspect=VW()/VH();camera.updateProjectionMatrix()}
+addEventListener('resize',applyOrient);if(window.visualViewport)visualViewport.addEventListener('resize',applyOrient);
+// ---------- Fullscreen ----------
+function isFS(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
+function toggleFS(){const el=document.documentElement;
+  if(isFS()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}
+  const req=el.requestFullscreen||el.webkitRequestFullscreen;
+  if(!req){msg('Vollbild geht hier nicht – im Browser öffnen oder zum Home-Bildschirm hinzufügen');return}
+  try{const r=req.call(el,{navigationUI:'hide'});const lock=()=>{try{if(isTouch&&screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{})}catch(e){}};
+    if(r&&r.then)r.then(lock).catch(()=>msg('Vollbild wurde vom Browser blockiert – öffne das Spiel direkt im Browser'));else lock()}catch(e){msg('Vollbild wird hier nicht unterstützt')}}
+document.addEventListener('fullscreenchange',()=>{setTimeout(applyOrient,150);$('fsBtn').textContent=isFS()?'⛶ BEENDEN':'⛶ VOLLBILD'});
+document.addEventListener('webkitfullscreenchange',()=>setTimeout(applyOrient,150));
+$('fsBtn').addEventListener('click',e=>{e.stopPropagation();toggleFS();$('fsBtn').blur()});
+$('fsIntro').addEventListener('click',()=>toggleFS());addEventListener('orientationchange',()=>setTimeout(applyOrient,250));
 // ---------- Character editor ----------
 const ED=[['Figur','fem',[[false,'Mann'],[true,'Frau']]],['Hautton','skin',[[0,'Hell'],[1,'Mittel hell'],[2,'Mittel'],[3,'Dunkel'],[4,'Sehr dunkel']]],
   ['Frisur','hairStyle',Object.entries(HAIRSTYLES)],['Haarfarbe','hair',[[0,'Schwarz'],[1,'Dunkelbraun'],[2,'Braun'],[3,'Blond'],[4,'Grau'],[5,'Rot']]],
