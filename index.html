@@ -109,7 +109,7 @@ body.touch #money{font-size:26px}
 @keyframes deal{from{transform:translateY(-30px) rotate(-8deg);opacity:0}}
 .bjLbl{font-size:17px;letter-spacing:2px;text-transform:uppercase;color:#ffd77a}.bjLbl span{color:#fff;font-family:var(--display);font-size:22px;margin-left:6px}
 .bjTable{display:flex;flex-direction:column;gap:6px;background:radial-gradient(ellipse at 50% 0%,#167a46,#0b4a2a);border-radius:12px;padding:10px;border:2px solid #5a3d08}
-#shop{position:fixed;inset:0;z-index:15;display:flex;padding:16px max(16px,env(safe-area-inset-left,0px));box-sizing:border-box;background:linear-gradient(120deg,rgba(6,10,16,.92),rgba(14,24,36,.88));overflow:auto}
+#inv,#shop{position:fixed;inset:0;z-index:15;display:flex;padding:16px max(16px,env(safe-area-inset-left,0px));box-sizing:border-box;background:linear-gradient(120deg,rgba(6,10,16,.92),rgba(14,24,36,.88));overflow:auto}
 .sh{margin:auto;width:min(760px,100%);background:#f4f2ee;color:#16181b;border-radius:10px;padding:18px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .sh h2{margin:0;font-family:var(--display);font-weight:400;font-size:38px;letter-spacing:4px}.sh .bal{font-family:var(--display);font-size:24px;color:#1c7a3a}
 .shList{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
@@ -119,6 +119,8 @@ body.touch #money{font-size:26px}
 .stat{font-size:13px;color:#4a463f;display:block}.stat i{display:block;height:5px;background:#16181b;border-radius:3px;margin-top:2px}
 .shCols{display:flex;gap:8px;flex-wrap:wrap}.sw{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px #c8c4bc;cursor:pointer}.sw.on{box-shadow:0 0 0 3px #16181b}
 #shBuy{font-family:var(--display);font-size:26px;letter-spacing:2px;padding:12px;border:0;border-radius:6px;background:#16181b;color:#fff;cursor:pointer}#shBuy:disabled{background:#b9b4aa;cursor:not-allowed}
+#invLeave{font-family:var(--ui);font-weight:700;font-size:16px;padding:8px;border:2px solid #c8c4bc;border-radius:6px;background:transparent;cursor:pointer}
+.sh .car .sw2{display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:-3px;margin-right:6px;border:2px solid #fff;box-shadow:0 0 0 1px #c8c4bc}
 #shLeave{font-family:var(--ui);font-weight:700;font-size:16px;padding:8px;border:2px solid #c8c4bc;border-radius:6px;background:transparent;cursor:pointer}
 .sh button:focus-visible{outline:3px solid #1d6fd0;outline-offset:2px}
 #intro{justify-content:center!important;align-items:flex-start!important;text-align:left!important;padding-left:max(28px,env(safe-area-inset-left,0px))!important;
@@ -136,6 +138,7 @@ body.touch #money{font-size:26px}
 html{--SW:100vw;--SH:100vh}
 body.rot{position:fixed!important;top:0;left:var(--SW);width:var(--SH)!important;height:var(--SW)!important;transform-origin:0 0;transform:rotate(90deg);overflow:hidden}
 body:not(.rot){width:var(--SW);height:var(--SH)}
+#invBtn{pointer-events:auto;margin-top:6px;font-family:var(--ui);font-weight:700;font-size:15px;letter-spacing:1.5px;padding:6px 12px;border-radius:4px;border:1px solid rgba(125,255,138,.6);background:rgba(8,22,12,.6);color:#c8ffd0;cursor:pointer}
 #gfxBtn{pointer-events:auto;margin-top:6px;font-family:var(--ui);font-weight:700;font-size:14px;letter-spacing:1.5px;padding:5px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.35);background:rgba(8,14,22,.6);color:#ddd;cursor:pointer}
 #fsBtn{pointer-events:auto;margin-top:6px;margin-left:6px;font-family:var(--ui);font-weight:700;font-size:15px;letter-spacing:1.5px;padding:6px 12px;border-radius:4px;border:1px solid rgba(255,255,255,.5);background:rgba(8,14,22,.6);color:#fff;cursor:pointer}
 #fsIntro{align-self:flex-start;font-family:var(--ui);font-weight:700;font-size:16px;letter-spacing:1.5px;padding:8px 16px;border-radius:4px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
@@ -159,7 +162,7 @@ body.intro .hud,body.intro #touch{display:none!important}
 
 <canvas id="c"></canvas>
 
-<div class="hud" id="topR"><div id="money">5 €</div><div id="stars"></div><div id="clock"></div><button type="button" id="phBtn">PENTHOUSE · P</button><br><button type="button" id="fsBtn">⛶ VOLLBILD</button><br><button type="button" id="gfxBtn">⚙ GRAFIK</button></div>
+<div class="hud" id="topR"><div id="money">5 €</div><div id="stars"></div><div id="clock"></div><button type="button" id="phBtn">PENTHOUSE · P</button><br><button type="button" id="fsBtn">⛶ VOLLBILD</button><br><button type="button" id="gfxBtn">⚙ GRAFIK</button><br><button type="button" id="invBtn">🚗 MEINE AUTOS · I</button></div>
 <div class="hud" id="mission"></div>
 <div class="hud" id="mapWrap"><canvas id="minimap" width="400" height="400"></canvas>
   <div class="bars"><div class="bar" id="hpBar"><i></i></div><div class="bar" id="carBar"><i></i></div></div>
@@ -191,6 +194,12 @@ body.intro .hud,body.intro #touch{display:none!important}
 <div id="fade"></div>
 <div id="vault" hidden><div class="vb" role="dialog" aria-label="Tresor"><h3>TRESOR KNACKEN</h3><canvas id="vaultCv" width="260" height="260"></canvas><div id="vaultTxt"></div>
   <button type="button" id="vaultBtn">STOPP (Leertaste)</button><button type="button" id="vaultEsc">Abbrechen</button></div></div>
+<div id="inv" hidden><div class="sh" role="dialog" aria-label="Meine Autos">
+  <h2>MEINE AUTOS</h2><div style="color:#6b665d">Tippe ein Auto an – es steht sofort neben dir auf der Straße und du sitzt drin.</div>
+  <div class="shList" id="invList"></div>
+  <div id="invNote" style="color:#6b665d;font-size:15px"></div>
+  <button type="button" id="invLeave">Schließen (Esc)</button>
+</div></div>
 <div id="shop" hidden><div class="sh" role="dialog" aria-label="Autohaus">
   <h2>VALORA MOTORS</h2><div class="bal" id="shBal"></div>
   <div class="shList" id="shList"></div>
@@ -208,7 +217,7 @@ body.intro .hud,body.intro #touch{display:none!important}
     <div><kbd>WASD</kbd> Laufen / Fahren</div><div><kbd>Maus</kbd> Kamera</div>
     <div><kbd>Shift</kbd> Sprinten</div><div><kbd>Leertaste</kbd> Springen / Bremse</div>
     <div><kbd>F</kbd> Einsteigen / Benutzen</div><div><kbd>H</kbd> Hupe</div><div><kbd>Rechtsklick / Q</kbd> Zielen</div><div><kbd>Linksklick</kbd> Schießen</div>
-    <div><kbd>T</kbd> Zeit +2 Std.</div><div><kbd>P</kbd> Penthouse</div><div><kbd>V</kbd> Vollbild</div><div><kbd>G</kbd> Grafikstufe</div><div><kbd>Esc</kbd> Menü schließen</div>
+    <div><kbd>T</kbd> Zeit +2 Std.</div><div><kbd>P</kbd> Penthouse</div><div><kbd>V</kbd> Vollbild</div><div><kbd>G</kbd> Grafikstufe</div><div><kbd>I</kbd> Meine Autos</div><div><kbd>Esc</kbd> Menü schließen</div>
   </div>
   <div class="note">Mit P (oder dem Penthouse-Button) springst du in dein Penthouse auf dem Valora Tower. Du startest mit 5 €. Gegenüber liegt das Casino (pink), daneben das Autohaus Valora Motors (grün). Kurierjobs am gelben Marker.</div>
 </div></div>
@@ -1046,7 +1055,7 @@ function hurt(a){P.hp=Math.max(0,P.hp-a);P.lastHurt=clock;if(P.hp<=0)wasted()}
 
 // ---------- Input ----------
 const keys={};let camYaw=Math.PI,camPitch=0.32,lastMouse=-9;let touchJoy={x:0,y:0},tRun=false,tJump=false;
-addEventListener('keydown',e=>{if(!started)return;if(vaultUI){if(e.code==='Space'||e.code==='KeyF'||e.code==='Enter'){e.preventDefault();vaultPress()}if(e.code==='Escape'){vaultUI=false;$('vault').hidden=true}return}if(casinoOpen){if(e.code==='Escape')closeCasino();return}if(shopOpen){if(e.code==='Escape')closeShop();return}keys[e.code]=true;if(e.code==='KeyF'||e.code==='Enter')toggleCar();if(e.code==='KeyT'){hour=(hour+2)%24;msg('Zeit: '+fmtTime())}if(e.code==='KeyP')goPenthouse();if(TW&&!P.car&&inCabin()&&/^Digit[123]$/.test(e.code))elevCall(+e.code.slice(5)-1);if(e.code==='KeyV')toggleFS();if(e.code==='KeyG')cycleQuality(1);
+addEventListener('keydown',e=>{if(!started)return;if(vaultUI){if(e.code==='Space'||e.code==='KeyF'||e.code==='Enter'){e.preventDefault();vaultPress()}if(e.code==='Escape'){vaultUI=false;$('vault').hidden=true}return}if(casinoOpen){if(e.code==='Escape')closeCasino();return}if(shopOpen){if(e.code==='Escape')closeShop();return}if(invOpen){if(e.code==='Escape'||e.code==='KeyI')closeInv();return}if(e.code==='KeyI'){openInv();return}keys[e.code]=true;if(e.code==='KeyF'||e.code==='Enter')toggleCar();if(e.code==='KeyT'){hour=(hour+2)%24;msg('Zeit: '+fmtTime())}if(e.code==='KeyP')goPenthouse();if(TW&&!P.car&&inCabin()&&/^Digit[123]$/.test(e.code))elevCall(+e.code.slice(5)-1);if(e.code==='KeyV')toggleFS();if(e.code==='KeyG')cycleQuality(1);
   if(e.code==='Space'||e.code.startsWith('Arrow'))e.preventDefault()});
 addEventListener('keyup',e=>{keys[e.code]=false});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
@@ -1057,7 +1066,7 @@ function getInput(){let x=0,y=0;if(keys.KeyW||keys.ArrowUp)y+=1;if(keys.KeyS||ke
   x+=touchJoy.x;y+=touchJoy.y;return{x:clamp(x,-1,1),y:clamp(y,-1,1),sprint:keys.ShiftLeft||keys.ShiftRight||tRun,jump:keys.Space||tJump,hb:keys.Space||tRun}}
 // touch
 if(isTouch){const joy=$('joy'),knob=$('knob');let jid=null,jx=0,jy=0,cid=null,cx=0,cy=0;const GX=t=>ROT?t.clientY:t.clientX,GY=t=>ROT?SW()-t.clientX:t.clientY;
-  addEventListener('touchstart',e=>{if(!started||casinoOpen||shopOpen)return;for(const t of e.changedTouches){if(t.target.closest&&t.target.closest('.tb,#phBtn,#fsBtn,#gfxBtn'))continue;
+  addEventListener('touchstart',e=>{if(!started||casinoOpen||shopOpen||invOpen)return;for(const t of e.changedTouches){if(t.target.closest&&t.target.closest('.tb,#phBtn,#fsBtn,#gfxBtn,#invBtn'))continue;
     if(GX(t)<VW()*0.45&&jid===null){jid=t.identifier;jx=GX(t);jy=GY(t);joy.style.display='block';joy.style.left=(jx-65)+'px';joy.style.top=(jy-65)+'px'}
     else if(cid===null){cid=t.identifier;cx=GX(t);cy=GY(t)}}},{passive:true});
   addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===jid){let dx=GX(t)-jx,dy=GY(t)-jy;const l=Math.hypot(dx,dy);if(l>55){dx*=55/l;dy*=55/l}
@@ -1486,6 +1495,31 @@ function buildDealer(x0,x1,z0,z1){const cx=(x0+x1)/2;const W=46,D=22,H=8.5;const
 let shopOpen=false,shopSel=0,shopCol=0,dealerCD=0;
 function openShop(){shopOpen=true;$('shop').hidden=false;if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();for(const k in keys)keys[k]=false;touchJoy.x=touchJoy.y=0;renderShop();Snd.blip(520)}
 function closeShop(){shopOpen=false;$('shop').hidden=true;dealerCD=3}
+// ---------- Car inventory: spawn any owned car next to the player ----------
+let invOpen=false,invCar=null;
+const STARTER={type:'sport',color:0xd8262f};
+function myCars(){return [STARTER,...OWNED]}
+function openInv(){if(inCasino||inPent){msg(inCasino?'Verlasse zuerst das Casino':'Fahr erst mit dem Aufzug nach unten');return}
+  if(BANK.cx&&inBank(P.pos)){msg('Geh erst aus der Bank');return}
+  invOpen=true;$('inv').hidden=false;if(document.exitPointerLock&&document.pointerLockElement)document.exitPointerLock();for(const k in keys)keys[k]=false;touchJoy.x=touchJoy.y=0;
+  const list=myCars();$('invList').innerHTML=list.map((c,i)=>{const t=TYPES[c.type];const cat=CATALOG.find(x=>x.type===c.type);return `<button type="button" class="car" data-i="${i}"><b>${t.name}</b><small><span class="sw2" style="background:#${new THREE.Color(c.color).getHexString()}"></span>${cat?cat.cls:'Sportwagen'}${i===0?' · Startauto':''}</small>
+    <span class="stat">Spitze ${Math.round(t.max*3.6*0.95)} km/h<i style="width:${Math.round(t.max)}%"></i></span><em>Holen</em></button>`}).join('');
+  $('invNote').textContent=OWNED.length?'':'Weitere Autos kannst du im Autohaus Valora Motors kaufen – sie erscheinen dann hier.'}
+function closeInv(){invOpen=false;$('inv').hidden=true}
+function spawnFromInv(i){const c0=myCars()[i];if(!c0)return;closeInv();
+  if(seq)return;
+  if(P.car){const old=P.car;P.car=null;old.driver=false;P.pos.copy(old.pos);P.m.visible=true}
+  // nearest road and lane next to the player, facing the camera direction
+  const pp=P.pos;const ri=clamp(Math.round((pp.x+HALF)/CELL),0,N),rj=clamp(Math.round((pp.z+HALF)/CELL),0,N);
+  const dx=Math.abs(pp.x-rc(ri)),dz=Math.abs(pp.z-rc(rj));const fx=-Math.sin(camYaw),fz=-Math.cos(camYaw);let x,z,h;
+  if(dx<dz){const sg=fz>=0?1:-1;x=rc(ri)-sg*4.4;z=clamp(pp.z,-HALF,HALF);h=sg>0?0:Math.PI}else{const sg=fx>=0?1:-1;z=rc(rj)+sg*4.4;x=clamp(pp.x,-HALF,HALF);h=sg>0?Math.PI/2:-Math.PI/2}
+  if(invCar&&invCar!==P.car&&cars.includes(invCar)&&!invCar.owned)invCar.remove();
+  for(const o of cars)if(o.ai==='traffic'&&dist2(o.pos,{x,z})<49)spawnOnRoad(o,{x,z},90,220);
+  const car=new Car(c0.type,c0.color,'civ');car.pos.set(x,0,z);car.h=h;car.driver=true;invCar=car;
+  P.pos.set(x,0.3,z);finishEnter(car);fadeTo(()=>{});big(TYPES[c0.type].name,'Bereit zum Losfahren','#7dff8a')}
+$('invList').addEventListener('click',e=>{const b=e.target.closest('button');if(b)spawnFromInv(+b.dataset.i)});
+$('invLeave').addEventListener('click',closeInv);
+$('invBtn').addEventListener('click',e=>{e.stopPropagation();invOpen?closeInv():openInv();$('invBtn').blur()});
 function renderShop(){$('shBal').textContent=eur(money);
   $('shList').innerHTML=CATALOG.map((c,i)=>{const t=TYPES[c.type];return `<button type="button" class="car${i===shopSel?' on':''}" data-i="${i}"><b>${t.name}</b><small>${c.cls}</small>
     <span class="stat">Spitze ${Math.round(t.max*3.6*0.95)} km/h<i style="width:${Math.round(t.max/100*100)}%"></i></span><span class="stat">Beschl.<i style="width:${Math.round(t.acc/35*100)}%"></i></span><em>${eur(c.price)}</em></button>`}).join('');
@@ -2005,7 +2039,7 @@ function updateCamera(dt){
 
 let last=performance.now();
 function frame(now){requestAnimationFrame(frame);const rawDt=(now-last)/1000;let dt=Math.min(0.05,rawDt);last=now;perfTick(rawDt);
-  if(started&&(casinoOpen||shopOpen||vaultUI))return;
+  if(started&&(casinoOpen||shopOpen||vaultUI||invOpen))return;
   else if(started&&inCasino){clock+=dt;updateSky(dt);updatePlayer(dt);updateInterior(dt);updateParts(dt);updateCamera(dt);Snd.update(999);updateHUD(dt);drawMap()}
   else if(started){clock+=dt;
     if(respawnT>0){respawnT-=dt;if(respawnT<=0)doRespawn();dt*=0.25}
@@ -2065,6 +2099,6 @@ $('phBtn').addEventListener('click',e=>{e.stopPropagation();goPenthouse();$('phB
 $('play').addEventListener('click',()=>{if(isTouch){try{const el=document.documentElement;const lock=()=>{try{const o=screen.orientation;if(o&&o.lock)o.lock('landscape').catch(()=>{})}catch(e){}};if(el.requestFullscreen)el.requestFullscreen().then(lock).catch(()=>{});else lock()}catch(e){}}$('intro').style.display='none';document.body.classList.remove('intro');started=true;hour=17.3;camYaw=Math.PI*1.5;camT.copy(P.pos);Snd.init();if(Snd.c&&Snd.c.resume)Snd.c.resume();
   if(!isTouch&&canvas.requestPointerLock){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
   msg('Willkommen in Valora City, '+(HERO.name||'Rico')+'. Dein Vortex GT steht am Straßenrand.')});
-window.__game={vg,setWanted:v=>{wanted=v},get money(){return money},BANK,shoot:()=>shoot(),aimDbg:()=>{const v=new THREE.Vector3();return BANK.npcs.filter(n=>n.kind==='guard').map(n=>{v.set(n.m.position.x,n.m.position.y+1.2,n.m.position.z);v.project(camera);return v.x.toFixed(2)+','+v.y.toFixed(2)+','+v.z.toFixed(3)}).join(' | ')},openVault:()=>openVault(),vaultPress:()=>vaultPress(),get TW(){return TW},elevCall:l=>elevCall(l),get seq(){return seq},scene,renderer,setQ:k=>{GFX.q=k;applyQuality()},get fps(){return fpsEMA},pent:()=>goPenthouse(),get inPent(){return inPent},exit:()=>exitCasino(),setMoney:v=>{money=v},enter:()=>enterCasino(),openGame:k=>openGame(k),interior:()=>czInteract,dealer:()=>dealer,openShop:()=>openShop(),get inside(){return inCasino},door:casinoDoor,cam:(y,pt)=>{camYaw=y;camPitch=pt},step:n=>{for(let k=0;k<n;k++){const dt=1/30;clock+=dt;updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);updatePolice(dt);updateMission(dt);updateBank(dt);updateElevator(dt);syncPentFlag()}},crime:(n,w)=>crime(n,w),P,cars,peds,get wanted(){return wanted}};
+window.__game={openInv:()=>openInv(),spawnFromInv:i=>spawnFromInv(i),vg,setWanted:v=>{wanted=v},get money(){return money},BANK,shoot:()=>shoot(),aimDbg:()=>{const v=new THREE.Vector3();return BANK.npcs.filter(n=>n.kind==='guard').map(n=>{v.set(n.m.position.x,n.m.position.y+1.2,n.m.position.z);v.project(camera);return v.x.toFixed(2)+','+v.y.toFixed(2)+','+v.z.toFixed(3)}).join(' | ')},openVault:()=>openVault(),vaultPress:()=>vaultPress(),get TW(){return TW},elevCall:l=>elevCall(l),get seq(){return seq},scene,renderer,setQ:k=>{GFX.q=k;applyQuality()},get fps(){return fpsEMA},pent:()=>goPenthouse(),get inPent(){return inPent},exit:()=>exitCasino(),setMoney:v=>{money=v},enter:()=>enterCasino(),openGame:k=>openGame(k),interior:()=>czInteract,dealer:()=>dealer,openShop:()=>openShop(),get inside(){return inCasino},door:casinoDoor,cam:(y,pt)=>{camYaw=y;camPitch=pt},step:n=>{for(let k=0;k<n;k++){const dt=1/30;clock+=dt;updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);updatePolice(dt);updateMission(dt);updateBank(dt);updateElevator(dt);syncPentFlag()}},crime:(n,w)=>crime(n,w),P,cars,peds,get wanted(){return wanted}};
 })();
 </script>
