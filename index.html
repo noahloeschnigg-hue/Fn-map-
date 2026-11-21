@@ -1332,7 +1332,7 @@ function updateHUD(dt){hudT-=dt;
   $('money').textContent=eur(money);
   let s='';for(let k=0;k<5;k++)s+=`<span class="${k<wanted?'on':''}">★</span>`;$('stars').innerHTML=s;
   const wx=['Klar','Klar','Bewölkt','Regen'][rain>0.5?3:rain>0.1?2:0];$('clock').textContent=fmtTime()+' · '+wx;
-  const pp=playerPos();$('area').innerHTML=inCasino?'<b>Valora Royale</b>Casino':inPent?'<b>Valora Tower</b>Penthouse · 150 m':'<b>'+district(pp.x,pp.z)+'</b>'+street(pp.x,pp.z);
+  const pp=playerPos();$('area').innerHTML=inCasino?'<b>Valora Royale</b>Casino':inPent?'<b>Valora Tower</b>Penthouse · 96 m':'<b>'+district(pp.x,pp.z)+'</b>'+street(pp.x,pp.z);
   $('hpBar').firstChild.style.width=P.hp+'%';$('hpBar').firstChild.style.background=P.hp<30?'#ff4a4a':'#4cd964';
   $('carBar').style.visibility=P.car?'visible':'hidden';if(P.car)$('carBar').firstChild.style.width=P.car.hp+'%';
   if(P.car)$('spd').textContent=Math.round(Math.abs(P.car.fwd)*3.6);
@@ -1396,7 +1396,7 @@ function updateDealer(dt){if(!dealer)return;for(const g of dealer.tts)g.rotation
 buildDealer(dealerBlock.x0,dealerBlock.x1,dealerBlock.z0,dealerBlock.z1);
 // ---------- Valora Tower + penthouse (teleport with P) ----------
 let inPent=false,TW=null;const pentSpots=[];const pentAnim={water:null,flames:[],light:null};
-function buildTower(b){const cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2,W=40,H=150;TW={x:cx,z:cz,w:W,H};const y0=H;
+function buildTower(b){const cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2,W=40,H=96;TW={x:cx,z:cz,w:W,H};const y0=H;
   const box=(w,h,d,x,y,z,m,sh=true,col=false)=>{const me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);me.position.set(cx+x,y,cz+z);me.castShadow=sh;me.receiveShadow=true;scene.add(me);
     if(col)addCollider(cx+x-w/2,cx+x+w/2,cz+z-d/2,cz+z+d/2,y+h/2);return me};
   // tower shaft
@@ -1415,46 +1415,81 @@ function buildTower(b){const cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2,W=40,H=150;TW={x:
   // glass railing
   const glass=new THREE.MeshStandardMaterial({color:0xbfd6e6,transparent:true,opacity:0.22,roughness:0.03,metalness:0.2,depthWrite:false});envMats.push(glass);
   const steel=new THREE.MeshStandardMaterial({color:0xcfd3d6,roughness:0.2,metalness:1});envMats.push(steel);
-  for(const [w,d,x,z] of [[W,0.1,0,-W/2+0.3],[W,0.1,0,W/2-0.3],[0.1,W,-W/2+0.3,0],[0.1,W,W/2-0.3,0]]){box(w,1.15,d,x,y0+0.6,z,glass,false,true);box(w+0.05,0.07,d+0.06,x,y0+1.2,z,steel,false)}
-  // ---- pavilion (north half) ----
-  const darkM=std(0x1c1e22,0.5,0.2),whiteM=std(0xf1efea,0.35),leather=std(0x2a1e18,0.45),fabric=std(0xb9b2a4,0.95),marble=new THREE.MeshStandardMaterial({color:0xf4f2ee,roughness:0.15});envMats.push(darkM,whiteM,marble);
-  const PZ0=-18.5,PZ1=-4,PX=14,PH=4.2;
-  box(PX*2+1,0.35,(PZ1-PZ0)+1.5,0,y0+PH+0.2,(PZ0+PZ1)/2+0.5,whiteM);
-  box(PX*2+1.05,0.08,0.1,0,y0+PH,PZ1+1.2,new THREE.MeshStandardMaterial({color:0x221100,emissive:0xffcf8a,emissiveIntensity:1.4}),false);
-  box(PX*2,PH,0.4,0,y0+PH/2,PZ0,darkM,true,true);
-  box(PX-1.6,PH,0.08,-(PX+1.6)/2,y0+PH/2,PZ1,glass,false,true);box(PX-1.6,PH,0.08,(PX+1.6)/2,y0+PH/2,PZ1,glass,false,true);
-  box(0.08,PH,PZ1-PZ0,-PX,y0+PH/2,(PZ0+PZ1)/2,glass,false,true);box(0.08,PH,PZ1-PZ0,PX,y0+PH/2,(PZ0+PZ1)/2,glass,false,true);
-  for(const x of [-PX,-PX/2,-1.6,1.6,PX/2,PX])box(0.12,PH,0.12,x,y0+PH/2,PZ1,steel,false);
-  const inner=new THREE.Mesh(new THREE.PlaneGeometry(PX*2,PZ1-PZ0).rotateX(-Math.PI/2),marble);inner.position.set(cx,y0+0.05,cz+(PZ0+PZ1)/2);inner.receiveShadow=true;scene.add(inner);
-  // living area
-  const rug=new THREE.Mesh(new THREE.PlaneGeometry(8,5.5).rotateX(-Math.PI/2),std(0x6b5a48,1));rug.position.set(cx-7,y0+0.07,cz-10);scene.add(rug);
-  box(6.5,0.45,1.1,-7,y0+0.3,-13.4,leather,true,true);box(6.5,0.8,0.3,-7,y0+0.75,-13.95,leather);box(1.1,0.45,3.2,-10.7,y0+0.3,-11.4,leather,true,true);box(0.3,0.8,3.2,-11.25,y0+0.75,-11.4,leather);
-  for(let k=0;k<3;k++)box(1.0,0.35,0.25,-9+k*2,y0+0.7,-13.6,fabric);
-  box(2.6,0.06,1.4,-7,y0+0.45,-10,new THREE.MeshStandardMaterial({color:0x99aab5,transparent:true,opacity:0.45,roughness:0.05}),false);box(0.12,0.4,0.12,-7,y0+0.22,-10,steel,false);
+  for(const [w,d,x,z] of [[W,0.1,0,-W/2+0.3],[0.1,W/2-2,-W/2+0.3,-W/4-1],[0.1,W/2-2,W/2-0.3,-W/4-1]]){box(w,1.15,d,x,y0+0.6,z,glass,false,true);box(w+0.05,0.07,d+0.06,x,y0+1.2,z,steel,false)}
+  // ---- glass penthouse: double-height, floor-to-ceiling glass on three sides, black mullion grid ----
+  const darkM=std(0x1c1e22,0.5,0.2),whiteM=std(0xf3f1ec,0.6),leather=std(0x2a1e18,0.45),fabric=std(0xb9b2a4,0.95),marble=new THREE.MeshStandardMaterial({color:0xf4f2ee,roughness:0.15});envMats.push(darkM,whiteM,marble);
+  const frameM=new THREE.MeshStandardMaterial({color:lin(0x16181b),roughness:0.35,metalness:0.6});envMats.push(frameM);
+  const paneM=new THREE.MeshStandardMaterial({color:0xcfe0ea,transparent:true,opacity:0.12,roughness:0.02,metalness:0.1,depthWrite:false});envMats.push(paneM);
+  const PX0=-19.4,PX1=19.4,PZ0=-2,PZ1=19.4,PH=7.4;const midX=(PX0+PX1)/2,midZ=(PZ0+PZ1)/2;
+  // dark wide-plank floor
+  const plank=canvasTex(512,512,g=>{for(let k=0;k<8;k++){const v=R(-10,10);g.fillStyle=`rgb(${74+v|0},${68+v|0},${64+v|0})`;g.fillRect(0,k*64,512,64);
+      for(let i=0;i<90;i++){g.strokeStyle=`rgba(${Math.random()<0.5?'20,15,12':'140,130,120'},${Math.random()*0.16})`;g.beginPath();const y=k*64+Math.random()*64;g.moveTo(0,y);g.bezierCurveTo(170,y+R(-4,4),340,y+R(-4,4),512,y);g.stroke()}
+      g.fillStyle='rgba(15,12,10,.75)';g.fillRect(0,k*64+62,512,2);const cut=(k*173)%512;g.fillRect(cut,k*64,2,64)}});
+  plank.repeat.set(5,4);
+  const plankR=mkCanvas(64,64);{const g=plankR.getContext('2d');g.fillStyle=gray(0.38);g.fillRect(0,0,64,64);for(let i=0;i<400;i++){g.fillStyle=gray(R(0.25,0.55));g.fillRect(Math.random()*64,Math.random()*64,2,1)}}
+  const floorM=new THREE.MeshStandardMaterial({map:plank,roughnessMap:texFrom(plankR,false),roughness:1,metalness:0});envMats.push(floorM);
+  const inner=new THREE.Mesh(new THREE.PlaneGeometry(PX1-PX0,PZ1-PZ0).rotateX(-Math.PI/2),floorM);inner.position.set(cx+midX,y0+0.05,cz+midZ);inner.receiveShadow=true;scene.add(inner);
+  // ceiling with recessed lights, roof slab
+  const ceilT=canvasTex(256,256,g=>{g.fillStyle='#f2f0eb';g.fillRect(0,0,256,256);const gr=g.createRadialGradient(128,128,0,128,128,16);gr.addColorStop(0,'#ffffff');gr.addColorStop(1,'rgba(200,200,200,0)');g.fillStyle=gr;g.fillRect(100,100,56,56);g.strokeStyle='rgba(0,0,0,.25)';g.lineWidth=2;g.beginPath();g.arc(128,128,12,0,7);g.stroke()});
+  ceilT.repeat.set(8,5);const ceilE=canvasTex(256,256,g=>{g.fillStyle='#000';g.fillRect(0,0,256,256);g.fillStyle='#fff4dc';g.beginPath();g.arc(128,128,10,0,7);g.fill()});ceilE.repeat.copy(ceilT.repeat);
+  const ceil=new THREE.Mesh(new THREE.PlaneGeometry(PX1-PX0,PZ1-PZ0).rotateX(Math.PI/2),new THREE.MeshStandardMaterial({map:ceilT,emissiveMap:ceilE,emissive:0xffffff,emissiveIntensity:0.6,roughness:0.9}));ceil.position.set(cx+midX,y0+PH-0.01,cz+midZ);scene.add(ceil);pentAnim.ceil=ceil.material;
+  box(PX1-PX0+1.2,0.5,PZ1-PZ0+1.2,midX,y0+PH+0.25,midZ,whiteM,true);
+  box(PX1-PX0+1.25,0.25,0.12,midX,y0+PH+0.25,PZ1+0.62,new THREE.MeshStandardMaterial({color:0x111111,emissive:0xffcf8a,emissiveIntensity:1.2}),false);
+  // north wall (solid, white) + white corner column like a real tower core
+  box(6.5-PX0,PH,0.4,(PX0+6.5)/2,y0+PH/2,PZ0,whiteM,true,true);box(PX1-9.5,PH,0.4,(PX1+9.5)/2,y0+PH/2,PZ0,whiteM,true,true);box(3,PH-3,0.4,8,y0+3+(PH-3)/2,PZ0,whiteM,true);
+  box(1.0,PH,1.0,PX0+0.5,y0+PH/2,PZ1-0.5,whiteM,true,true);
+  // glass walls (colliders) - south wall keeps a 3 m sliding-door gap at x∈[-1.5,1.5]
+  const pane=(w,d,x,z)=>box(w,PH,d,x,y0+PH/2,z,paneM,false,true);
+  pane(PX1-PX0,0.06,midX,PZ1);
+  pane(0.06,PZ1-PZ0,PX0,midZ);pane(0.06,PZ1-PZ0,PX1,midZ);
+  // mullion grid
+  const vert=(x,z)=>box(0.12,PH,0.16,x,y0+PH/2,z,frameM,true);
+  const horiz=(len,x,z,alongX,y,h)=>box(alongX?len:0.16,h,alongX?0.16:len,x,y0+y,z,frameM,true);
+  for(let k=0;k<=14;k++)vert(PX0+k*(PX1-PX0)/14,PZ1);
+  for(let k=0;k<=8;k++){const z=PZ0+0.2+k*(PZ1-PZ0-0.2)/8;vert(PX0,z);vert(PX1,z)}
+  for(const [y,h] of [[0.25,0.5],[2.75,0.3],[5.2,0.12],[PH-0.12,0.24]]){
+    horiz(PX1-PX0,midX,PZ1,true,y,h);
+    horiz(PZ1-PZ0,PX0,midZ,false,y,h);horiz(PZ1-PZ0,PX1,midZ,false,y,h)}
+  // mezzanine loft (double height around it)
+  const LZ1=4.5,LX1=-3,LY=3.7;
+  box(LX1-PX0,0.35,LZ1-PZ0,(PX0+LX1)/2,y0+LY,(PZ0+LZ1)/2,whiteM,true);
+  for(const [w,d,x,z] of [[LX1-PX0,0.06,(PX0+LX1)/2,LZ1],[0.06,LZ1-PZ0,LX1,(PZ0+LZ1)/2]]){box(w,1.05,d,x,y0+LY+0.7,z,paneM,false);box(w+0.04,0.06,d+0.05,x,y0+LY+1.24,z,frameM,false)}
+  for(let k=0;k<12;k++){box(1.3,0.08,0.34,PX0+1.3,y0+0.3+k*0.3,12.2-k*0.62,whiteM,true)}
+  box(0.06,3.8,7.6,PX0+2,y0+2.3,8.8,paneM,false);addCollider(cx+PX0,cx+PX0+2,cz+4.6,cz+12.6,y0+4.2);
+  box(2.6,0.9,0.7,PX0+3.2,y0+LY+0.6,-1.2,darkM);box(1.8,0.12,2.6,-12,y0+LY+0.25,0.8,std(0x6b5a48,1),false);
+  // living area facing the glass
+  const rug=new THREE.Mesh(new THREE.PlaneGeometry(7,5).rotateX(-Math.PI/2),std(0xd9d3c7,1));rug.position.set(cx-8,y0+0.07,cz+11);rug.receiveShadow=true;scene.add(rug);
+  box(6,0.45,1.1,-8,y0+0.3,8.6,leather,true,true);box(6,0.8,0.3,-8,y0+0.75,8.05,leather,true);box(1.1,0.45,3,-11.45,y0+0.3,10.5,leather,true,true);box(0.3,0.8,3,-11.95,y0+0.75,10.5,leather);
+  for(let k=0;k<3;k++)box(1.0,0.35,0.25,-9.8+k*1.9,y0+0.7,8.3,fabric);
+  box(2.4,0.06,1.3,-8,y0+0.45,11.2,new THREE.MeshStandardMaterial({color:0x99aab5,transparent:true,opacity:0.45,roughness:0.05}),false);box(0.12,0.4,0.12,-8,y0+0.22,11.2,steel,false);
+  for(const x of [-4.2,-12]){box(0.9,0.42,0.9,x,y0+0.25,14,fabric,true,true)}
+  // TV wall (north)
   const tvT=canvasTex(512,288,g=>{const gr=g.createLinearGradient(0,0,0,288);gr.addColorStop(0,'#ff8a4a');gr.addColorStop(0.6,'#6a2a6a');gr.addColorStop(1,'#141030');g.fillStyle=gr;g.fillRect(0,0,512,288);
     for(let i=0;i<26;i++){const w=R(12,30),h=R(40,170),x=i*20;g.fillStyle='#0c0a1a';g.fillRect(x,288-h,w,h);for(let y=288-h+6;y<284;y+=10)for(let xx=x+3;xx<x+w-3;xx+=6)if(Math.random()<0.4){g.fillStyle='#ffd88a';g.fillRect(xx,y,2,3)}}
     g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,236,512,52);g.fillStyle='#fff';g.font='bold 26px sans-serif';g.fillText('VALORA NEWS  ·  Börse auf Rekordhoch',16,270)});
-  const tv=new THREE.Mesh(new THREE.PlaneGeometry(4.2,2.36),new THREE.MeshStandardMaterial({map:tvT,emissiveMap:tvT,emissive:0xffffff,emissiveIntensity:1.1}));tv.position.set(cx-7,y0+2.1,cz+PZ0+0.22);scene.add(tv);
-  box(4.6,2.6,0.08,-7,y0+2.1,PZ0+0.17,darkM,false);box(5,0.5,0.5,-7,y0+0.25,PZ0+0.5,darkM);
-  // bed
-  box(3.4,0.5,4.2,8.5,y0+0.3,-14,darkM,true,true);box(3.2,0.35,4,8.5,y0+0.7,-13.9,whiteM);box(3.25,0.12,2.4,8.5,y0+0.9,-13.1,std(0x2a3f5a,0.95));
-  for(const x of [7.6,9.4])box(1.2,0.28,0.6,x,y0+0.98,-15.5,whiteM);box(3.6,1.6,0.25,8.5,y0+1.1,-16.2,leather);
-  pentSpots.push({kind:'bed',x:cx+8.5,z:cz-11.2,r:1.7,label:'Schlafen bis 08:00 Uhr'});
+  const tv=new THREE.Mesh(new THREE.PlaneGeometry(3.6,2.0),new THREE.MeshStandardMaterial({map:tvT,emissiveMap:tvT,emissive:0xffffff,emissiveIntensity:1.0}));tv.position.set(cx-13,y0+1.9,cz+PZ0+0.22);scene.add(tv);
+  box(4.0,2.3,0.08,-13,y0+1.9,PZ0+0.17,darkM,false);box(4.6,0.45,0.5,-13,y0+0.23,PZ0+0.5,darkM,true,true);
+  // bed (east side, by the glass)
+  box(3.4,0.5,4.2,15,y0+0.3,5.6,darkM,true,true);box(3.2,0.35,4,15,y0+0.7,5.7,whiteM);box(3.25,0.12,2.4,15,y0+0.9,6.5,std(0x2a3f5a,0.95));
+  for(const x of [14.1,15.9])box(1.2,0.28,0.6,x,y0+0.98,4.1,whiteM);box(3.6,1.6,0.25,15,y0+1.1,3.4,leather);
+  pentSpots.push({kind:'bed',x:cx+15,z:cz+8.6,r:1.7,label:'Schlafen bis 08:00 Uhr'});
   // kitchen island + stools
-  box(4.2,1.0,1.3,2.5,y0+0.5,-9.5,marble,true,true);box(4.3,0.06,1.4,2.5,y0+1.02,-9.5,darkM,false);
-  for(let k=0;k<3;k++){const s=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.22,0.08,14),leather);s.position.set(cx+1.2+k*1.3,y0+0.78,cz-8.4);scene.add(s);const pl=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.05,0.75),steel);pl.position.set(cx+1.2+k*1.3,y0+0.38,cz-8.4);scene.add(pl)}
-  // elevator
-  box(2.4,3.0,0.15,0,y0+1.5,PZ0+0.27,steel,false);box(0.06,3.0,0.16,0,y0+1.5,PZ0+0.3,darkM,false);
-  box(2.8,0.12,0.18,0,y0+3.08,PZ0+0.3,new THREE.MeshStandardMaterial({color:0x111111,emissive:0x9fd8ff,emissiveIntensity:1.5}),false);
-  pentSpots.push({kind:'lift',x:cx,z:cz+PZ0+1.6,r:1.6,label:'Aufzug nach unten'});
-  // plants & lamps
-  for(const [x,z] of [[-13,-17],[13,-17],[-13,-5],[13,-5.5],[-18,18],[18,18]]){const pot=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.3,0.7,14),darkM);pot.position.set(cx+x,y0+0.35,cz+z);scene.add(pot);
-    const pl=new THREE.Mesh(new THREE.IcosahedronGeometry(0.75,1),leafMat);pl.position.set(cx+x,y0+1.3,cz+z);pl.scale.set(1,1.5,1);scene.add(pl)}
+  box(4.2,1.0,1.3,3,y0+0.5,4,marble,true,true);box(4.3,0.06,1.4,3,y0+1.02,4,darkM,false);
+  for(let k=0;k<3;k++){const s=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.22,0.08,14),leather);s.position.set(cx+1.7+k*1.3,y0+0.78,cz+5.1);scene.add(s);const pl=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.05,0.75),steel);pl.position.set(cx+1.7+k*1.3,y0+0.38,cz+5.1);scene.add(pl)}
+  // pendant lights over island
   const lampE=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffd9a0,emissiveIntensity:2});
-  for(const [x,z] of [[-12,-12],[12,-8]]){box(0.05,1.7,0.05,x,y0+0.85,z,steel,false);const sh=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.35,0.4,14,1,true),lampE);sh.position.set(cx+x,y0+1.8,cz+z);scene.add(sh)}
-  pentAnim.light=new THREE.PointLight(0xffd9a8,1.2,30,1.5);pentAnim.light.position.set(cx,y0+3.6,cz-11);pentAnim.light.visible=false;scene.add(pentAnim.light);
+  for(let k=0;k<3;k++){const x=cx+1.7+k*1.3;const cord=new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.01,4.6),frameM);cord.position.set(x,y0+PH-2.3,cz+4);scene.add(cord);const sh=new THREE.Mesh(new THREE.SphereGeometry(0.2,14,10),lampE);sh.position.set(x,y0+2.6,cz+4);scene.add(sh)}
+  // elevator (north wall)
+  box(2.4,3.0,0.15,-4,y0+1.5,PZ0+0.27,steel,false);box(0.06,3.0,0.16,-4,y0+1.5,PZ0+0.3,darkM,false);
+  box(2.8,0.12,0.18,-4,y0+3.08,PZ0+0.3,new THREE.MeshStandardMaterial({color:0x111111,emissive:0x9fd8ff,emissiveIntensity:1.5}),false);
+  pentSpots.push({kind:'lift',x:cx-4,z:cz+PZ0+1.6,r:1.6,label:'Aufzug nach unten'});
+  // plants
+  for(const [x,z] of [[18.2,18.2],[-17.6,16.6],[18.2,-0.8],[5.5,-0.8],[-18,-18],[18,-18]]){const pot=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.3,0.7,14),darkM);pot.position.set(cx+x,y0+0.35,cz+z);scene.add(pot);
+    const pl=new THREE.Mesh(new THREE.IcosahedronGeometry(0.75,1),leafMat);pl.position.set(cx+x,y0+1.3,cz+z);pl.scale.set(1,1.6,1);scene.add(pl)}
+  pentAnim.light=new THREE.PointLight(0xffe2bc,1.1,32,1.5);pentAnim.light.position.set(cx,y0+5.5,cz+9);pentAnim.light.visible=false;scene.add(pentAnim.light);
+  pentAnim.box={x0:cx+PX0,x1:cx+PX1,z0:cz+PZ0,z1:cz+PZ1,top:y0+PH-0.5};
   // ---- terrace (south half) ----
-  const poolX=-7,poolZ=7,PW=14,PD=7;
+  const poolX=-7,poolZ=-7,PW=14,PD=6;
   box(PW+0.6,0.6,0.3,poolX,y0+0.3,poolZ-PD/2-0.15,marble,true,true);box(PW+0.6,0.6,0.3,poolX,y0+0.3,poolZ+PD/2+0.15,marble,true,true);
   box(0.3,0.6,PD,poolX-PW/2-0.15,y0+0.3,poolZ,marble,true,true);box(0.3,0.6,PD,poolX+PW/2+0.15,y0+0.3,poolZ,marble,true,true);
   addCollider(cx+poolX-PW/2,cx+poolX+PW/2,cz+poolZ-PD/2,cz+poolZ+PD/2,y0+0.6);
@@ -1462,26 +1497,26 @@ function buildTower(b){const cx=(b.x0+b.x1)/2,cz=(b.z0+b.z1)/2,W=40,H=150;TW={x:
   caust.repeat.set(3,1.5);const water=new THREE.Mesh(new THREE.PlaneGeometry(PW,PD).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({map:caust,emissiveMap:caust,emissive:0x2aa0d0,emissiveIntensity:0.35,roughness:0.05,metalness:0.1,transparent:true,opacity:0.92}));
   water.position.set(cx+poolX,y0+0.5,cz+poolZ);scene.add(water);pentAnim.water=caust;envMats.push(water.material);
   // loungers + parasol
-  for(let k=0;k<3;k++){const x=3+k*2.4,z=6.5;box(0.9,0.35,2,x,y0+0.25,z,whiteM,true,true);const bk=box(0.9,0.08,0.9,x,y0+0.65,z-0.85,fabric,true);bk.rotation.x=-0.6;box(0.95,0.06,1.2,x,y0+0.45,z+0.35,std(0x2a7a8a,0.9),false)}
-  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,2.6),steel);pole.position.set(cx+12,y0+1.3,cz+6);scene.add(pole);
-  const um=new THREE.Mesh(new THREE.ConeGeometry(2.0,0.6,10,1,true),new THREE.MeshStandardMaterial({color:lin(0xf1efea),side:THREE.DoubleSide,roughness:0.9}));um.position.set(cx+12,y0+2.75,cz+6);um.castShadow=true;scene.add(um);
+  for(let k=0;k<3;k++){const x=3+k*2.4,z=-7;box(0.9,0.35,2,x,y0+0.25,z,whiteM,true,true);const bk=box(0.9,0.08,0.9,x,y0+0.65,z-0.85,fabric,true);bk.rotation.x=-0.6;box(0.95,0.06,1.2,x,y0+0.45,z+0.35,std(0x2a7a8a,0.9),false)}
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,2.6),steel);pole.position.set(cx+11.5,y0+1.3,cz-7);scene.add(pole);
+  const um=new THREE.Mesh(new THREE.ConeGeometry(2.0,0.6,10,1,true),new THREE.MeshStandardMaterial({color:lin(0xf1efea),side:THREE.DoubleSide,roughness:0.9}));um.position.set(cx+11.5,y0+2.75,cz-7);um.castShadow=true;scene.add(um);
   // fire pit lounge
-  const pit=new THREE.Mesh(new THREE.CylinderGeometry(0.9,1.0,0.5,20),std(0x3a3632,0.9));pit.position.set(cx+9,y0+0.28,cz-0.5);scene.add(pit);addCollider(cx+8,cx+10,cz-1.5,cz+0.5,y0+0.6);
+  const pit=new THREE.Mesh(new THREE.CylinderGeometry(0.9,1.0,0.5,20),std(0x3a3632,0.9));pit.position.set(cx+12,y0+0.28,cz-15);scene.add(pit);addCollider(cx+11,cx+13,cz-16,cz-14,y0+0.6);
   const flameM=new THREE.MeshStandardMaterial({color:0xff6a00,emissive:0xff7a1a,emissiveIntensity:2.6,transparent:true,opacity:0.85});
-  for(let k=0;k<5;k++){const f=new THREE.Mesh(new THREE.ConeGeometry(0.16,0.7,6),flameM);f.position.set(cx+9+R(-0.4,0.4),y0+0.85,cz-0.5+R(-0.4,0.4));scene.add(f);pentAnim.flames.push(f)}
-  for(const a of [0.6,2.2,3.8,5.4]){const s=box(1.6,0.4,0.7,9+Math.cos(a)*2.3-9+9,y0+0.22,-0.5+Math.sin(a)*2.3,leather,true);s.position.set(cx+9+Math.cos(a)*2.3,y0+0.22,cz-0.5+Math.sin(a)*2.3);s.rotation.y=-a+Math.PI/2}
+  for(let k=0;k<5;k++){const f=new THREE.Mesh(new THREE.ConeGeometry(0.16,0.7,6),flameM);f.position.set(cx+12+R(-0.4,0.4),y0+0.85,cz-15+R(-0.4,0.4));scene.add(f);pentAnim.flames.push(f)}
+  for(const a of [0.6,2.2,3.8,5.4]){const s=box(1.6,0.4,0.7,9+Math.cos(a)*2.3-9+9,y0+0.22,-0.5+Math.sin(a)*2.3,leather,true);s.position.set(cx+12+Math.cos(a)*2.3,y0+0.22,cz-15+Math.sin(a)*2.3);s.rotation.y=-a+Math.PI/2}
   // helipad
   const hp=canvasTex(256,256,g=>{g.fillStyle='#3a3d42';g.beginPath();g.arc(128,128,126,0,7);g.fill();g.strokeStyle='#f2c12e';g.lineWidth=8;g.beginPath();g.arc(128,128,110,0,7);g.stroke();g.fillStyle='#ffffff';g.font='bold 130px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText('H',128,136)});
-  const pad=new THREE.Mesh(new THREE.CircleGeometry(4.2,40).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({map:hp,transparent:true,roughness:0.8}));pad.position.set(cx-8,y0+0.06,cz+15);scene.add(pad);
+  const pad=new THREE.Mesh(new THREE.CircleGeometry(4.2,40).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({map:hp,transparent:true,roughness:0.8}));pad.position.set(cx-8,y0+0.06,cz-15);scene.add(pad);
 }
 function pentNearest(){let best=null,bd=1e9;for(const it of pentSpots){const d=Math.hypot(P.pos.x-it.x,P.pos.z-it.z);if(d<it.r&&d<bd){bd=d;best=it}}return best}
-function updatePent(dt){if(pentAnim.water){pentAnim.water.offset.x+=dt*0.02;pentAnim.water.offset.y+=dt*0.013}
+function updatePent(dt){if(pentAnim.ceil)pentAnim.ceil.emissiveIntensity=0.25+nf*0.9;if(pentAnim.water){pentAnim.water.offset.x+=dt*0.02;pentAnim.water.offset.y+=dt*0.013}
   for(const f of pentAnim.flames){f.scale.y=0.7+Math.random()*0.6;f.scale.x=f.scale.z=0.8+Math.random()*0.3}
   const it=pentNearest();if(it)hint((isTouch?'EIN/AUS':'F')+' – '+it.label)}
 function goPenthouse(){if(inCasino){msg('Verlasse zuerst das Casino');return}if(respawnT>0)return;if(inPent){leavePent();return}
   fadeTo(()=>{if(P.car){const c=P.car;P.car=null;c.driver=false;P.m.visible=true;headLight.visible=false;$('speed').style.display='none'}
-    inPent=true;pentAnim.light.visible=true;P.pos.set(TW.x+2,TW.H+0.03,TW.z+17.5);P.vx=P.vz=P.vy=0;P.yaw=0;camYaw=Math.PI;camPitch=0.42;camT.copy(P.pos);camT.y+=1.5;
-    big('PENTHOUSE','Valora Tower · 150 m über der Stadt','#9fd8ff')})}
+    inPent=true;pentAnim.light.visible=true;P.pos.set(TW.x+8,TW.H+0.03,TW.z+12);P.vx=P.vz=P.vy=0;P.yaw=Math.PI*0.25;camYaw=Math.PI*1.25;camPitch=0.2;camT.copy(P.pos);camT.y+=1.5;
+    big('PENTHOUSE','Valora Tower · 96 m über der Stadt','#9fd8ff')})}
 function leavePent(){fadeTo(()=>{inPent=false;pentAnim.light.visible=false;P.pos.set(TW.x+TW.w/2+3,0.3,TW.z);P.vx=P.vz=P.vy=0;P.yaw=Math.PI/2;camYaw=-Math.PI/2;camPitch=0.25;camT.copy(P.pos);msg('Unten am Valora Tower')})}
 function pentInteract(){const it=pentNearest();if(!it)return;if(it.kind==='lift')leavePent();
   else if(it.kind==='bed'){fadeTo(()=>{hour=8;P.hp=100;big('AUSGESCHLAFEN','08:00 Uhr · volle Gesundheit','#9fd8ff')})}}
@@ -1577,7 +1612,7 @@ function updateCamera(dt){
   let dist=P.car?8.2+sp*0.05:(inCasino?3.4:3.9);
   const cp=Math.cos(camPitch);camOff.set(Math.sin(camYaw)*cp,Math.sin(camPitch),Math.cos(camYaw)*cp);
   for(let k=1;k<=12;k++){const t=k/12*dist;const x=camT.x+camOff.x*t,y=camT.y+camOff.y*t,z=camT.z+camOff.z*t;if(inBox(x,y,z,0.4)){dist=Math.max(1.2,t-0.6);break}}
-  camera.position.set(camT.x+camOff.x*dist,Math.max(0.6,camT.y+camOff.y*dist),camT.z+camOff.z*dist);if(inCasino)camera.position.y=Math.min(camera.position.y,CZ.H-0.7);
+  camera.position.set(camT.x+camOff.x*dist,Math.max(0.6,camT.y+camOff.y*dist),camT.z+camOff.z*dist);if(inCasino)camera.position.y=Math.min(camera.position.y,CZ.H-0.7);if(inPent&&pentAnim.box){const b=pentAnim.box;if(P.pos.x>b.x0&&P.pos.x<b.x1&&P.pos.z>b.z0&&P.pos.z<b.z1)camera.position.y=Math.min(camera.position.y,b.top)}
   if(shake>0){camera.position.x+=R(-1,1)*shake*0.3;camera.position.y+=R(-1,1)*shake*0.3;shake=Math.max(0,shake-dt*2.5)}
   camera.lookAt(camT.x,camT.y+0.2,camT.z);
   const nearW=inPent?0.6:0.1;if(camera.near!==nearW){camera.near=nearW;camera.updateProjectionMatrix()}
