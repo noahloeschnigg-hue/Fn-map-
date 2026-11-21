@@ -123,6 +123,20 @@ body.touch #money{font-size:26px}
 .ed input{font-family:var(--ui);font-size:18px;font-weight:700;padding:5px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.35);color:#fff;width:100%;box-sizing:border-box}
 .ed .ttl{font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--sun)}
 @media (max-width:760px){#intro{align-items:flex-end!important;background:linear-gradient(0deg,rgba(6,4,12,.96) 52%,rgba(6,4,12,0) 78%)!important}#intro .ip{max-height:64vh}#intro h1{font-size:40px!important;text-shadow:3px 3px 0 #e0306a!important}#intro .keys{display:none!important}}
+
+body.rot{position:absolute!important;top:0;left:100vw;width:100vh!important;height:100vw!important;transform-origin:0 0;transform:rotate(90deg)}
+body.rot #intro{align-items:flex-start!important;background:linear-gradient(90deg,rgba(6,4,12,.94) 0%,rgba(6,4,12,.82) 40%,rgba(6,4,12,0) 66%)!important}
+body.rot #intro .ip,body.rot #intro{max-height:100%}
+body.rot #intro .ip{max-width:52%}
+body.rot #intro h1,body.rot #intro .keys{display:none!important}
+body.rot #mission{max-width:40%}
+@media (max-height:520px){#intro h1{font-size:40px!important;text-shadow:3px 3px 0 #e0306a!important}#intro .keys{display:none!important}#intro .ip{max-height:100%;gap:8px}.ed .r{font-size:15px}.ed button{height:26px}#intro .sub{font-size:14px}}
+body.rot.touch #mapWrap{left:12px!important;right:auto!important;top:62px!important;width:110px!important}body.rot.touch #minimap{width:110px!important;height:110px!important}body.rot.touch #area{display:none}
+body.rot.touch #mission{font-size:13px!important}body.rot.touch #mission .t{font-size:16px}
+body.rot.touch #tbF{bottom:96px!important}body.rot.touch #tbJump{bottom:16px!important}body.rot.touch #tbRun{bottom:16px!important}body.rot.touch #tbHorn{bottom:100px!important}
+@media (max-height:520px){body.touch #mapWrap{left:12px!important;right:auto!important;top:62px!important;width:110px!important}body.touch #minimap{width:110px!important;height:110px!important}body.touch #area{display:none}
+  body.touch #mission{font-size:13px!important}body.touch #tbF{bottom:96px!important}body.touch #tbJump{bottom:16px!important}body.touch #tbRun{bottom:16px!important}body.touch #tbHorn{bottom:100px!important}}
+body.rot .ed .r{font-size:15px}body.rot .ed button{height:26px}body.rot #intro .sub{font-size:14px}
 body.intro .hud,body.intro #touch{display:none!important}
 #phBtn{pointer-events:auto;margin-top:8px;font-family:var(--ui);font-weight:700;font-size:15px;letter-spacing:1.5px;padding:6px 12px;border-radius:4px;border:1px solid rgba(159,216,255,.6);background:rgba(8,14,22,.6);color:#cfeaff;cursor:pointer}
 #phBtn:focus-visible{outline:2px solid #fff}
@@ -193,6 +207,8 @@ body.intro .hud,body.intro #touch{display:none!important}
 (()=>{
 'use strict';
 const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+let ROT=false;const VW=()=>ROT?innerHeight:innerWidth,VH=()=>ROT?innerWidth:innerHeight;
+ROT=isTouch&&innerHeight>innerWidth;document.body.classList.toggle('rot',ROT);
 if(isTouch)document.body.classList.add('touch');document.body.classList.add('intro');
 const $=id=>document.getElementById(id);
 let seed=20261120;
@@ -212,13 +228,13 @@ const LIMIT=HALF+40;
 const canvas=$('c');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:!isTouch,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,isTouch?1.5:2));
-renderer.setSize(innerWidth,innerHeight);
+renderer.setSize(VW(),VH());
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
 const scene=new THREE.Scene();
 scene.fog=new THREE.Fog(0x9ec4e8,90,620);scene.background=null;
-const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,0.1,1600);
+const camera=new THREE.PerspectiveCamera(68,VW()/VH(),0.1,1600);
 const hemi=new THREE.HemisphereLight(0xcfe2ff,0x4a4436,0.6);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff0d8,1.6);
 sun.castShadow=true;const SM=isTouch?1024:2048;sun.shadow.mapSize.set(SM,SM);
@@ -247,9 +263,9 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(1400,32,16),new THREE.ShaderMa
 sky.renderOrder=-1;sky.frustumCulled=false;scene.add(sky);
 // post: bloom + filmic grade (teal shadows / warm highlights, vignette, grain)
 const composer=new THREE.EffectComposer(renderer);
-composer.setPixelRatio(Math.min(devicePixelRatio||1,isTouch?1.25:1.5));composer.setSize(innerWidth,innerHeight);
+composer.setPixelRatio(Math.min(devicePixelRatio||1,isTouch?1.25:1.5));composer.setSize(VW(),VH());
 composer.addPass(new THREE.RenderPass(scene,camera));
-const bloom=new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth/2,innerHeight/2),0.55,0.6,0.82);composer.addPass(bloom);
+const bloom=new THREE.UnrealBloomPass(new THREE.Vector2(VW()/2,VH()/2),0.55,0.6,0.82);composer.addPass(bloom);
 const grade=new THREE.ShaderPass({uniforms:{tDiffuse:{value:null},time:{value:0},sat:{value:1.12},con:{value:1.08},vig:{value:0.42}},
   vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
   fragmentShader:`uniform sampler2D tDiffuse;uniform float time,sat,con,vig;varying vec2 vUv;
@@ -953,13 +969,13 @@ addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas||mDown)
 function getInput(){let x=0,y=0;if(keys.KeyW||keys.ArrowUp)y+=1;if(keys.KeyS||keys.ArrowDown)y-=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
   x+=touchJoy.x;y+=touchJoy.y;return{x:clamp(x,-1,1),y:clamp(y,-1,1),sprint:keys.ShiftLeft||keys.ShiftRight||tRun,jump:keys.Space||tJump,hb:keys.Space||tRun}}
 // touch
-if(isTouch){const joy=$('joy'),knob=$('knob');let jid=null,jx=0,jy=0,cid=null,cx=0,cy=0;
+if(isTouch){const joy=$('joy'),knob=$('knob');let jid=null,jx=0,jy=0,cid=null,cx=0,cy=0;const GX=t=>ROT?t.clientY:t.clientX,GY=t=>ROT?innerWidth-t.clientX:t.clientY;
   addEventListener('touchstart',e=>{if(!started||casinoOpen||shopOpen)return;for(const t of e.changedTouches){if(t.target.closest&&t.target.closest('.tb,#phBtn'))continue;
-    if(t.clientX<innerWidth*0.45&&jid===null){jid=t.identifier;jx=t.clientX;jy=t.clientY;joy.style.display='block';joy.style.left=(jx-65)+'px';joy.style.top=(jy-65)+'px'}
-    else if(cid===null){cid=t.identifier;cx=t.clientX;cy=t.clientY}}},{passive:true});
-  addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===jid){let dx=t.clientX-jx,dy=t.clientY-jy;const l=Math.hypot(dx,dy);if(l>55){dx*=55/l;dy*=55/l}
+    if(GX(t)<VW()*0.45&&jid===null){jid=t.identifier;jx=GX(t);jy=GY(t);joy.style.display='block';joy.style.left=(jx-65)+'px';joy.style.top=(jy-65)+'px'}
+    else if(cid===null){cid=t.identifier;cx=GX(t);cy=GY(t)}}},{passive:true});
+  addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===jid){let dx=GX(t)-jx,dy=GY(t)-jy;const l=Math.hypot(dx,dy);if(l>55){dx*=55/l;dy*=55/l}
       knob.style.left=(40+dx)+'px';knob.style.top=(40+dy)+'px';touchJoy.x=dx/55;touchJoy.y=-dy/55}
-    else if(t.identifier===cid){camYaw-=(t.clientX-cx)*0.006;camPitch=clamp(camPitch+(t.clientY-cy)*0.004,-0.15,1.25);cx=t.clientX;cy=t.clientY;lastMouse=clock}}},{passive:true});
+    else if(t.identifier===cid){camYaw-=(GX(t)-cx)*0.006;camPitch=clamp(camPitch+(GY(t)-cy)*0.004,-0.15,1.25);cx=GX(t);cy=GY(t);lastMouse=clock}}},{passive:true});
   const end=e=>{for(const t of e.changedTouches){if(t.identifier===jid){jid=null;touchJoy.x=touchJoy.y=0;joy.style.display='none';knob.style.left=knob.style.top='40px'}if(t.identifier===cid)cid=null}};
   addEventListener('touchend',end);addEventListener('touchcancel',end);
   const btn=(id,dn,up)=>{const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();b.classList.add('on');dn()},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();b.classList.remove('on');up&&up()},{passive:false})};
@@ -1626,10 +1642,11 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)
     if(respawnT>0){respawnT-=dt;if(respawnT<=0)doRespawn();dt*=0.25}
     updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);const np=updatePolice(dt);updateMission(dt);updateDealer(dt);if(inPent)updatePent(dt);updateParts(dt);updateCamera(dt);Snd.update(np);updateHUD(dt);drawMap()}
   else{clock+=dt;hour=16.2;updateSky(0);const hp=P.pos;P.m.rotation.y=Math.PI/2+Math.sin(clock*0.45)*0.55;animPerson(P.m,0,0);
-    const wide=innerWidth>760;camera.position.set(hp.x+3.2,hp.y+1.3,hp.z+(wide?-0.3:0));camera.lookAt(hp.x,hp.y+(wide?1.0:0.55),hp.z+(wide?1.15:0));if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
+    const wide=VW()>760;camera.position.set(hp.x+3.2,hp.y+1.3,hp.z+(wide?-0.3:0));camera.lookAt(hp.x,hp.y+(wide?1.0:0.55),hp.z+(wide?1.15:0));if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
   grade.uniforms.time.value=clock%10;composer.render()}
 requestAnimationFrame(frame);
-addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
+function applyOrient(){ROT=isTouch&&innerHeight>innerWidth;document.body.classList.toggle('rot',ROT);renderer.setSize(VW(),VH());composer.setSize(VW(),VH());camera.aspect=VW()/VH();camera.updateProjectionMatrix()}
+addEventListener('resize',applyOrient);addEventListener('orientationchange',()=>setTimeout(applyOrient,250));
 // ---------- Character editor ----------
 const ED=[['Figur','fem',[[false,'Mann'],[true,'Frau']]],['Hautton','skin',[[0,'Hell'],[1,'Mittel hell'],[2,'Mittel'],[3,'Dunkel'],[4,'Sehr dunkel']]],
   ['Frisur','hairStyle',Object.entries(HAIRSTYLES)],['Haarfarbe','hair',[[0,'Schwarz'],[1,'Dunkelbraun'],[2,'Braun'],[3,'Blond'],[4,'Grau'],[5,'Rot']]],
@@ -1647,7 +1664,7 @@ $('editor').addEventListener('click',e=>{const b=e.target.closest('button');if(!
   rebuildHero();renderEditor()});
 renderEditor();
 $('phBtn').addEventListener('click',e=>{e.stopPropagation();goPenthouse();$('phBtn').blur()});
-$('play').addEventListener('click',()=>{$('intro').style.display='none';document.body.classList.remove('intro');started=true;hour=17.3;camYaw=Math.PI*1.5;camT.copy(P.pos);Snd.init();if(Snd.c&&Snd.c.resume)Snd.c.resume();
+$('play').addEventListener('click',()=>{if(isTouch){try{const el=document.documentElement;const lock=()=>{try{const o=screen.orientation;if(o&&o.lock)o.lock('landscape').catch(()=>{})}catch(e){}};if(el.requestFullscreen)el.requestFullscreen().then(lock).catch(()=>{});else lock()}catch(e){}}$('intro').style.display='none';document.body.classList.remove('intro');started=true;hour=17.3;camYaw=Math.PI*1.5;camT.copy(P.pos);Snd.init();if(Snd.c&&Snd.c.resume)Snd.c.resume();
   if(!isTouch&&canvas.requestPointerLock){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
   msg('Willkommen in Valora City, '+(HERO.name||'Rico')+'. Dein Vortex GT steht am Straßenrand.')});
 window.__game={pent:()=>goPenthouse(),get inPent(){return inPent},exit:()=>exitCasino(),setMoney:v=>{money=v},enter:()=>enterCasino(),openGame:k=>openGame(k),interior:()=>czInteract,dealer:()=>dealer,openShop:()=>openShop(),get inside(){return inCasino},door:casinoDoor,cam:(y,pt)=>{camYaw=y;camPitch=pt},step:n=>{for(let k=0;k<n;k++){const dt=1/30;clock+=dt;updateSky(dt);updatePlayer(dt);updateTraffic(dt);carInteractions(dt);updatePeds(dt);updatePolice(dt);updateMission(dt)}},crime:(n,w)=>crime(n,w),P,cars,peds,get wanted(){return wanted}};
